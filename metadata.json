@@ -1,0 +1,63 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4KRK9MB950D3N96YWKTG5MD",
+  "strategy": "manual-commit",
+  "branch": "Competitors_Agent",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "ASSETS.md",
+    "backend/.env.example",
+    "backend/README.md",
+    "backend/agents/competitor.py",
+    "backend/api/competitor.py",
+    "backend/api/council.py",
+    "backend/config.py",
+    "backend/council/coordinator.py",
+    "backend/council/participants.py",
+    "backend/evidence/README.md",
+    "backend/evidence/competitors.json",
+    "backend/ingest.py",
+    "backend/jobs.py",
+    "backend/llm/ollama.py",
+    "backend/main.py",
+    "backend/requirements.txt",
+    "backend/schemas/agent.py",
+    "backend/schemas/common.py",
+    "backend/schemas/council.py",
+    "backend/schemas/evidence.py",
+    "backend/smoke.py",
+    "backend/storage.py",
+    "backend/tests/test_competitor.py",
+    "backend/tests/test_live_council.py",
+    "backend/tools/retrieval.py",
+    "public/images/competitors/byd.png",
+    "public/images/competitors/mercedes.svg",
+    "public/images/competitors/tesla.svg",
+    "src/components/dashboard/AppShell.tsx",
+    "src/pages/Competitor.tsx",
+    "src/pages/Council.tsx",
+    "src/pages/LiveCouncil.tsx",
+    "src/pages/competitor.css",
+    "src/vite-env.d.ts",
+    "tests/e2e/live-agent.spec.ts",
+    "tests/e2e/prototype.spec.ts",
+    "vite.config.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 548286,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 30874496,
+    "output_tokens": 159544,
+    "api_call_count": 256,
+    "subagent_tokens_complete": false
+  }
+}

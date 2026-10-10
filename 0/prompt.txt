@@ -1,0 +1,41 @@
+ok so now can u like make the agent or something how would we do it?
+
+---
+
+then download get Ollama
+
+---
+
+pause now am on 15
+
+---
+
+ok so can u continue now but also can u make sure u got very good accurate up to date competitor data and also how do I know where Ollama is running and how and if I even have it now and stuff?
+
+---
+
+can we also make our page part look super cool with real official competitor logos and stuff super fancy styles
+
+---
+
+and the agent fully works right? for sure? and the data u r showing and the workflow is working? for sure?
+
+---
+
+make it fully connected also please can u try including more competitors like Audi, Volkswagen, more Chinese big brands etc. perhaps? and furthermore here on the UI of the page of that part
+
+make it more simpler like I can select a brand and very clearly see from a model from their brand what it has that CLEARLY BMW does not have and show next to it a percent of success it generates currently for its brand and what it could benefit for us or smth like that like really simple showing but super super clear not too many random stuff yeah? also ofc use the real logos and stuff and also have u made sure it is connected also the agent to the agent debate section properly has it? and which Qwen model is it running on btw?
+
+---
+
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"call_xCmmIIoXwWOEiZlgH2aQQXuJ\",0]","question":"Are your teammates’ Customer and Market agents already available in this checkout, or only on their own branches? I can connect the Competitor agent to a working local Qwen council now and leave clear integration points for their implementations.","answer":"Not built yet"}]
+</send_user_message_question_reply>
+
+---
+
+what link do I use to access it bcs on my Microsoft Edge I am not seeing the same outputs as if I click here
+
+---
+
+not working anyways it is here like in VS Code if I open ur link it works and shows updates but on Microsoft Edge
