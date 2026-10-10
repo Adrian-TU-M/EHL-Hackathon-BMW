@@ -18,6 +18,10 @@ import { Badge, Button, Loading, Modal } from "../components/ui/Primitives";
 import { EvidenceDialog } from "../components/dashboard/EvidenceDialog";
 import { agentMeta } from "../components/agents/AgentSculpture";
 import { stages } from "../lib/council/machine";
+import { EvidenceDrawer } from "../components/customer/EvidenceDrawer";
+import type { DrawerRequest } from "../components/customer/EvidenceDrawer";
+import { liveCustomerSource } from "../lib/api/customer";
+import "../components/customer/customer.css";
 import type { AgentState, Topic } from "../lib/types";
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 export default function Council() {
@@ -28,7 +32,9 @@ export default function Council() {
     startCouncil,
     controlCouncil,
     evidence,
+    councilEvidence,
   } = useAppStore();
+  const [liveDrawer, setLiveDrawer] = useState<DrawerRequest | null>(null);
   const [topic, setTopic] = useState<Topic>(council.topic);
   const [expanded, setExpanded] = useState(false);
   const [challenge, setChallenge] = useState(false);
@@ -45,6 +51,25 @@ export default function Council() {
   const currentSources = evidence.filter((e) =>
     event?.evidenceIds.includes(e.id),
   );
+  const liveSources = councilEvidence.filter((e) =>
+    event?.evidenceIds.includes(e.id),
+  );
+  const waitingOn = council.events[council.cursor + 1]?.pending
+    ? council.events[council.cursor + 1]
+    : undefined;
+  const live = council.liveCustomer;
+  // Live Customer Agent citations open the customer evidence drawer; scripted ones the demo dialog.
+  const openIds = (list: string[]) => {
+    const items = councilEvidence.filter((e) => list.includes(e.id));
+    if (items.length)
+      setLiveDrawer({
+        kind: "evidence",
+        title: "Customer Agent evidence",
+        items,
+        note: "Original BMW feedback cited by the live Customer Agent (qwen3:8b). Citations were checked in code against the records shown to the model.",
+      });
+    else setIds(list);
+  };
   return (
     <div className="council-page">
       <div className="council-page-header">
@@ -59,7 +84,11 @@ export default function Council() {
           </h1>
           <p>Evidence in focus. Assumptions in the open. You in control.</p>
         </div>
-        <Badge tone="dark">SCRIPTED DEMO COUNCIL</Badge>
+        <Badge tone="dark">
+          {live
+            ? "LIVE CUSTOMER AGENT · OTHER AGENTS SCRIPTED"
+            : "SCRIPTED DEMO COUNCIL"}
+        </Badge>
       </div>
       <div className="council-stagebar">
         {stages.map((s, i) => (
@@ -204,10 +233,26 @@ export default function Council() {
                 <i />
               </div>
             </div>
+            {event?.model && (
+              <small className="council-live-tag" data-testid="live-turn">
+                Live · {event.model.replace("ollama:", "")} · BMW feedback
+              </small>
+            )}
+            {event?.evidenceBase && (
+              <small className="council-evidence-base" data-testid="evidence-base">
+                {event.evidenceBase}
+              </small>
+            )}
             <p key={event?.id} aria-live="polite">
               {event?.statement ||
                 "Your council is ready. Choose a customer experience and start the discussion. Each specialist brings a distinct perspective; the judge evaluates the evidence before you decide."}
             </p>
+            {waitingOn && active && (
+              <small className="council-waiting" role="status">
+                {agentMeta[waitingOn.actor].name} is reading the BMW feedback
+                and preparing a response…
+              </small>
+            )}
             {council.challenge && (
               <div className="challenge-record">
                 <strong>Your challenge</strong>
@@ -229,12 +274,28 @@ export default function Council() {
             <span className="eyebrow">EVIDENCE IN FOCUS</span>
             <FileText size={16} />
           </div>
-          {currentSources.length ? (
+          {liveSources.length > 0 &&
+            liveSources.slice(0, 3).map((e) => (
+              <button
+                className="council-source"
+                key={e.id}
+                data-testid="live-source"
+                onClick={() => openIds([e.id])}
+              >
+                <Badge tone="dark">customer · BMW data</Badge>
+                <p>{e.passage}</p>
+                <span>
+                  {e.id} · {e.country || e.market} · {e.source}{" "}
+                  <Maximize2 size={12} />
+                </span>
+              </button>
+            ))}
+          {liveSources.length > 0 ? null : currentSources.length ? (
             currentSources.slice(0, 3).map((e) => (
               <button
                 className="council-source"
                 key={e.id}
-                onClick={() => setIds([e.id])}
+                onClick={() => openIds([e.id])}
               >
                 <Badge tone="dark">{e.domain}</Badge>
                 <p>{e.passage}</p>
@@ -256,7 +317,9 @@ export default function Council() {
             <span className="eyebrow">ASSUMPTIONS & LIMITATIONS</span>
             <p>
               {event?.assumption ||
-                "No real datasets are connected. The discussion demonstrates the workflow, not verified BMW findings."}
+                (live
+                  ? "Customer statements come from the live Customer Agent on supplied BMW feedback. Market, competitor, moderator and judge turns are still scripted."
+                  : "No real datasets are connected. The discussion demonstrates the workflow, not verified BMW findings.")}
             </p>
           </div>
           {stageIndex >= 3 && (
@@ -287,13 +350,19 @@ export default function Council() {
               <div>
                 <strong style={{ color: agentMeta[e.actor].color }}>
                   {agentMeta[e.actor].name} <span>{e.stage}</span>
+                  {e.model && (
+                    <span className="council-live-tag"> live</span>
+                  )}
                 </strong>
+                {e.evidenceBase && (
+                  <small className="council-evidence-base">{e.evidenceBase}</small>
+                )}
                 <p>{e.statement}</p>
                 {e.assumption && <small>Assumption: {e.assumption}</small>}
                 {e.evidenceIds.length > 0 && (
                   <button
                     className="text-link"
-                    onClick={() => setIds(e.evidenceIds)}
+                    onClick={() => openIds(e.evidenceIds)}
                   >
                     {e.evidenceIds.join(" · ")}
                     <FileText size={12} />
@@ -322,6 +391,13 @@ export default function Council() {
         </Button>
       </div>
       {ids && <EvidenceDialog ids={ids} onClose={() => setIds(null)} />}{" "}
+      {liveDrawer && (
+        <EvidenceDrawer
+          request={liveDrawer}
+          source={liveCustomerSource}
+          onClose={() => setLiveDrawer(null)}
+        />
+      )}
       {challenge && (
         <Modal
           title="Bring your perspective"
@@ -329,8 +405,10 @@ export default function Council() {
         >
           <p>
             The discussion is paused. Your challenge will stay visible in the
-            council and audit trail. In this demo, it does not generate a new AI
-            response.
+            council and audit trail.{" "}
+            {live
+              ? "The live Customer Agent will answer it from the BMW feedback when you resume."
+              : "In this demo, it does not generate a new AI response."}
           </p>
           <label className="field-label" htmlFor="council-challenge">
             What needs closer examination?

@@ -119,6 +119,8 @@ export function advanceCouncil(
   elapsedMs = 4200,
 ): CouncilState {
   if (state.status !== "running") return state;
+  // A live agent turn is still being generated: wait for it (waiting time is not counted).
+  if (state.events[state.cursor + 1]?.pending) return state;
   if (state.elapsedMs + elapsedMs > MAX_DURATION_MS)
     return { ...state, status: "paused", elapsedMs: MAX_DURATION_MS };
   const cursor = Math.min(state.cursor + 1, state.events.length - 1);
@@ -135,6 +137,8 @@ export function avatarState(state: CouncilState, agent: AgentId): AgentState {
   if (state.status === "complete") return "complete";
   const event = state.events[state.cursor];
   if (!event) return "idle";
+  if (state.events[state.cursor + 1]?.pending && state.events[state.cursor + 1].actor === agent)
+    return "thinking";
   if (event.actor !== agent) return "waiting";
   return event.stage === "challenge"
     ? "challenging"

@@ -130,6 +130,8 @@ test("specialist pages filter actual fixture records and disclose sources", asyn
 test("council pause, interruption, challenge, bounded stages and PM handoff", async ({
   page,
 }) => {
+  // The scripted council (Customer Agent backend unreachable); the live one is in council-live.spec.ts.
+  await page.route("**/customer-api/**", (route) => route.abort());
   await start(page);
   await page.getByRole("link", { name: "Agent council", exact: true }).click();
   await page.clock.install();

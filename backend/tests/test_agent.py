@@ -1,7 +1,7 @@
 import pytest
 
-from customer_agent.agent import CustomerAgent, scrub_ids, strip_numeric_claims
-from customer_agent.schemas import PerspectiveRequest, Scope
+from customer_agent.agent import CustomerAgent, scrub_ids, soften_overclaims, split_recommendation, strip_numeric_claims
+from customer_agent.schemas import PerspectiveRequest, Scope, StudyRef
 
 from .conftest import FakeLLM
 
@@ -96,7 +96,40 @@ def test_perspective_validates_and_verifies(data_dir, load, maps):
     event = CustomerAgent(load(data_dir), maps, llm).perspective(
         PerspectiveRequest(scope=EU, topic="Displays", stage="challenge", challenge="Is this real?"))
     assert event.evidenceIds == ["X10-0001"]
+    assert [e.id for e in event.evidence] == ["X10-0001"] and event.evidence[0].passage
     assert event.stage == "challenge" and "Is this real?" in llm.prompts[0]
+    assert event.evidenceBase.startswith("Evidence base: ") and "customers cannot be counted" in event.evidenceBase
+    assert "Evidence base: " in llm.prompts[0]
+
+
+def test_split_recommendation_removes_repeat():
+    s = "Widgets vanish (G70-1). Initial recommendation: Stabilise the software."
+    assert split_recommendation(s, "Stabilise the software.") == "Widgets vanish (G70-1)."
+    assert split_recommendation("Widgets vanish. Stabilise the software.", "Stabilise the software") == "Widgets vanish."
+    assert split_recommendation("Widgets vanish.", "Fix it.") == "Widgets vanish."
+
+
+def test_strip_numeric_drops_dangling_connective():
+    out, removed = strip_numeric_claims("There are 346 complaints. However, feedback is self-selected. G60 scores HIGHEST.")
+    assert removed == 1 and out == "Feedback is self-selected. G60 scores highest."
+
+
+def test_frequency_words_keep_how_many():
+    out, _ = strip_numeric_claims("We cannot tell how many customers see this. Many drivers complain.")
+    assert out == "We cannot tell how many customers see this. Some drivers complain."
+
+
+def test_soften_overclaims():
+    out = soften_overclaims("Infotainment is a recurring complaint theme; issues are concentrated in iDrive, a clear need.")
+    assert out == "Infotainment is a complaint theme; issues are in iDrive, a possible need."
+
+
+def test_study_direction_spells_out_rank():
+    ref = lambda v: StudyRef.model_construct(id="S", source="s", market="Europe", vehicle="G70", attribute="a", metric="mean",
+                             value=v, comparison={"F70": 8.16, "G60": 8.26})
+    assert "LOWEST" in CustomerAgent._study_direction(ref(7.99))
+    assert "HIGHEST" in CustomerAgent._study_direction(ref(8.5))
+    assert "rank 2 of 3" in CustomerAgent._study_direction(ref(8.2))
 
 
 @pytest.mark.parametrize("text,valid,expected", [

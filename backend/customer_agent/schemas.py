@@ -153,8 +153,10 @@ class CouncilEvent(BaseModel):
     evidenceIds: list[str]
     assumption: str | None = None
     recommendation: str = ""
+    evidenceBase: str = ""  # deterministic: records on the topic, of total in scope; thin flag
     uncertainties: list[str] = Field(default_factory=list)
     quantitative: list[QuantitativeClaim] = Field(default_factory=list)
+    evidence: list[Evidence] = Field(default_factory=list)  # the cited feedback records, resolved
     model: str = ""
 
 

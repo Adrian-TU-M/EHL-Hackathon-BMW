@@ -182,6 +182,38 @@ export const liveCustomerSource: CustomerDataSource = {
   },
 };
 
+/** One council turn from the live Customer Agent (POST /customer/perspective). */
+export interface CustomerPerspectiveRequest {
+  scope: { vehicle: string; market: string; powertrain: string | null };
+  topic: string;
+  stage: "perspectives" | "challenge" | "revision";
+  question?: string;
+  challenge?: string;
+}
+export interface CustomerPerspective {
+  id: string;
+  stage: string;
+  actor: "customer";
+  statement: string;
+  evidenceIds: string[];
+  assumption: string | null;
+  recommendation: string;
+  evidenceBase: string;
+  uncertainties: string[];
+  quantitative: QuantitativeClaim[];
+  evidence: CustomerEvidence[];
+  model: string;
+}
+export function fetchCustomerPerspective(req: CustomerPerspectiveRequest, signal?: AbortSignal): Promise<CustomerPerspective> {
+  return request<CustomerPerspective>("/customer/perspective", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+    signal,
+    timeoutMs: 180000, // local qwen3:8b; turns queue behind each other in Ollama
+  });
+}
+
 /** Health probe used to choose between live data and the demo fallback. */
 export async function customerBackendAvailable(signal?: AbortSignal): Promise<boolean> {
   try {

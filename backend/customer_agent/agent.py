@@ -36,6 +36,9 @@ FINDING_KINDS = [
     "retain_positive", "friction", "segment_difference",
 ]
 QUOTE_CHARS = 450
+# Below this many unique records on a topic the evidence is anecdotal: the agent must say so,
+# and pattern words ("recurring", "widespread", ...) are removed from its text.
+THIN_RECORDS = 10
 # Which source classifications may support each finding kind (checked in code).
 KIND_POLARITIES = {
     "recurring_complaint": {"Complaint"},
@@ -84,9 +87,13 @@ NUMERIC_CLAIM = re.compile(
 META_CLAIM = re.compile(r"\b(shared|echoed|reported|repeated|seen) (across|by|in) (multiple|several|many|numerous)\b",
                         re.IGNORECASE)
 FREQUENCY_WORDS = [
-    (re.compile(r"\b(several|many|multiple|numerous)\b", re.IGNORECASE), "some"),
+    (re.compile(r"(?<!how )\b(several|many|multiple|numerous)\b", re.IGNORECASE), "some"),  # keep "how many"
     (re.compile(r"\b(consistently|frequently|often|widely|commonly|repeatedly) ", re.IGNORECASE), ""),
 ]
+
+
+LEADING_CONNECTIVE = re.compile(r"^(However|But|Also|Still|Moreover|Additionally|Furthermore|In addition|That said),?\s+",
+                                re.IGNORECASE)
 
 
 INLINE_ID = re.compile(r"(STUDY:[\w:.-]+|\b[A-Z][A-Z0-9]*-\d+\b)")
@@ -104,11 +111,42 @@ def scrub_ids(text: str, valid: set[str]) -> str:
 def strip_numeric_claims(text: str) -> tuple[str, int]:
     sentences = re.split(r"(?<=[.!?])\s+", text.strip())
     kept = [s for s in sentences if not NUMERIC_CLAIM.search(s) and not META_CLAIM.search(s)]
+    if kept and len(kept) < len(sentences):  # "However, ..." no longer follows anything
+        kept[0] = LEADING_CONNECTIVE.sub(lambda m: "", kept[0])
+        kept[0] = kept[0][:1].upper() + kept[0][1:]
     out = " ".join(kept)
+    out = re.sub(r"\b(HIGHEST|LOWEST)\b", lambda m: m.group(1).lower(), out)
     for pattern, repl in FREQUENCY_WORDS:
         # Keep sentence-initial capitals ("Several customers" -> "Some customers").
         out = pattern.sub(lambda m: repl.capitalize() if repl and m.group(0)[0].isupper() else repl, out)
     return out, len(sentences) - len(kept)
+
+
+# Words that imply a pattern; not supportable when only a handful of records exist.
+OVERCLAIM = [
+    (re.compile(r"\b(recurring|widespread|common|prevalent|persistent|systemic) ", re.IGNORECASE), ""),
+    (re.compile(r"\b(are|is) concentrated in\b", re.IGNORECASE), r"\1 in"),
+    (re.compile(r"\bclear (need|pattern|demand)\b", re.IGNORECASE), r"possible \1"),
+]
+RECOMMENDATION_LEAD = re.compile(r"\s*(Initial )?recommendation:.*$", re.IGNORECASE | re.DOTALL)
+
+
+def soften_overclaims(text: str) -> str:
+    for pattern, repl in OVERCLAIM:
+        text = pattern.sub(repl, text)
+    text = re.sub(r"\s{2,}", " ", text).strip()
+    return text[:1].upper() + text[1:] if text else text
+
+
+def split_recommendation(statement: str, recommendation: str) -> str:
+    """The statement says what the evidence shows; the recommendation is separate.
+    Remove a recommendation the model repeated inside the statement."""
+    statement = RECOMMENDATION_LEAD.sub("", statement).strip()
+    rec = recommendation.strip().rstrip(".")
+    if rec and rec.lower() in statement.lower():
+        i = statement.lower().index(rec.lower())
+        statement = (statement[:i] + statement[i + len(rec):]).strip(" .") + "."
+    return re.sub(r"\s{2,}", " ", statement).strip()
 
 
 def _scope_key(scope: Scope, extra: str = "") -> str:
@@ -176,13 +214,13 @@ class CustomerAgent:
 
     # ---------- context building (deterministic) ----------
 
-    def _quote_block(self, rows: pd.DataFrame, record_ids: list[str]) -> list[str]:
+    def _quote_block(self, rows: pd.DataFrame, record_ids: list[str], chars: int = QUOTE_CHARS) -> list[str]:
         lines = []
         for rid in record_ids:
             r = rows[rows["record_id"] == rid]
             first = r.iloc[0]
             text = first["text"]
-            text = text if len(text) <= QUOTE_CHARS else text[:QUOTE_CHARS].rsplit(" ", 1)[0] + " …"
+            text = text if len(text) <= chars else text[:chars].rsplit(" ", 1)[0] + " …"
             types = "/".join(sorted({t for t in r["feedback_type"] if t})) or "unclassified"
             subs = "; ".join(sorted({c for c in r["category_l2"] if c}))[:120]
             lines.append(f'[{rid}] ({types}; {first["powertrain"]}; {subs}) "{text}"')
@@ -201,9 +239,25 @@ class CustomerAgent:
         lines = []
         for ref in self._top_study_refs(refs, limit):
             peers = ", ".join(f"{k}: {v}" for k, v in ref.comparison.items()) or "no peers in study"
-            metric = "mean score" if ref.metric == "mean" else "top-3-box share"
-            lines.append(f"[{ref.id}] {ref.attribute} ({ref.market} {ref.vehicle}, {metric}) = {ref.value}; peers: {peers}")
+            metric = "mean score" if ref.metric == "mean" else "top-box share"
+            lines.append(f"[{ref.id}] {ref.attribute} ({ref.market} {ref.vehicle}, {metric}) = {ref.value}; "
+                         f"peers: {peers}{self._study_direction(ref)}")
         return lines
+
+    @staticmethod
+    def _study_direction(ref: StudyRef) -> str:
+        """Spell out the comparison so the model cannot misread it (higher = better)."""
+        if ref.value is None or not ref.comparison:
+            return ""
+        n = len(ref.comparison) + 1
+        better = sum(v > ref.value for v in ref.comparison.values())
+        if better == 0:
+            pos = f"the HIGHEST (best) of {n} models"
+        elif better == n - 1:
+            pos = f"the LOWEST (worst) of {n} models"
+        else:
+            pos = f"rank {better + 1} of {n} models"
+        return f" -> {ref.vehicle} scores {pos} in this study (higher = better)"
 
     def _theme_block(
         self, stat: ThemeStat, total: int, rows: pd.DataFrame, k: int
@@ -218,10 +272,18 @@ class CustomerAgent:
         positive = [r for r in representative(rows, stat.theme, "Positive", major if mostly_positive else minor)
                     if r not in negative]
         quote_ids = ((positive + negative) if mostly_positive else (negative + positive))[:k]
+        if len(quote_ids) < k:  # slots reserved for a missing polarity go to the others
+            for polarity in ("Complaint", "Request", "Positive"):
+                quote_ids += [r for r in representative(rows, stat.theme, polarity, k)
+                              if r not in quote_ids][: k - len(quote_ids)]
+        thin = stat.records < THIN_RECORDS
         subs = ", ".join(f"{name}" for name, _ in stat.topSubcategories[:5])
         segs = "; ".join(f"{dim}: " + ", ".join(f"{v}={n}" for v, n in vals.items())
                          for dim, vals in stat.segments.items())
-        if mostly_positive:
+        if stat.records < THIN_RECORDS:
+            focus = ("THIN EVIDENCE: only a handful of records. Describe what these individual customers said; "
+                     "do not call it a pattern, recurring or common.")
+        elif mostly_positive:
             focus = "Mostly positive: say what customers value and must be retained (retain_positive); note any friction."
         else:
             focus = "Mostly negative: identify the recurring complaint pattern, requests or unmet needs."
@@ -239,7 +301,8 @@ class CustomerAgent:
             block.append("Study results:")
             block.extend(self._study_lines(shown))
         block.append("Quotes:")
-        block.extend(self._quote_block(rows, quote_ids))
+        # With thin evidence every record is shown, at full length: there are only a few.
+        block.extend(self._quote_block(rows, quote_ids, QUOTE_CHARS * 2 if thin else QUOTE_CHARS))
         polarities = {rid: set(rows[(rows["record_id"] == rid) & (rows["theme"] == stat.theme)]["polarity"])
                       for rid in quote_ids}
         return "\n".join(block), polarities, {r.id for r in shown}
@@ -440,6 +503,24 @@ class CustomerAgent:
         return [to_evidence(self.data, rows[rows["record_id"] == rid]) for rid in record_ids
                 if (rows["record_id"] == rid).any()]
 
+    def _evidence_base(self, scope: Scope, rows: pd.DataFrame, themes: list[str], total: int,
+                       has_study: bool) -> tuple[str, bool]:
+        """Deterministic one-line evidence summary for a council turn, and whether it is thin."""
+        topic = rows[rows["theme"].isin(themes)]
+        n = int(topic["record_id"].nunique())
+        by = {p: int(topic[topic["polarity"] == p]["record_id"].nunique()) for p in ("Complaint", "Request", "Positive")}
+        split = ", ".join(f"{v} {k.lower()}" for k, v in by.items() if v) or "none classified"
+        line = (f"Evidence base: {n} of {total} {scope.vehicle} · {scope.market} feedback records on this topic "
+                f"({split})")
+        thin = n < THIN_RECORDS
+        if thin:
+            line += "; thin evidence"
+        if has_study:
+            line += "; customer study results attached"
+        if not coverage(self.data, scope).customersIdentifiable:
+            line += ". No customer IDs: customers cannot be counted"
+        return line + ".", thin
+
     def perspective(self, req: PerspectiveRequest) -> CouncilEvent:
         """One bounded council turn (Stage 2 position, or a single challenge/clarification reply)."""
         scope = req.scope
@@ -461,6 +542,7 @@ class CustomerAgent:
             self._cache[key] = event
             return event
         total = int(rows["record_id"].nunique())
+        base, thin = self._evidence_base(scope, rows, themes, total, bool(refs))
         blocks, allowed_q, allowed_s = [], set(), set()
         for stat in stats[:3]:
             text, q, s = self._theme_block(stat, total, rows, 6)
@@ -472,20 +554,37 @@ class CustomerAgent:
             blocks.append("Study results:\n" + "\n".join(self._study_lines(shown)))
             allowed_s |= {r.id for r in shown}
         stage_task = {
-            "perspectives": "State your independent customer position on this topic: what customers "
-            "report, what must be retained, and your initial recommendation. 2-4 sentences.",
-            "challenge": f"Another council member challenges you: \"{req.challenge}\". Respond to that "
-            "challenge directly using the evidence: concede what the evidence cannot show, and defend "
-            "what it does show. 2-4 sentences.",
+            "perspectives": "State your independent customer position on this topic: what the feedback "
+            "shows and what must be retained. 2-4 sentences.",
+            "challenge": f"Another council member challenges you: \"{req.challenge}\". Answer that challenge "
+            "directly. If it questions how widespread the issue is, say plainly how strong the evidence "
+            "base is, that feedback is self-selected, and whether customers can be counted; then defend "
+            "only what the quotes and study results do show, and name what would settle the question. "
+            "2-4 sentences.",
             "revision": f"The moderator asks one clarification: \"{req.challenge or req.question}\". "
             "Answer it precisely from the evidence. 2-3 sentences.",
         }[req.stage]
+        strength = (
+            "THIN: this is anecdotal. Write 'one customer' / 'these customers', never 'customers report', "
+            "'recurring', 'common', 'pattern' or 'concentrated'. Say in the statement that the evidence is thin."
+            if thin else "Enough records to describe patterns in the supplied feedback (not in all customers)."
+        )
         user = (
             f"Council topic: {req.topic}. Scope: {scope.vehicle} / {scope.market} / "
             f"{scope.powertrain or 'all powertrains'}.\n"
-            f"Moderator question: {req.question or 'How should the next generation address this topic for customers?'}\n\n"
-            f"Task: {stage_task} Stay on the council topic: ignore parts of quotes about other topics. "
-            "Keep the recommendation to one or two sentences.\n\n" + "\n\n".join(blocks)
+            f"Moderator question: {req.question or 'How should the next generation address this topic for customers?'}\n"
+            f"{base} (verified by code; shown to the council next to your statement)\n"
+            f"Evidence strength: {strength}\n\n"
+            + "\n\n".join(blocks)
+            + "\n\n# YOUR TURN\n"
+            f"Task: {stage_task} Stay on the council topic: ignore parts of quotes about other topics.\n"
+            "Study results above come from a customer study: call it the customer study and use the stated "
+            "direction (HIGHEST/LOWEST) exactly. When feedback is thin, a study result where this vehicle is the "
+            "LOWEST or HIGHEST of the models is the strongest evidence: mention it.\n"
+            "Fields: 'statement' = your answer to this Task (for a challenge: your direct reply to it), with NO "
+            "recommendation in it. 'recommendation' = one or two sentences, separate. 'assumption' = one concrete "
+            "limitation of THIS evidence (e.g. few records, one channel, study not split by powertrain); never "
+            "restate the topic."
         )
         raw = self.llm.chat_json(SYSTEM_PROMPT, user, PERSPECTIVE_SCHEMA)
         ev, _ = self._validate_ids(raw.get("evidenceIds", []), allowed_q)
@@ -495,17 +594,20 @@ class CustomerAgent:
             candidate = {"item": {"title": req.topic}, "detail": statement, "ev": ev}
             rejected = self._verify([candidate], rows)
             ev = [e for e in ev if (id(candidate), e) not in rejected]
-        statement = scrub_ids(statement, set(ev) | set(st))
+        recommendation = strip_numeric_claims(raw.get("recommendation", ""))[0]
+        statement = split_recommendation(scrub_ids(statement, set(ev) | set(st)), recommendation)
+        if thin:
+            statement, recommendation = soften_overclaims(statement), soften_overclaims(recommendation)
         uncertainties = [u for u in raw.get("uncertainties", []) if u]
         if removed:
             uncertainties.append("Numeric statements by the model were removed; see attached counts.")
         quant = [q for s in stats[:3] for q in (s.shareOfRecords, s.complaintShare)]
         quant += [r.quantitative for r in refs if r.id in st]
         event = CouncilEvent(
-            id=event_id, stage=req.stage, statement=statement, evidenceIds=ev + st,
-            assumption=raw.get("assumption") or None,
-            recommendation=strip_numeric_claims(raw.get("recommendation", ""))[0],
-            uncertainties=uncertainties, quantitative=quant, model=f"ollama:{self.llm.model}",
+            id=event_id, stage=req.stage, statement=statement, evidenceIds=ev + st, evidenceBase=base,
+            assumption=raw.get("assumption") or None, recommendation=recommendation,
+            uncertainties=uncertainties, quantitative=quant, evidence=self._evidence(rows, ev),
+            model=f"ollama:{self.llm.model}",
         )
         self._cache[key] = event
         return event
