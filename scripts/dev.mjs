@@ -89,6 +89,8 @@ start(
     "127.0.0.1",
     "--port",
     "8001",
+    "--timeout-graceful-shutdown",
+    "5",
   ],
   {
     ...process.env,

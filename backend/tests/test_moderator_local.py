@@ -252,3 +252,21 @@ async def test_controller_source_quotes_pass_but_paraphrases_and_wrong_scope_do_
     assert exact.validation == 'supported' and exact.semantic_check == 'exact_source_quote'
     assert overclaim.validation == 'unverified' and overclaim.semantic_check == 'pending'
     assert wrong_scope.validation == 'unsupported'
+
+
+@pytest.mark.asyncio
+async def test_model_validation_failure_is_logged_with_stage_and_attempt(engine, scope, caplog):
+    from moderator.adapters import DeterministicAdapters
+    from .test_workflow import confirmed, control
+    class InvalidJudge(DeterministicAdapters):
+        async def call(self, actor, operation, data, *args):
+            if actor == 'judge':
+                raise ValueError('Known criterion requires a supported argument')
+            return await super().call(actor, operation, data, *args)
+    engine.adapters = InvalidJudge()
+    session = await confirmed(engine, scope)
+    with caplog.at_level('WARNING', logger='uvicorn.error'):
+        await control(engine, session)
+        await engine.tasks[session.id]
+    assert 'judge/assessment validation attempt 1: Known criterion requires a supported argument' in caplog.text
+    assert 'judge/assessment validation attempt 2: Known criterion requires a supported argument' in caplog.text

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import math
 import os
 import time
@@ -670,6 +671,11 @@ class Engine:
             except (ValidationError, ValueError) as error:
                 if isinstance(error, Budget):
                     raise
+                detail = (json.dumps(error.errors(include_input=False, include_url=False), default=str)
+                          if isinstance(error, ValidationError) else str(error))
+                logging.getLogger("uvicorn.error").warning(
+                    "Moderator %s/%s validation attempt %s: %s", actor, operation, attempt, detail[:800]
+                )
                 if attempt == 2:
                     w.errors.append(
                         f"{actor}/{operation}: invalid structured output after one repair"
