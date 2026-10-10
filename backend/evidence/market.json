@@ -1,0 +1,1124 @@
+{
+  "version": 1,
+  "as_of": "2026-10-10",
+  "records": [
+    {
+      "id": "bmw-group-EU",
+      "source_type": "market_metric",
+      "source_title": "BMW Group Report 2025",
+      "source_uri": "https://www.bmwgroup.com/en/report/2025/index.html",
+      "locator": "Page 78, deliveries by region and market; source unit: 1,000 vehicles",
+      "passage": "BMW Group deliveries in Europe were 948,500 vehicles in 2024 and 1,017,600 in 2025. Calculated change from rounded table values: +7.29%.",
+      "market": "Europe",
+      "categories": [
+        "Regional demand"
+      ],
+      "caveats": [
+        "BMW Group includes BMW, MINI and Rolls-Royce; not an individual model or all-industry measure.",
+        "Source table is rounded to 100 vehicles. Growth calculated from rounded values can differ from reported growth."
+      ],
+      "brand": "BMW Group",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary"
+    },
+    {
+      "id": "bmw-group-US",
+      "source_type": "market_metric",
+      "source_title": "BMW Group Report 2025",
+      "source_uri": "https://www.bmwgroup.com/en/report/2025/index.html",
+      "locator": "Page 78, deliveries by region and market; source unit: 1,000 vehicles",
+      "passage": "BMW Group deliveries in United States were 399,300 vehicles in 2024 and 419,200 in 2025. Calculated change from rounded table values: +4.98%.",
+      "market": "United States",
+      "categories": [
+        "Regional demand"
+      ],
+      "caveats": [
+        "BMW Group includes BMW, MINI and Rolls-Royce; not an individual model or all-industry measure.",
+        "Source table is rounded to 100 vehicles. Growth calculated from rounded values can differ from reported growth."
+      ],
+      "brand": "BMW Group",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary"
+    },
+    {
+      "id": "bmw-group-CN",
+      "source_type": "market_metric",
+      "source_title": "BMW Group Report 2025",
+      "source_uri": "https://www.bmwgroup.com/en/report/2025/index.html",
+      "locator": "Page 78, deliveries by region and market; source unit: 1,000 vehicles",
+      "passage": "BMW Group deliveries in China were 715,200 vehicles in 2024 and 626,000 in 2025. Calculated change from rounded table values: -12.47%.",
+      "market": "China",
+      "categories": [
+        "Regional demand"
+      ],
+      "caveats": [
+        "BMW Group includes BMW, MINI and Rolls-Royce; not an individual model or all-industry measure.",
+        "Source table is rounded to 100 vehicles. Growth calculated from rounded values can differ from reported growth."
+      ],
+      "brand": "BMW Group",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary"
+    },
+    {
+      "id": "bmw-group-electrification",
+      "source_type": "market_metric",
+      "source_title": "BMW Group Report 2025",
+      "source_uri": "https://www.bmwgroup.com/en/report/2025/index.html",
+      "locator": "Page 77, BMW Group deliveries of electrified models",
+      "passage": "BMW Group BEV deliveries increased from 426,536 in 2024 to 442,059 in 2025 (+3.6% reported). PHEV deliveries increased from 166,614 to 200,012 (+20.0% reported). BEVs represented 17.9% of BMW Group deliveries in 2025.",
+      "market": "Global",
+      "categories": [
+        "Electrification"
+      ],
+      "caveats": [
+        "Group-wide historical data, not selected-model or regional powertrain data.",
+        "BEV and PHEV are distinct; these growth rates do not measure feature success."
+      ],
+      "brand": "BMW Group",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary"
+    },
+    {
+      "id": "acea-eu-bev-2026-08",
+      "source_type": "industry_signal",
+      "source_title": "ACEA",
+      "source_uri": "https://www.acea.auto/pc-registrations/new-car-registrations-5-3-in-august-2026-year-to-date-battery-electric-21-7-market-share/",
+      "locator": "Jan–Aug 2026",
+      "passage": "ACEA reports BEVs at 21.7% and PHEVs at 10.0% of EU new-car registrations in January–August 2026. BEV share was 15.8% a year earlier.",
+      "market": "Europe",
+      "categories": [
+        "Electrification"
+      ],
+      "caveats": [
+        "EU coverage excludes the UK; not all Europe or the BMW premium segment.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "Industry",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-09-24",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "id": "iea-china-ev-2025",
+      "source_type": "industry_signal",
+      "source_title": "IEA Global EV Outlook 2026",
+      "source_uri": "https://www.iea.org/reports/global-ev-outlook-2026/trends-in-electric-cars",
+      "locator": "2025, reported May 2026",
+      "passage": "IEA reports electric cars at almost 55% of new-car sales in China in 2025. Electric includes BEV and PHEV.",
+      "market": "China",
+      "categories": [
+        "Electrification"
+      ],
+      "caveats": [
+        "National all-segment sales; not BMW demand or BEV-only share.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "Industry",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "id": "iea-us-ev-2025",
+      "source_type": "industry_signal",
+      "source_title": "IEA Global EV Outlook 2026",
+      "source_uri": "https://www.iea.org/reports/global-ev-outlook-2026/executive-summary",
+      "locator": "2025, reported May 2026",
+      "passage": "IEA reports US electric-car sales remained relatively stable in 2025 at just under 10% of total car sales.",
+      "market": "United States",
+      "categories": [
+        "Electrification"
+      ],
+      "caveats": [
+        "Electric includes BEV and PHEV; annual historical coverage, not a current monthly reading.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "Industry",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "id": "iea-charging-eu",
+      "source_type": "industry_signal",
+      "source_title": "IEA Global EV Outlook 2026",
+      "source_uri": "https://www.iea.org/reports/global-ev-outlook-2026/electric-vehicle-charging-chap-6-and-10",
+      "locator": "2025, reported May 2026",
+      "passage": "IEA reports EU ultra-fast public charging points increased 30% between 2024 and 2025.",
+      "market": "Europe",
+      "categories": [
+        "Charging"
+      ],
+      "caveats": [
+        "Infrastructure growth does not establish charger reliability or selected-car compatibility.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "Industry",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "id": "iea-charging-us",
+      "source_type": "industry_signal",
+      "source_title": "IEA Global EV Outlook 2026",
+      "source_uri": "https://www.iea.org/reports/global-ev-outlook-2026/electric-vehicle-charging-chap-6-and-10",
+      "locator": "2025, reported May 2026",
+      "passage": "IEA reports US fast and ultra-fast public charging points grew 30% to nearly 70,000 in 2025.",
+      "market": "United States",
+      "categories": [
+        "Charging"
+      ],
+      "caveats": [
+        "Counts are charging points, not sites; not a vehicle charging-speed specification.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "Industry",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "id": "iea-charging-cn",
+      "source_type": "industry_signal",
+      "source_title": "IEA Global EV Outlook 2026",
+      "source_uri": "https://www.iea.org/reports/global-ev-outlook-2026/electric-vehicle-charging-chap-6-and-10",
+      "locator": "2025, reported May 2026",
+      "passage": "IEA reports China’s fast and ultra-fast charging points grew from 1.5 million in 2024 to 2.2 million in 2025.",
+      "market": "China",
+      "categories": [
+        "Charging"
+      ],
+      "caveats": [
+        "Infrastructure totals do not prove experience quality or universal vehicle compatibility.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "Industry",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "id": "bmw-voice-eu",
+      "source_type": "industry_signal",
+      "source_title": "BMW PressClub",
+      "source_uri": "https://www.press.bmwgroup.com/global/article/detail/T0454477EN/a-milestone-for-human-vehicle-interaction-bmw-intelligent-personal-assistant-expanded-to-include-amazon-alexa-technology?showMedia=photo",
+      "locator": "Announcement: January 2026",
+      "passage": "BMW announced Alexa+ integration for the iX3, with initial customer availability planned for Germany and the US in the second half of 2026.",
+      "market": "Europe",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Announcement only: current rollout, selected-model availability, adoption and customer benefit are unverified.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "BMW",
+      "model": "iX3",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-01-05",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "id": "bmw-voice-us",
+      "source_type": "industry_signal",
+      "source_title": "BMW PressClub",
+      "source_uri": "https://www.press.bmwgroup.com/global/article/detail/T0454477EN/a-milestone-for-human-vehicle-interaction-bmw-intelligent-personal-assistant-expanded-to-include-amazon-alexa-technology?showMedia=photo",
+      "locator": "Announcement: January 2026",
+      "passage": "BMW announced Alexa+ integration for the iX3, with initial customer availability planned for Germany and the US in the second half of 2026.",
+      "market": "United States",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Announcement only: current rollout, selected-model availability, adoption and customer benefit are unverified.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "BMW",
+      "model": "iX3",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-01-05",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "id": "iea-lfp-2025",
+      "source_type": "industry_signal",
+      "source_title": "IEA Global EV Outlook 2026",
+      "source_uri": "https://www.iea.org/reports/global-ev-outlook-2026/electric-vehicle-batteries",
+      "locator": "2025, reported May 2026",
+      "passage": "IEA describes LFP deployment and production as concentrated in China, with supply-chain concentration remaining a constraint.",
+      "market": "Global",
+      "categories": [
+        "Electrification"
+      ],
+      "caveats": [
+        "Chemistry trade-offs and costs need vehicle-specific engineering validation.",
+        "No causal feature-sales relationship is established."
+      ],
+      "brand": "Industry",
+      "model": "All models",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference"
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "vw-ida-chatgpt",
+      "brand": "Volkswagen",
+      "model": "ID. family / Golf / Tiguan / Passat",
+      "published_on": "2024-06-21",
+      "source_title": "Volkswagen · IDA availability announcement",
+      "source_uri": "https://www.volkswagen-group.com/en/articles/chatgpt-is-now-available-in-many-volkswagen-models-18464",
+      "locator": "IDA availability announcement",
+      "passage": "Volkswagen reported ChatGPT availability through IDA in new ID. models, Golf, Tiguan and Passat with its new-generation infotainment in June 2024.",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Historical deployment announcement; not new 2026 news or measured active usage.",
+        "Hardware, language, connectivity and market eligibility must be checked.",
+        "Documented direction, not a measured feature-sales effect or proof of demand for the selected BMW."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "bmw-panoramic",
+      "brand": "BMW",
+      "model": "Neue Klasse",
+      "published_on": "2025-01-07",
+      "source_title": "BMW · Panoramic iDrive at CES",
+      "source_uri": "https://www.press.bmwgroup.com/usa/article/detail/T0447356EN_US/new-bmw-panoramic-idrive-revolutionizes-vehicle-operation?language=en_US",
+      "locator": "Panoramic iDrive at CES",
+      "passage": "BMW presented Panoramic iDrive with information projected across the lower windscreen and haptic steering-wheel controls. Introduction in new BMW models was planned from late 2025.",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "A dated product announcement, not confirmation of current fitment in G60, G70 or F70.",
+        "BMW already develops this direction; do not propose it as a proven BMW-wide gap.",
+        "Documented direction, not a measured feature-sales effect or proof of demand for the selected BMW."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "ncap-hmi-2026",
+      "brand": "Euro NCAP",
+      "model": "New-car safety assessments",
+      "published_on": "2025-11-26",
+      "source_title": "Euro NCAP · 2026 assessment programme",
+      "source_uri": "https://www.euroncap.com/press-media/euro-ncap-announces-2026-protocol-changes-to-tackle-modern-driving-risks/",
+      "locator": "2026 assessment programme",
+      "passage": "Euro NCAP’s 2026 programme adds assessment of essential-control placement, clarity and usability, including physical controls.",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Safety-rating criteria, not legislation or a quantified customer preference survey.",
+        "Documented direction, not a measured feature-sales effect or proof of demand for the selected BMW."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "ncap-assistance-2026",
+      "brand": "Euro NCAP",
+      "model": "New-car safety assessments",
+      "published_on": "2025-11-26",
+      "source_title": "Euro NCAP · Driver monitoring and assistance",
+      "source_uri": "https://www.euroncap.com/press-media/euro-ncap-announces-2026-protocol-changes-to-tackle-modern-driving-risks/",
+      "locator": "Driver monitoring and assistance",
+      "passage": "Euro NCAP’s 2026 programme increases attention to driver-monitoring reliability and user acceptance, and assesses assistance behaviour in real-world driving.",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Rating direction does not establish autonomous-driving capability, customer uptake or BMW equipment absence.",
+        "Documented direction, not a measured feature-sales effect or proof of demand for the selected BMW."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "bmw-v2g-2026",
+      "brand": "BMW / E.ON",
+      "model": "iX3 / Neue Klasse",
+      "published_on": "2026-02-09",
+      "source_title": "BMW / E.ON · Germany V2G offer, pages 1–2",
+      "source_uri": "https://www.press.bmwgroup.com/global/article/attachment/T0455460EN/643828",
+      "locator": "Germany V2G offer, pages 1–2",
+      "passage": "BMW and E.ON announced that customers in Germany could order a bidirectional wallbox and V2G electricity package for compatible Neue Klasse vehicles, starting with the iX3.",
+      "categories": [
+        "Charging",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Germany-specific offer; not evidence of availability in every region or the selected BMW model.",
+        "Requires compatible vehicle, wallbox, metering and tariff. Grid export (V2G) differs from powering appliances (V2L).",
+        "Published offer does not establish actual installations, uptake or net customer savings.",
+        "Documented direction, not a measured feature-sales effect or proof of demand for the selected BMW."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "mb-cla-ota",
+      "brand": "Mercedes-Benz",
+      "model": "CLA",
+      "published_on": "2025-07-16",
+      "source_title": "Mercedes-Benz · CLA software platform",
+      "source_uri": "https://media.mbusa.com/news/the-all-new-mercedes-benz-cla-gorgeous-effortless-intuitive-and-flexible",
+      "locator": "CLA software platform",
+      "passage": "Mercedes-Benz documents MB.OS in the new CLA as supporting cloud-connected software updates, including driver-assistance functions.",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "US product documentation; available updates depend on hardware, market and service eligibility.",
+        "Update capability is not evidence of reliability, lifetime support or willingness to pay.",
+        "Documented direction, not a measured feature-sales effect or proof of demand for the selected BMW."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "mb-cla-routing",
+      "brand": "Mercedes-Benz",
+      "model": "CLA",
+      "published_on": "2025-07-16",
+      "source_title": "Mercedes-Benz · CLA electric navigation",
+      "source_uri": "https://media.mbusa.com/news/the-all-new-mercedes-benz-cla-gorgeous-effortless-intuitive-and-flexible",
+      "locator": "CLA electric navigation",
+      "passage": "Mercedes-Benz describes CLA electric navigation that plans routes with charging stops using multiple trip factors.",
+      "categories": [
+        "Charging",
+        "Feature trends"
+      ],
+      "caveats": [
+        "US product documentation; navigation is a Digital Extra with eligibility conditions.",
+        "Capability does not establish actual journey-time savings or charger reliability.",
+        "Documented direction, not a measured feature-sales effect or proof of demand for the selected BMW."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "nio-swap-milestone",
+      "brand": "NIO",
+      "model": "Compatible swap-network vehicles",
+      "published_on": "2026-02-06",
+      "source_title": "NIO · Battery-swap service milestone",
+      "source_uri": "https://www.nio.com/news/20260206001",
+      "locator": "Battery-swap service milestone",
+      "passage": "NIO reported reaching 100 million cumulative battery swaps on 6 February 2026 across its service network.",
+      "categories": [
+        "Charging",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Manufacturer-reported cumulative service events, not unique customers or vehicles.",
+        "Historical milestone, not the network total today. Global network claim is not a country-specific adoption rate.",
+        "Requires compatible battery architecture and infrastructure; does not prove a viable BMW business case.",
+        "Documented direction, not a measured feature-sales effect or proof of demand for the selected BMW."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "volvo-gemini-2026",
+      "brand": "Volvo",
+      "model": "Eligible Google built-in models",
+      "published_on": "2026-04-30",
+      "source_title": "Volvo Cars · Gemini rollout begins",
+      "source_uri": "https://www.volvocars.com/us/media/press-releases/E84A67A6AEB4B35B/",
+      "locator": "Gemini rollout begins",
+      "passage": "Volvo announced the start of Google Gemini rollout on 30 April 2026, initially for eligible customers in the United States with Google built-in vehicles.",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Rollout start does not mean every eligible car has received the update; no active-use or satisfaction statistics are supplied.",
+        "Gemini initially requires a connected vehicle and US English Google account; availability and services vary by country and subscription.",
+        "International product context is not proof of availability or demand in the selected BMW region."
+      ]
+    },
+    {
+      "source_type": "industry_signal",
+      "market": "Global",
+      "retrieved_at": "2026-10-10T12:00:00+00:00",
+      "content_kind": "curated_summary",
+      "verified_on": "2026-10-10",
+      "review_due_on": "2026-11-09",
+      "reference_status": "current_reference",
+      "id": "volvo-ux-2026",
+      "brand": "Volvo",
+      "model": "Eligible Google built-in models",
+      "published_on": "2026-04-30",
+      "source_title": "Volvo Cars · Volvo Car UX update",
+      "source_uri": "https://www.volvocars.com/us/media/press-releases/E84A67A6AEB4B35B/",
+      "locator": "Volvo Car UX update",
+      "passage": "Volvo reported that rollout of its Volvo Car UX infotainment update to existing cars began in March 2026.",
+      "categories": [
+        "Digital experience",
+        "Feature trends"
+      ],
+      "caveats": [
+        "Rollout start does not mean every eligible car has received the update; no active-use or satisfaction statistics are supplied.",
+        "Gemini initially requires a connected vehicle and US English Google account; availability and services vary by country and subscription.",
+        "International product context is not proof of availability or demand in the selected BMW region."
+      ]
+    }
+  ],
+  "series": [
+    {
+      "id": "bmw-group-EU",
+      "market": "Europe",
+      "model": "BMW Group",
+      "level": "group",
+      "title": "BMW Group deliveries",
+      "unit": "vehicles",
+      "evidence_id": "bmw-group-EU",
+      "yoy": 7.29,
+      "points": [
+        {
+          "year": 2021,
+          "value": 949100,
+          "kind": "observed"
+        },
+        {
+          "year": 2022,
+          "value": 878500,
+          "kind": "observed"
+        },
+        {
+          "year": 2023,
+          "value": 943000,
+          "kind": "observed"
+        },
+        {
+          "year": 2024,
+          "value": 948500,
+          "kind": "observed"
+        },
+        {
+          "year": 2025,
+          "value": 1017600,
+          "kind": "observed"
+        }
+      ]
+    },
+    {
+      "id": "bmw-group-US",
+      "market": "United States",
+      "model": "BMW Group",
+      "level": "group",
+      "title": "BMW Group deliveries",
+      "unit": "vehicles",
+      "evidence_id": "bmw-group-US",
+      "yoy": 4.98,
+      "points": [
+        {
+          "year": 2021,
+          "value": 368000,
+          "kind": "observed"
+        },
+        {
+          "year": 2022,
+          "value": 363500,
+          "kind": "observed"
+        },
+        {
+          "year": 2023,
+          "value": 397300,
+          "kind": "observed"
+        },
+        {
+          "year": 2024,
+          "value": 399300,
+          "kind": "observed"
+        },
+        {
+          "year": 2025,
+          "value": 419200,
+          "kind": "observed"
+        }
+      ]
+    },
+    {
+      "id": "bmw-group-CN",
+      "market": "China",
+      "model": "BMW Group",
+      "level": "group",
+      "title": "BMW Group deliveries",
+      "unit": "vehicles",
+      "evidence_id": "bmw-group-CN",
+      "yoy": -12.47,
+      "points": [
+        {
+          "year": 2021,
+          "value": 847900,
+          "kind": "observed"
+        },
+        {
+          "year": 2022,
+          "value": 793500,
+          "kind": "observed"
+        },
+        {
+          "year": 2023,
+          "value": 826300,
+          "kind": "observed"
+        },
+        {
+          "year": 2024,
+          "value": 715200,
+          "kind": "observed"
+        },
+        {
+          "year": 2025,
+          "value": 626000,
+          "kind": "observed"
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "id": "acea-eu-bev-2026-08",
+      "title": "Electric moves into the mainstream",
+      "topic": "Electrification",
+      "market": "Europe",
+      "geography": "European Union",
+      "period": "Jan–Aug 2026",
+      "kind": "Observed",
+      "headline": "21.7%",
+      "unit": "BEV registration share",
+      "summary": "ACEA reports BEVs at 21.7% and PHEVs at 10.0% of EU new-car registrations in January–August 2026. BEV share was 15.8% a year earlier.",
+      "implication": "Investigate whether the selected model’s ownership and charging experience meets changing expectations.",
+      "evidence_id": "acea-eu-bev-2026-08",
+      "published_on": "2026-09-24",
+      "verified_on": "2026-10-10"
+    },
+    {
+      "id": "iea-china-ev-2025",
+      "title": "China’s electric majority",
+      "topic": "Electrification",
+      "market": "China",
+      "geography": "China",
+      "period": "2025, reported May 2026",
+      "kind": "Observed",
+      "headline": "~55%",
+      "unit": "BEV + PHEV sales share",
+      "summary": "IEA reports electric cars at almost 55% of new-car sales in China in 2025. Electric includes BEV and PHEV.",
+      "implication": "Test regional competitiveness without applying Chinese adoption rates to other markets.",
+      "evidence_id": "iea-china-ev-2025",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10"
+    },
+    {
+      "id": "iea-us-ev-2025",
+      "title": "A different pace in the US",
+      "topic": "Electrification",
+      "market": "United States",
+      "geography": "United States",
+      "period": "2025, reported May 2026",
+      "kind": "Observed",
+      "headline": "<10%",
+      "unit": "BEV + PHEV sales share",
+      "summary": "IEA reports US electric-car sales remained relatively stable in 2025 at just under 10% of total car sales.",
+      "implication": "Keep regional adoption assumptions separate when prioritising electrification-related features.",
+      "evidence_id": "iea-us-ev-2025",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10"
+    },
+    {
+      "id": "iea-charging-eu",
+      "title": "Charging infrastructure accelerates",
+      "topic": "Charging",
+      "market": "Europe",
+      "geography": "European Union",
+      "period": "2025, reported May 2026",
+      "kind": "Observed",
+      "headline": "+30%",
+      "unit": "ultra-fast charging points",
+      "summary": "IEA reports EU ultra-fast public charging points increased 30% between 2024 and 2025.",
+      "implication": "Investigate route planning, reliability and usable charging performance alongside peak charging power.",
+      "evidence_id": "iea-charging-eu",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10"
+    },
+    {
+      "id": "iea-charging-us",
+      "title": "Charging infrastructure accelerates",
+      "topic": "Charging",
+      "market": "United States",
+      "geography": "United States",
+      "period": "2025, reported May 2026",
+      "kind": "Observed",
+      "headline": "~70k",
+      "unit": "fast + ultra-fast points",
+      "summary": "IEA reports US fast and ultra-fast public charging points grew 30% to nearly 70,000 in 2025.",
+      "implication": "Investigate route planning, reliability and usable charging performance alongside peak charging power.",
+      "evidence_id": "iea-charging-us",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10"
+    },
+    {
+      "id": "iea-charging-cn",
+      "title": "Charging infrastructure accelerates",
+      "topic": "Charging",
+      "market": "China",
+      "geography": "China",
+      "period": "2025, reported May 2026",
+      "kind": "Observed",
+      "headline": "2.2m",
+      "unit": "fast + ultra-fast points",
+      "summary": "IEA reports China’s fast and ultra-fast charging points grew from 1.5 million in 2024 to 2.2 million in 2025.",
+      "implication": "Investigate route planning, reliability and usable charging performance alongside peak charging power.",
+      "evidence_id": "iea-charging-cn",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10"
+    },
+    {
+      "id": "bmw-voice-eu",
+      "title": "The conversational cockpit",
+      "topic": "Digital experience",
+      "market": "Europe",
+      "geography": "Germany",
+      "period": "Announcement: January 2026",
+      "kind": "Announcement",
+      "headline": "AI",
+      "unit": "voice interaction",
+      "summary": "BMW announced Alexa+ integration for the iX3, with initial customer availability planned for Germany and the US in the second half of 2026.",
+      "implication": "Validate task completion and distraction before assuming that conversational AI improves usability.",
+      "evidence_id": "bmw-voice-eu",
+      "published_on": "2026-01-05",
+      "verified_on": "2026-10-10"
+    },
+    {
+      "id": "bmw-voice-us",
+      "title": "The conversational cockpit",
+      "topic": "Digital experience",
+      "market": "United States",
+      "geography": "United States",
+      "period": "Announcement: January 2026",
+      "kind": "Announcement",
+      "headline": "AI",
+      "unit": "voice interaction",
+      "summary": "BMW announced Alexa+ integration for the iX3, with initial customer availability planned for Germany and the US in the second half of 2026.",
+      "implication": "Validate task completion and distraction before assuming that conversational AI improves usability.",
+      "evidence_id": "bmw-voice-us",
+      "published_on": "2026-01-05",
+      "verified_on": "2026-10-10"
+    },
+    {
+      "id": "iea-lfp-2025",
+      "title": "Battery cost meets supply risk",
+      "topic": "Electrification",
+      "market": "Global",
+      "geography": "Global context",
+      "period": "2025, reported May 2026",
+      "kind": "Published analysis",
+      "headline": "LFP",
+      "unit": "battery chemistry",
+      "summary": "IEA describes LFP deployment and production as concentrated in China, with supply-chain concentration remaining a constraint.",
+      "implication": "Investigate affordability and supply exposure together; do not infer a BMW bill of materials.",
+      "evidence_id": "iea-lfp-2025",
+      "published_on": "2026-05-20",
+      "verified_on": "2026-10-10"
+    }
+  ],
+  "coverage": [
+    "Primary-source snapshot reviewed 10 October 2026. Source-page checks detect fetch or text changes; they do not certify truth or discover all new announcements.",
+    "Source dates and reporting periods differ. Historical observations, announcements and planning inputs are kept separate.",
+    "No feature-level causal sales effect, willingness-to-pay estimate or verified implementation cost is available.",
+    "BMW Group history and model planning inputs have different populations. Do not combine them into market share.",
+    "Customer studies are a 2025 snapshot with different survey formats; they are not a preference time series.",
+    "Feature watchlist is editorial selection of documented developments, not a popularity ranking or exhaustive market census."
+  ],
+  "features": [
+    {
+      "id": "assistants",
+      "title": "AI that understands the journey.",
+      "label": "AI assistants",
+      "summary": "Conversational assistants appear in multiple manufacturers’ roadmaps and products. Useful-task performance still needs to be measured.",
+      "question": "Can a conversational interface complete useful driving tasks with less effort?",
+      "evidence_ids": [
+        "volvo-gemini-2026",
+        "vw-ida-chatgpt",
+        "bmw-voice-eu",
+        "bmw-voice-us"
+      ],
+      "examples": [
+        {
+          "evidence_id": "volvo-gemini-2026",
+          "status": "Rollout started",
+          "geography": "Initially United States"
+        },
+        {
+          "evidence_id": "vw-ida-chatgpt",
+          "status": "Availability reported",
+          "geography": "Model / language restrictions"
+        },
+        {
+          "evidence_id": "bmw-voice-eu",
+          "status": "Rollout planned",
+          "geography": "Germany · second half 2026"
+        },
+        {
+          "evidence_id": "bmw-voice-us",
+          "status": "Rollout planned",
+          "geography": "US · second half 2026"
+        }
+      ],
+      "study_tags": [
+        "infotainment",
+        "navigation"
+      ],
+      "feedback_query": "voice recognition navigation"
+    },
+    {
+      "id": "cockpit",
+      "title": "Less distraction. More control.",
+      "label": "Cockpit usability",
+      "summary": "Display innovation and usability assessment are moving together. A larger display alone is not evidence of a better experience.",
+      "question": "Which common tasks could become clearer without adding driver distraction?",
+      "evidence_ids": [
+        "bmw-panoramic",
+        "ncap-hmi-2026"
+      ],
+      "examples": [
+        {
+          "evidence_id": "bmw-panoramic",
+          "status": "Product announced",
+          "geography": "BMW product direction"
+        },
+        {
+          "evidence_id": "ncap-hmi-2026",
+          "status": "Rating direction",
+          "geography": "European safety assessment"
+        }
+      ],
+      "study_tags": [
+        "controls",
+        "infotainment"
+      ],
+      "feedback_query": "controls displays interface"
+    },
+    {
+      "id": "energy",
+      "title": "The car as an energy resource.",
+      "label": "Bidirectional energy",
+      "summary": "BMW’s German V2G offer connects a compatible vehicle to the electricity system. The commercial and technical prerequisites matter.",
+      "question": "Would a local energy service create value after installation, tariff and battery constraints?",
+      "evidence_ids": [
+        "bmw-v2g-2026"
+      ],
+      "examples": [
+        {
+          "evidence_id": "bmw-v2g-2026",
+          "status": "Ordering announced",
+          "geography": "Germany only"
+        }
+      ],
+      "study_tags": [
+        "efficiency"
+      ],
+      "feedback_query": "charging energy battery"
+    },
+    {
+      "id": "updates",
+      "title": "A vehicle that keeps evolving.",
+      "label": "Software updates",
+      "summary": "Mercedes-Benz documents vehicle software updates beyond infotainment. Support quality matters as much as update capability.",
+      "question": "Which updates solve a customer problem, and how would BMW prove reliability?",
+      "evidence_ids": [
+        "volvo-ux-2026",
+        "mb-cla-ota",
+        "bmw-panoramic"
+      ],
+      "examples": [
+        {
+          "evidence_id": "volvo-ux-2026",
+          "status": "Rollout started",
+          "geography": "Eligible existing vehicles"
+        },
+        {
+          "evidence_id": "mb-cla-ota",
+          "status": "Capability documented",
+          "geography": "US product documentation"
+        },
+        {
+          "evidence_id": "bmw-panoramic",
+          "status": "Product announced",
+          "geography": "BMW software direction"
+        }
+      ],
+      "study_tags": [
+        "connected",
+        "infotainment"
+      ],
+      "feedback_query": "software update connected services"
+    },
+    {
+      "id": "journey",
+      "title": "Make charging part of the route.",
+      "label": "Charging journeys",
+      "summary": "Route planning with charging stops is a documented product capability. Regional infrastructure counts provide context, not experience quality.",
+      "question": "Could clearer charging-stop information reduce uncertainty on real journeys?",
+      "evidence_ids": [
+        "mb-cla-routing",
+        "iea-charging-eu",
+        "iea-charging-us",
+        "iea-charging-cn"
+      ],
+      "examples": [
+        {
+          "evidence_id": "mb-cla-routing",
+          "status": "Capability documented",
+          "geography": "US product documentation"
+        },
+        {
+          "evidence_id": "iea-charging-eu",
+          "status": "Observed infrastructure",
+          "geography": "European Union"
+        },
+        {
+          "evidence_id": "iea-charging-us",
+          "status": "Observed infrastructure",
+          "geography": "United States"
+        },
+        {
+          "evidence_id": "iea-charging-cn",
+          "status": "Observed infrastructure",
+          "geography": "China"
+        }
+      ],
+      "study_tags": [
+        "navigation",
+        "efficiency"
+      ],
+      "feedback_query": "charging route navigation"
+    },
+    {
+      "id": "assistance",
+      "title": "Assistance people can trust.",
+      "label": "Driver assistance",
+      "summary": "Safety assessment increasingly considers how assistance behaves in everyday use. This is a rating direction, not a measure of feature popularity.",
+      "question": "How could clearer alerts and calmer interventions improve trust in assistance?",
+      "evidence_ids": [
+        "ncap-assistance-2026"
+      ],
+      "examples": [
+        {
+          "evidence_id": "ncap-assistance-2026",
+          "status": "Rating direction",
+          "geography": "European assessment · international context"
+        }
+      ],
+      "study_tags": [
+        "controls"
+      ],
+      "feedback_query": "assistance warnings lane keeping"
+    },
+    {
+      "id": "swapping",
+      "title": "Another way to replenish energy.",
+      "label": "Battery swapping",
+      "summary": "NIO reports substantial cumulative use of its swap network. It remains a distinct architecture and service model to investigate.",
+      "question": "Is faster replenishment valuable enough to justify a different vehicle and network architecture?",
+      "evidence_ids": [
+        "nio-swap-milestone"
+      ],
+      "examples": [
+        {
+          "evidence_id": "nio-swap-milestone",
+          "status": "Reported service usage",
+          "geography": "NIO global network · China-led"
+        }
+      ],
+      "study_tags": [
+        "efficiency"
+      ],
+      "feedback_query": "battery charging range"
+    }
+  ],
+  "source_checks": {
+    "vw-ida-chatgpt": {
+      "anchors": [
+        "ChatGPT",
+        "IDA",
+        "Tiguan"
+      ]
+    },
+    "bmw-panoramic": {
+      "anchors": [
+        "Panoramic Vision",
+        "haptic",
+        "2025"
+      ]
+    },
+    "ncap-hmi-2026": {
+      "anchors": [
+        "2026",
+        "physical buttons",
+        "human"
+      ]
+    },
+    "ncap-assistance-2026": {
+      "anchors": [
+        "2026",
+        "driver monitoring",
+        "user acceptance"
+      ]
+    },
+    "bmw-v2g-2026": {
+      "anchors": [
+        "V2G",
+        "February",
+        "Germany"
+      ]
+    },
+    "mb-cla-ota": {
+      "anchors": [
+        "MB.OS",
+        "over-the-air",
+        "driver assistance"
+      ]
+    },
+    "mb-cla-routing": {
+      "anchors": [
+        "Electric Intelligence",
+        "charging stops",
+        "CLA"
+      ]
+    },
+    "nio-swap-milestone": {
+      "anchors": [
+        "100 million",
+        "2026",
+        "battery"
+      ]
+    },
+    "bmw-voice-eu": {
+      "anchors": [
+        "Alexa",
+        "2026",
+        "iX3"
+      ]
+    },
+    "bmw-voice-us": {
+      "anchors": [
+        "Alexa",
+        "2026",
+        "iX3"
+      ]
+    },
+    "volvo-gemini-2026": {
+      "anchors": [
+        "Gemini",
+        "United States",
+        "2026"
+      ]
+    },
+    "volvo-ux-2026": {
+      "anchors": [
+        "March 2026",
+        "Volvo Car UX",
+        "over-the-air"
+      ]
+    }
+  }
+}

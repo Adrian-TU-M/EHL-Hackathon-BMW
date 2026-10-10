@@ -34,6 +34,10 @@ export default function AppShell() {
   const status = useAppStore((s) => s.council.status);
   const tick = useAppStore((s) => s.tickCouncil);
   const location = useLocation();
+  const liveWorkspace =
+    location.pathname === "/market" ||
+    (location.pathname === "/council" &&
+      !new URLSearchParams(location.search).has("demo"));
   const activeIndex = navigation.findIndex(
     (item) => item.to === location.pathname,
   );
@@ -103,8 +107,14 @@ export default function AppShell() {
           <div className="session-card">
             <span className="session-dot" />
             <div>
-              <strong>Demo environment</strong>
-              <span>Local session · synthetic data</span>
+              <strong>
+                {liveWorkspace ? "Local agent workspace" : "Demo environment"}
+              </strong>
+              <span>
+                {liveWorkspace
+                  ? "Local Qwen · cited evidence"
+                  : "Local session · synthetic data"}
+              </span>
             </div>
           </div>
           <p>
@@ -144,11 +154,16 @@ export default function AppShell() {
             </span>
           </div>
           <div>
-            <Badge tone="blue">DEMO</Badge>
+            <Badge tone="blue">{liveWorkspace ? "AGENTS" : "DEMO"}</Badge>
             <Button
               variant="secondary"
               className="export-button"
-              disabled={exporting}
+              disabled={exporting || liveWorkspace}
+              title={
+                liveWorkspace
+                  ? "Live results are saved locally. This report exporter covers demo analyses only."
+                  : undefined
+              }
               onClick={exportReport}
             >
               <Download size={15} />
@@ -187,7 +202,7 @@ export default function AppShell() {
         </div>
         <main className="page-content" key={location.pathname}>
           <Outlet />
-          {nextPage && (
+          {nextPage && location.pathname !== "/market" && (
             <NavLink className="journey-next" to={nextPage.to}>
               <div>
                 <span>
@@ -205,7 +220,11 @@ export default function AppShell() {
             BMW NEXT <span className="muted">/</span> Product intelligence, with
             perspective.
           </span>
-          <span>Synthetic demo · Human approval required</span>
+          <span>
+            {liveWorkspace
+              ? "Local evidence · Human review required"
+              : "Synthetic demo · Human approval required"}
+          </span>
         </footer>
       </div>
       {toast && (

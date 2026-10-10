@@ -1,0 +1,740 @@
+[
+  {
+    "id": "tesla-model3-us-rear-screen-20261010",
+    "source_type": "competitor_official",
+    "source_title": "Tesla Model 3 US Owner's Manual — Touchscreen",
+    "source_uri": "https://www.tesla.com/ownersmanual/model3/en_us/GUID-518C51C1-E9AC-4A68-AE12-07F4FF8C881E.html",
+    "locator": "Rear Touchscreen section",
+    "passage": "The US Model 3 manual describes a rear screen, where fitted, with climate adjustment, media playback, video, games and Bluetooth headphone pairing. The manual qualifies the feature by vehicle equipment and market configuration.",
+    "retrieved_at": "2026-10-10T00:00:00Z",
+    "brand": "Tesla",
+    "model": "Model 3",
+    "market": "United States",
+    "country": "US",
+    "powertrain": "Electric",
+    "categories": [
+      "Displays",
+      "Infotainment",
+      "Rear passenger experience"
+    ],
+    "caveats": [
+      "Human-curated source summary, not a full snapshot. Retrieval date recorded at day precision.",
+      "Manual does not establish standard fitment on every trim or a particular model year.",
+      "Model 3 is a technology reference, not automatically a segment-equivalent peer to every BMW."
+    ],
+    "content_kind": "curated_summary",
+    "verified_on": "2026-10-10",
+    "reference_status": "current_reference",
+    "review_due_on": "2026-11-09"
+  },
+  {
+    "id": "mercedes-eclass-us-2024-superscreen",
+    "source_type": "competitor_official",
+    "source_title": "Mercedes-Benz USA — 2024 E-Class Sedan Quick Reference Guide",
+    "source_uri": "https://media.mbusa.com/news/2024-e-class-sedan-quick-reference-guide",
+    "locator": "Technology highlights / MBUX Superscreen Package",
+    "passage": "Mercedes-Benz's US guide for the 2024 E-Class lists an optional Superscreen package adding a 12.3-inch passenger display alongside the standard 14.4-inch central multimedia screen.",
+    "retrieved_at": "2026-10-10T00:00:00Z",
+    "brand": "Mercedes-Benz",
+    "model": "E-Class",
+    "model_year": 2024,
+    "market": "United States",
+    "country": "US",
+    "powertrain": "Combustion",
+    "categories": [
+      "Displays",
+      "Infotainment",
+      "Passenger entertainment"
+    ],
+    "caveats": [
+      "Human-curated source summary. Retrieval date recorded at day precision.",
+      "Historical 2024 US specification, not evidence of current or future European/Chinese equipment.",
+      "Optional package; do not describe it as standard. Mild-hybrid combustion reference, not an electric peer."
+    ],
+    "content_kind": "curated_summary",
+    "verified_on": "2026-10-10",
+    "reference_status": "historical_reference",
+    "review_due_on": null
+  },
+  {
+    "id": "byd-seal-uk-2026-display",
+    "source_type": "competitor_official",
+    "source_title": "BYD UK — Model-year 2026 SEAL launch specification (19 February 2026)",
+    "source_uri": "https://bydukmedia.com/en/news-articles/byd-launches-new-model-year-2026-seal-saloon-more-practicality,-increased-customisation-and-greater-specification.html",
+    "locator": "On-board technology / Design equipment",
+    "passage": "The UK MY2026 launch specifies a fixed 15.6-inch touchscreen for SEAL Design. Do not carry over rotating-screen descriptions from older SEAL versions.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": "2026-02-19",
+    "brand": "BYD",
+    "model": "SEAL",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": 2026,
+    "trim": "Design",
+    "categories": [
+      "Displays",
+      "Infotainment"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Dated MY2026 launch specification; later production/configurator changes must be checked before a purchase-level comparison.",
+      "SEAL is a technology reference, not automatically a like-for-like peer to every BMW."
+    ]
+  },
+  {
+    "id": "byd-seal-uk-2026-hud",
+    "source_type": "competitor_official",
+    "source_title": "BYD UK — Model-year 2026 SEAL launch specification (19 February 2026)",
+    "source_uri": "https://bydukmedia.com/en/news-articles/byd-launches-new-model-year-2026-seal-saloon-more-practicality,-increased-customisation-and-greater-specification.html",
+    "locator": "On-board technology / Excellence upgrade",
+    "passage": "The UK MY2026 launch identifies the head-up display as an addition on Excellence over Design.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": "2026-02-19",
+    "brand": "BYD",
+    "model": "SEAL",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": 2026,
+    "trim": "Excellence AWD",
+    "categories": [
+      "Displays",
+      "Head-up display"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Dated MY2026 launch specification; later production/configurator changes must be checked before a purchase-level comparison.",
+      "SEAL is a technology reference, not automatically a like-for-like peer to every BMW."
+    ]
+  },
+  {
+    "id": "byd-seal-uk-2026-comfort",
+    "source_type": "competitor_official",
+    "source_title": "BYD UK — Model-year 2026 SEAL launch specification (19 February 2026)",
+    "source_uri": "https://bydukmedia.com/en/news-articles/byd-launches-new-model-year-2026-seal-saloon-more-practicality,-increased-customisation-and-greater-specification.html",
+    "locator": "On-board technology / Design equipment",
+    "passage": "The UK MY2026 Design specification lists power-adjustable front seats with heating and ventilation, and a Dynaudio system with twelve speakers.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": "2026-02-19",
+    "brand": "BYD",
+    "model": "SEAL",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": 2026,
+    "trim": "Design",
+    "categories": [
+      "Comfort",
+      "Seats",
+      "Audio"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Dated MY2026 launch specification; later production/configurator changes must be checked before a purchase-level comparison.",
+      "SEAL is a technology reference, not automatically a like-for-like peer to every BMW."
+    ]
+  },
+  {
+    "id": "byd-seal-uk-2026-access",
+    "source_type": "competitor_official",
+    "source_title": "BYD UK — Model-year 2026 SEAL launch specification (19 February 2026)",
+    "source_uri": "https://bydukmedia.com/en/news-articles/byd-launches-new-model-year-2026-seal-saloon-more-practicality,-increased-customisation-and-greater-specification.html",
+    "locator": "On-board technology / new equipment",
+    "passage": "The UK MY2026 announcement introduces driver-attention monitoring and smartphone entry using a Bluetooth key.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": "2026-02-19",
+    "brand": "BYD",
+    "model": "SEAL",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": 2026,
+    "trim": "Design and Excellence AWD",
+    "categories": [
+      "Driver assistance",
+      "Connectivity",
+      "Digital key"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Dated MY2026 launch specification; later production/configurator changes must be checked before a purchase-level comparison.",
+      "SEAL is a technology reference, not automatically a like-for-like peer to every BMW."
+    ]
+  },
+  {
+    "id": "byd-seal-uk-2026-charge",
+    "source_type": "competitor_official",
+    "source_title": "BYD UK — Model-year 2026 SEAL launch specification (19 February 2026)",
+    "source_uri": "https://bydukmedia.com/en/news-articles/byd-launches-new-model-year-2026-seal-saloon-more-practicality,-increased-customisation-and-greater-specification.html",
+    "locator": "Rapid performance complemented by long range",
+    "passage": "The launch rates both variants at 150 kW peak DC charging and 37 minutes from 10% to 80%. These are manufacturer figures, not measured real-world results.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": "2026-02-19",
+    "brand": "BYD",
+    "model": "SEAL",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": 2026,
+    "trim": "Design and Excellence AWD",
+    "categories": [
+      "Charging",
+      "Battery"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Dated MY2026 launch specification; later production/configurator changes must be checked before a purchase-level comparison.",
+      "SEAL is a technology reference, not automatically a like-for-like peer to every BMW."
+    ]
+  },
+  {
+    "id": "tesla-model3-uk-rear",
+    "source_type": "competitor_official",
+    "source_title": "Tesla Model 3 UK Owner’s Manual — Touchscreen",
+    "source_uri": "https://www.tesla.com/ownersmanual/model3/en_gb/GUID-518C51C1-E9AC-4A68-AE12-07F4FF8C881E.html",
+    "locator": "Rear Touchscreen",
+    "passage": "Where fitted, the rear display provides climate adjustment, media, video and games, and pairing for up to two Bluetooth headsets.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Tesla",
+    "model": "Model 3",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Displays",
+      "Infotainment",
+      "Rear passenger experience"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "The live manual spans vehicle configurations and software revisions; model year and trim are not established.",
+      "Rear screen is conditional on equipment. Do not infer universal standard fitment.",
+      "Model 3 is a technology reference, not automatically a segment-equivalent peer."
+    ]
+  },
+  {
+    "id": "tesla-model3-uk-controls",
+    "source_type": "competitor_official",
+    "source_title": "Tesla Model 3 UK Owner’s Manual — Touchscreen",
+    "source_uri": "https://www.tesla.com/ownersmanual/model3/en_gb/GUID-518C51C1-E9AC-4A68-AE12-07F4FF8C881E.html",
+    "locator": "Controls / Customizing My Apps",
+    "passage": "The manual describes searching vehicle settings from Controls, voice access to common controls, and user-configurable shortcuts in My Apps.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Tesla",
+    "model": "Model 3",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Displays",
+      "Usability",
+      "Voice control"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "The live manual spans vehicle configurations and software revisions; model year and trim are not established.",
+      "Rear screen is conditional on equipment. Do not infer universal standard fitment.",
+      "Model 3 is a technology reference, not automatically a segment-equivalent peer."
+    ]
+  },
+  {
+    "id": "tesla-model3-uk-rear-lock",
+    "source_type": "competitor_official",
+    "source_title": "Tesla Model 3 UK Owner’s Manual — Touchscreen",
+    "source_uri": "https://www.tesla.com/ownersmanual/model3/en_gb/GUID-518C51C1-E9AC-4A68-AE12-07F4FF8C881E.html",
+    "locator": "Control the rear touchscreen from the front",
+    "passage": "The front display can remotely control rear media and climate functions and lock access to the rear display.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Tesla",
+    "model": "Model 3",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Displays",
+      "Rear passenger experience",
+      "Comfort"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "The live manual spans vehicle configurations and software revisions; model year and trim are not established.",
+      "Rear screen is conditional on equipment. Do not infer universal standard fitment.",
+      "Model 3 is a technology reference, not automatically a segment-equivalent peer."
+    ]
+  },
+  {
+    "id": "mercedes-eqs-uk-hyperscreen",
+    "source_type": "competitor_official",
+    "source_title": "Mercedes-Benz UK — EQS Saloon equipment highlights",
+    "source_uri": "https://www.mercedes-benz.co.uk/passengercars/models/saloon/eqs/overview.html",
+    "locator": "Equipment / MBUX Hyperscreen",
+    "passage": "The UK EQS page describes three displays beneath a continuous glass surface, OLED technology, haptic feedback and a zero-layer interface.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Mercedes-Benz",
+    "model": "EQS",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Displays",
+      "Infotainment"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Live UK marketing page, not a trim equipment matrix. Listed features are not necessarily standard or available in the selected order configuration.",
+      "Model year is not specified in the cited section. Check the configurator before asserting fitment.",
+      "EQS is a flagship technology reference; it is not automatically a G60 or F70 segment peer."
+    ]
+  },
+  {
+    "id": "mercedes-eqs-uk-entertainment",
+    "source_type": "competitor_official",
+    "source_title": "Mercedes-Benz UK — EQS Saloon equipment highlights",
+    "source_uri": "https://www.mercedes-benz.co.uk/passengercars/models/saloon/eqs/overview.html",
+    "locator": "Equipment / Digital Extra: MBUX Entertainment 3 years",
+    "passage": "The page describes a three-year entertainment Digital Extra with apps and video, music and gaming, requiring a data package arranged with a third-party provider.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Mercedes-Benz",
+    "model": "EQS",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Infotainment",
+      "Connectivity",
+      "Subscriptions"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Live UK marketing page, not a trim equipment matrix. Listed features are not necessarily standard or available in the selected order configuration.",
+      "Model year is not specified in the cited section. Check the configurator before asserting fitment.",
+      "EQS is a flagship technology reference; it is not automatically a G60 or F70 segment peer."
+    ]
+  },
+  {
+    "id": "mercedes-eqs-uk-parking",
+    "source_type": "competitor_official",
+    "source_title": "Mercedes-Benz UK — EQS Saloon equipment highlights",
+    "source_uri": "https://www.mercedes-benz.co.uk/passengercars/models/saloon/eqs/overview.html",
+    "locator": "Equipment / Parking Package with 360° camera",
+    "passage": "The advertised parking package combines parking assistance with selectable surround-camera views on the central display.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Mercedes-Benz",
+    "model": "EQS",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Parking",
+      "Driver assistance",
+      "Displays"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Live UK marketing page, not a trim equipment matrix. Listed features are not necessarily standard or available in the selected order configuration.",
+      "Model year is not specified in the cited section. Check the configurator before asserting fitment.",
+      "EQS is a flagship technology reference; it is not automatically a G60 or F70 segment peer."
+    ]
+  },
+  {
+    "id": "mercedes-eqs-uk-dashcam",
+    "source_type": "competitor_official",
+    "source_title": "Mercedes-Benz UK — EQS Saloon equipment highlights",
+    "source_uri": "https://www.mercedes-benz.co.uk/passengercars/models/saloon/eqs/overview.html",
+    "locator": "Equipment / Digital Extra: MBUX Dashcam",
+    "passage": "The described dashcam Digital Extra records the scene ahead together with time and speed.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Mercedes-Benz",
+    "model": "EQS",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Driver assistance",
+      "Dashcam",
+      "Security"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Live UK marketing page, not a trim equipment matrix. Listed features are not necessarily standard or available in the selected order configuration.",
+      "Model year is not specified in the cited section. Check the configurator before asserting fitment.",
+      "EQS is a flagship technology reference; it is not automatically a G60 or F70 segment peer."
+    ]
+  },
+  {
+    "id": "mercedes-aclass-uk-mbux",
+    "source_type": "competitor_official",
+    "source_title": "Mercedes-Benz UK — A-Class Hatchback",
+    "source_uri": "https://www.mercedes-benz.co.uk/passengercars/models/hatchback/a-class/overview.html?abtest-new_extint=target",
+    "locator": "FAQ / What technology does the A-Class Hatchback come with?",
+    "passage": "The UK A-Class page describes MBUX voice and connected functions, a 10.25-inch digital display and wireless smartphone integration.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Mercedes-Benz",
+    "model": "A-Class Hatchback",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Combustion",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Displays",
+      "Infotainment",
+      "Connectivity"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Range-level marketing reference; no particular trim, model year or standard fitment is established. The page covers several powertrains. Confirm selected variant."
+    ]
+  },
+  {
+    "id": "mercedes-aclass-uk-ar-navigation",
+    "source_type": "competitor_official",
+    "source_title": "Mercedes-Benz UK — A-Class Hatchback",
+    "source_uri": "https://www.mercedes-benz.co.uk/passengercars/models/hatchback/a-class/overview.html?abtest-new_extint=target",
+    "locator": "Highlights / MBUX Augmented Reality for Navigation",
+    "passage": "The UK page advertises navigation guidance overlaid on live camera imagery as an MBUX Digital Extra.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "Mercedes-Benz",
+    "model": "A-Class Hatchback",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Combustion",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Displays",
+      "Navigation",
+      "Usability"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Range-level marketing reference; no particular trim, model year or standard fitment is established. The page covers several powertrains. Confirm selected variant."
+    ]
+  },
+  {
+    "id": "byd-seal6-dmi-uk-display",
+    "source_type": "competitor_official",
+    "source_title": "BYD UK — SEAL 6 DM-i",
+    "source_uri": "https://www.byd.com/uk/hybrid-cars/seal-6-dm-i",
+    "locator": "Interior / Floating touchscreen",
+    "passage": "BYD’s UK SEAL 6 DM-i page advertises a 15.6-inch floating display with touch controls and vehicle information.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "BYD",
+    "model": "SEAL 6 DM-i",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Plug-in hybrid",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Displays",
+      "Infotainment"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Range-level UK marketing reference; verify exact trim. Do not confuse this plug-in hybrid with the electric SEAL."
+    ]
+  },
+  {
+    "id": "byd-seal6-dmi-uk-seats",
+    "source_type": "competitor_official",
+    "source_title": "BYD UK — SEAL 6 DM-i",
+    "source_uri": "https://www.byd.com/uk/hybrid-cars/seal-6-dm-i",
+    "locator": "Interior / Premium comfort seats",
+    "passage": "The UK product page describes powered seats with memory, ventilation and heating; the selected trim’s specification still needs confirmation.",
+    "retrieved_at": "2026-10-10T18:30:00Z",
+    "published_on": null,
+    "brand": "BYD",
+    "model": "SEAL 6 DM-i",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Plug-in hybrid",
+    "model_year": null,
+    "trim": null,
+    "categories": [
+      "Comfort",
+      "Seats"
+    ],
+    "reference_status": "current_reference",
+    "verified_on": "2026-10-10",
+    "review_due_on": "2026-11-09",
+    "content_kind": "curated_summary",
+    "caveats": [
+      "Checked against the official source on 10 October 2026. Curated summary, not a complete document snapshot.",
+      "Country-specific reference; confirm exact model year, trim and order configuration. Not proof of future availability.",
+      "Range-level UK marketing reference; verify exact trim. Do not confuse this plug-in hybrid with the electric SEAL."
+    ]
+  },
+  {
+    "id": "audi-a6-etron-uk-passenger-20261010",
+    "source_type": "competitor_official",
+    "source_title": "Audi UK — A6 Sportback e-tron design and specification",
+    "source_uri": "https://www.audi.co.uk/en/models/a6-e-tron/a6-sportback-e-tron/design-and-specification/",
+    "locator": "Model feature description / specification",
+    "passage": "Audi UK lists an MMI front passenger display among the A6 Sportback e-tron Vorsprung trim equipment. The page describes independent navigation and entertainment operation with the passenger display.",
+    "retrieved_at": "2026-10-10T00:00:00Z",
+    "brand": "Audi",
+    "model": "A6 Sportback e-tron",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "trim": "Vorsprung",
+    "categories": [
+      "Displays",
+      "Infotainment"
+    ],
+    "caveats": [
+      "Human-curated summary of an official source; not an independently measured outcome.",
+      "Applies to the stated country and described configuration. Check current order specification.",
+      "No evidence here establishes BMW absence, customer uptake or a causal commercial success percentage."
+    ],
+    "content_kind": "curated_summary",
+    "verified_on": "2026-10-10",
+    "reference_status": "current_reference",
+    "review_due_on": "2026-11-09"
+  },
+  {
+    "id": "audi-a6-etron-uk-roof-20261010",
+    "source_type": "competitor_official",
+    "source_title": "Audi UK — A6 Sportback e-tron design and specification",
+    "source_uri": "https://www.audi.co.uk/en/models/a6-e-tron/a6-sportback-e-tron/design-and-specification/",
+    "locator": "Model feature description / specification",
+    "passage": "Audi UK lists a panoramic glass sunroof with switchable transparency on the A6 Sportback e-tron Vorsprung. The roof description identifies nine segments that can be transparent or non-transparent.",
+    "retrieved_at": "2026-10-10T00:00:00Z",
+    "brand": "Audi",
+    "model": "A6 Sportback e-tron",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "trim": "Vorsprung",
+    "categories": [
+      "Interior",
+      "Comfort",
+      "Roof"
+    ],
+    "caveats": [
+      "Human-curated summary of an official source; not an independently measured outcome.",
+      "Applies to the stated country and described configuration. Check current order specification.",
+      "No evidence here establishes BMW absence, customer uptake or a causal commercial success percentage."
+    ],
+    "content_kind": "curated_summary",
+    "verified_on": "2026-10-10",
+    "reference_status": "current_reference",
+    "review_due_on": "2026-11-09"
+  },
+  {
+    "id": "vw-id7-uk-smartglass-20261010",
+    "source_type": "competitor_official",
+    "source_title": "Volkswagen UK — ID.7 Tourer Smart Glass",
+    "source_uri": "https://www.volkswagen.co.uk/en/electric-and-hybrid/electric-cars/id7-tourer.html/__layer/layers/id-family/id_7_tourer/panoramadach--smart-glas-/master.layer",
+    "locator": "Model feature description / specification",
+    "passage": "Volkswagen UK describes an optional Smart Glass panoramic sunroof for the ID.7 Tourer. It can switch between transparent and opaque and is operated using a headliner control or voice control.",
+    "retrieved_at": "2026-10-10T00:00:00Z",
+    "brand": "Volkswagen",
+    "model": "ID.7 Tourer",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "trim": null,
+    "categories": [
+      "Interior",
+      "Comfort",
+      "Roof"
+    ],
+    "caveats": [
+      "Human-curated summary of an official source; not an independently measured outcome.",
+      "Applies to the stated country and described configuration. Check current order specification.",
+      "No evidence here establishes BMW absence, customer uptake or a causal commercial success percentage."
+    ],
+    "content_kind": "curated_summary",
+    "verified_on": "2026-10-10",
+    "reference_status": "current_reference",
+    "review_due_on": "2026-11-09"
+  },
+  {
+    "id": "vw-id7-uk-hud-20261010",
+    "source_type": "competitor_official",
+    "source_title": "Volkswagen UK — ID.7 Tourer trim equipment",
+    "source_uri": "https://www.volkswagen.co.uk/en/electric-and-hybrid/electric-cars/id7-tourer.html/__layer/layers/id-family/id_7_tourer/panoramadach--smart-glas-/master.layer",
+    "locator": "Model feature description / specification",
+    "passage": "The UK ID.7 Tourer Pro Match Plus equipment list includes a 15-inch navigation infotainment display and an augmented reality head-up display as standard.",
+    "retrieved_at": "2026-10-10T00:00:00Z",
+    "brand": "Volkswagen",
+    "model": "ID.7 Tourer",
+    "market": "Europe",
+    "country": "GB",
+    "powertrain": "Electric",
+    "trim": "Pro Match Plus",
+    "categories": [
+      "Displays",
+      "Head-up display"
+    ],
+    "caveats": [
+      "Human-curated summary of an official source; not an independently measured outcome.",
+      "Applies to the stated country and described configuration. Check current order specification.",
+      "No evidence here establishes BMW absence, customer uptake or a causal commercial success percentage."
+    ],
+    "content_kind": "curated_summary",
+    "verified_on": "2026-10-10",
+    "reference_status": "current_reference",
+    "review_due_on": "2026-11-09"
+  },
+  {
+    "id": "xpeng-g6-fr-charging-20261010",
+    "source_type": "competitor_official",
+    "source_title": "XPENG France — New G6",
+    "source_uri": "https://www.xpeng.com/fr/model/G6",
+    "locator": "Model feature description / specification",
+    "passage": "XPENG France describes the new G6 with an 800V architecture and a 5C LFP battery. It claims 10–80% charging in 12 minutes under internal test conditions; the footnote specifies a 451 kW fast charger.",
+    "retrieved_at": "2026-10-10T00:00:00Z",
+    "brand": "XPENG",
+    "model": "G6",
+    "market": "Europe",
+    "country": "FR",
+    "powertrain": "Electric",
+    "trim": null,
+    "categories": [
+      "Charging",
+      "Battery"
+    ],
+    "caveats": [
+      "Human-curated summary of an official source; not an independently measured outcome.",
+      "Applies to the stated country and described configuration. Check current order specification.",
+      "No evidence here establishes BMW absence, customer uptake or a causal commercial success percentage.",
+      "Manufacturer claim, not a matched independent test. Charging depends on battery temperature, state and charger; SUV is a technology reference, not a sedan-equivalent peer."
+    ],
+    "content_kind": "curated_summary",
+    "verified_on": "2026-10-10",
+    "reference_status": "current_reference",
+    "review_due_on": "2026-11-09"
+  },
+  {
+    "id": "nio-et5t-de-swap-20261010",
+    "source_type": "competitor_official",
+    "source_title": "NIO Germany — ET5 Touring owner manual",
+    "source_uri": "https://cdn-udp-public.eu.nio.com/www-nio/de_DE/user-instructions/ET5-Touring/index.html",
+    "locator": "Model feature description / specification",
+    "passage": "The German ET5 Touring manual documents Power Swap with Parking Assist. A driver can request a swap at a compatible station nearby, join its queue, and activate assisted parking into the station before starting the battery swap.",
+    "retrieved_at": "2026-10-10T00:00:00Z",
+    "brand": "NIO",
+    "model": "ET5 Touring",
+    "market": "Europe",
+    "country": "DE",
+    "powertrain": "Electric",
+    "trim": null,
+    "categories": [
+      "Charging",
+      "Battery swap"
+    ],
+    "caveats": [
+      "Human-curated summary of an official source; not an independently measured outcome.",
+      "Applies to the stated country and described configuration. Check current order specification.",
+      "No evidence here establishes BMW absence, customer uptake or a causal commercial success percentage.",
+      "Requires compatible station access, service eligibility and driver supervision. Manual does not establish country-wide coverage or current wait times."
+    ],
+    "content_kind": "curated_summary",
+    "verified_on": "2026-10-10",
+    "reference_status": "current_reference",
+    "review_due_on": "2026-11-09"
+  }
+]

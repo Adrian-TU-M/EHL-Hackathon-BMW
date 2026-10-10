@@ -10,31 +10,37 @@ An unofficial BMW challenge prototype: choose a vehicle and market, inspect sour
 
 Read [PROJECT_SPEC.md](PROJECT_SPEC.md) for the complete product specification, system architecture, user journey, team contracts and open questions. The original project introduction above is retained from the teammate's Entire README commit.
 
+## Live Market Trends on this branch
+
+`Market_Trends_Agent` connects `/market` and `/council` to **local Ollama Qwen3 8B**.
+The redesigned Market page includes seven feature watchlist themes, 34 scoped BMW study items, dated industry signals, regional Group history,
+model planning inputs, source references and a real agent investigation. Only a
+PM click starts debate. See [backend/MARKET.md](backend/MARKET.md) for setup,
+sources, workflow and teammate integration.
+
+Run the backend on port 8001 and Vite on port 5173, then open
+**http://127.0.0.1:5173/market** (use this exact address in Edge). Both private
+indexes and Ollama are required for the full council. Generated data and runs are
+ignored by Git. Customer, Competitor and Judge use local council adapters until
+teammates' implementations are merged. Other platform pages remain demos, and
+live recommendations do not automatically enter the demo decision/export flow.
+
 ## Run locally
 
-Install Node.js 22.12 or newer first; the Node.js installer includes npm. On Windows, close and reopen your terminal after installing so it picks up the updated `PATH`. In PowerShell, check that both commands are available:
-
-```powershell
-node --version
-npm --version
-```
-
-If PowerShell says either command is not recognized, Node.js is not installed or its install location is not on `PATH` yet.
-
-From the project folder, install dependencies and start the development server:
+Use Node.js 22.12+ (tested with Node 25.7) and npm.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Open the Local URL printed by Vite (normally http://127.0.0.1:5173). The core demo needs no API key, database, login, or confidential dataset. The optional live Judge discussion uses the public ElevenLabs agent ID in `.env.local`; copy `.env.example` and set `VITE_ELEVENLABS_AGENT_ID`. Never put an ElevenLabs API key in a `VITE_` variable. The dev server binds to loopback. To share a demo across devices, deliberately configure an appropriate host and access policy.
+Open the Local URL printed by Vite (normally http://127.0.0.1:5173). The original demo needs no API keys, paid services, database, login, or confidential dataset. Live Market/council require the backend setup above. The dev server binds to loopback. To share a demo across devices, deliberately configure an appropriate host and access policy.
 
 ```bash
 npm run build       # TypeScript checks and production bundle in dist/
 npm run preview     # Serve that production build locally
 npm test            # Domain logic, state machine, review/version and PDF tests
-npm run test:e2e    # Five end-to-end browser workflows, desktop and mobile
+npm run test:e2e    # Browser workflows; Market test needs the running backend/indexes
 npm run format      # Format source, tests and configuration
 ```
 
@@ -46,12 +52,12 @@ For static hosting, serve `dist/` and rewrite non-file routes to `index.html`. N
 
 1. Select F70 / G60 / G70, market, available demo powertrain, a 3–5-year horizon and an optional goal. Confirm the scope. F70 currently offers combustion in the demo; other derivative/market availability is an integration question.
 2. Explore genuine BMW reference photography for each series. Choose “Explore in 3D” to open its corresponding community-created BMW model on Sketchfab, with drag-to-orbit and scroll-to-zoom. Close the viewer to return to photography. Use Overview's category controls to connect requirements with sources. These visual references are not engineering or driving simulations.
-3. Explore customer feedback search and filters, synthetic satisfaction samples, market sensitivity controls and hypothetical competitor comparisons. Click sources for passages, dates, source location, calculation inputs and limitations.
-4. Start the council. Its fixed sequence has three perspectives, one challenge round, one clarification, an assessment and a proposal. Pause, resume, interrupt, challenge or expand the discussion. When the Judge presents its recommendation, approve it, leave it for review, or discuss it by text or voice. The Avatars studio previews the shared visual states.
+3. Explore customer feedback search and filters, synthetic satisfaction samples and hypothetical competitor comparisons; the Market page now uses the live workflow described above. Click sources for passages, dates, source location, calculation inputs and limitations.
+4. Open `/council?demo=1` for the scripted council. Its fixed sequence has three perspectives, one challenge round, one clarification, an assessment, proposal and PM review. Pause, resume, interrupt, challenge or expand the discussion. The Avatars studio previews the shared visual states.
 5. Compare scenario presets and adjust weights. Review a requirement with a rationale: approve, reject, edit, challenge, defer, request evidence or reopen. Editing creates a new version and clears prior approval. Excluding evidence reopens linked requirements.
-6. Inspect Audit Trail, then use Export report on any workspace page to download a multi-page PDF with the current scope, requirements, scoring, scenarios, sources, assumptions, council statements and audit history.
+6. Inspect Audit Trail, then use Export report on a demo workspace page to download a multi-page PDF with the current scope, requirements, scoring, scenarios, sources, assumptions, council statements and audit history.
 
-The demo initializes provisional requirements so all pages can be explored immediately. Council proposals revisit those seeded requirements rather than inventing new runtime content. Free-text goals and council challenges are recorded without invoking inference. The optional Judge-to-PM discussion uses the configured ElevenLabs agent; revised wording remains provisional until the PM applies and approves it in the app.
+The separate scripted demo initializes provisional requirements so all pages can be explored immediately. Council proposals revisit those seeded requirements rather than inventing new runtime content. In that scripted demo, free-text goals and challenges are recorded without inference. The default live council invokes Qwen only on the explicit PM action.
 
 ## Structure and integration points
 
@@ -83,7 +89,7 @@ src/
 - **Frontend teammates:** use `useAppStore` selectors and the shared domain types. Keep calculations in `lib/scoring`, workflow transitions in `lib/council`, and components focused on rendering/interactions.
 - **3D teammates:** `lib/vehicles.ts` maps each series to its reference photograph and public Sketchfab model. Replace the embed with approved local GLBs when exact model assets are available. Accurate spatial hotspots and engineering simulation require separately validated geometry and models. Asset provenance and rights limits are in [ASSETS.md](ASSETS.md).
 
-Suggested HTTP/SSE routes are documented in PROJECT_SPEC.md. Keep the backend technology interchangeable; FastAPI, a relational store and domain-specific retrieval are planned interfaces, not installed services.
+Suggested HTTP/SSE routes are documented in PROJECT_SPEC.md. Keep the backend technology interchangeable; FastAPI, local evidence retrieval and persisted agent jobs are implemented in `backend/`. Shared authentication, relational persistence and live-to-decision integration remain future work.
 
 ## What is real and what is simulated
 
@@ -91,14 +97,15 @@ Suggested HTTP/SSE routes are documented in PROJECT_SPEC.md. Keep the backend te
 | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Responsive routes, accessible dialogs and keyboard controls   | No authentication or server deployment                                                          |
 | Genuine BMW series imagery and distinct F70/G60/G70 3D embeds | Community model reference views; internet required; no validated engineering/driving simulation |
-| Five animated procedural agent entities                       | Hidden/offscreen council animation is paused                                                   |
-| Deterministic bounded council with pause/resume and audit     | Council statements remain scripted; the Judge handoff can use live ElevenLabs text/voice discussion |
-| Feedback drilldowns and explicit study sample calculations    | All passages, study ratings, market curves and competitor patterns are synthetic                |
+| Live Market agent and six-turn council                        | Shared Qwen3 8B; bounded evidence checks remain fallible; other teammate agents not merged      |
+| Five animated procedural agent entities                       | Scripted visual demo at `/council?demo=1`; no voice                                             |
+| Deterministic bounded council with pause/resume and audit     | Scripted statements; challenges are retained but do not produce dynamic responses               |
+| Feedback drilldowns and explicit study sample calculations    | Demo Customer/Competitor fixtures are synthetic; Market uses dated cited sources                |
 | Deterministic scoring and scenario comparison                 | Rubric ratings, impact, risk and effort need real validation; no ROI or sales uplift is claimed |
 | Human decisions, requirement versions and local audit         | Versioned browser localStorage only; not shared or tamper-proof backend persistence             |
 | Actual downloadable PDF with pagination                       | Uses built-in Helvetica; extended writing systems need an embedded Unicode font in production   |
 
-Evidence strength is separate from priority. Unknown scores remain unknown; known-input weight coverage is visible. Approval is attached to one version. Browser reload pauses any active council for deliberate resumption. Starting a new analysis replaces the previous locally saved demo; export first if you want its report.
+Evidence strength is separate from priority. Unknown scores remain unknown; known-input weight coverage is visible. Approval is attached to one version. Browser reload pauses the scripted demo council. Live jobs continue in the backend and the browser resumes polling. Starting a new analysis replaces the previous locally saved demo; export first if you want its report.
 
 BMW photography is bundled locally. Google Fonts uses system fallbacks when offline; optional Sketchfab 3D embeds require internet access and use the provider's own navigation. Close the 3D viewer to return to the reference photograph. The council uses local lighting without an external HDR dependency. The production bundle lazy-loads 3D, analytics and PDF modules; Three.js remains the largest chunk (about 1.2 MB before gzip).
 
@@ -115,7 +122,7 @@ The automated suite covers:
 - A valid multi-page PDF generated from the same application snapshot.
 - BMW series selection and embed switching, scope confirmation, source filters, specialist routes, all council controls, review/version/exclusion, scenario weights, reload persistence, audit, PDF download, mobile navigation and deep links.
 
-The exported PDF is additionally rendered for visual inspection. Dependency installation after the security updates reports zero known advisories. `npm run build` reports a large Three.js chunk warning; it is documented rather than hidden. The Judge conversation requires a public ElevenLabs agent ID in local Vite configuration. No API key is exposed to the browser; if the agent ID is absent, approval and later review remain available while live discussion is disabled.
+The exported PDF is additionally rendered for visual inspection. Dependency installation after the security updates reports zero known advisories. `npm run build` reports a large Three.js chunk warning; it is documented rather than hidden. There are no configured live AI/backend environment variables to verify.
 
 ## Entire collaboration
 
