@@ -143,6 +143,9 @@ export interface CouncilEvent {
   model?: string;
   /** Deterministic evidence summary for a live turn (records on the topic, of total; thin flag). */
   evidenceBase?: string;
+  /** Live debate turn: whom it answers and the stance taken. */
+  respondingTo?: string;
+  stance?: "agree" | "partly_agree" | "disagree" | "outside_evidence" | "none";
 }
 export interface CouncilState {
   status: "idle" | "running" | "paused" | "interrupted" | "complete";

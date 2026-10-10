@@ -17,7 +17,8 @@ FindingKind = Literal[
     "friction",
     "segment_difference",
 ]
-Stage = Literal["perspectives", "challenge", "revision"]
+# "discussion" = a turn in an open conversation (reply to the latest message / question).
+Stage = Literal["perspectives", "challenge", "revision", "discussion"]
 
 
 class Scope(BaseModel):
@@ -137,12 +138,21 @@ class AnalysisResult(BaseModel):
     warnings: list[str]
 
 
+class DiscussionMessage(BaseModel):
+    """A previous turn by another participant. Context for the reply, never evidence."""
+    actor: str = Field(max_length=40)
+    statement: str = Field(max_length=2000)
+
+
 class PerspectiveRequest(BaseModel):
     scope: Scope
-    topic: str  # theme or frontend Topic
+    # Theme or frontend Topic. Empty / "overall" / "all" = open discussion: topics are taken from
+    # the question, or the agent covers the scope's top customer themes.
+    topic: str = ""
     stage: Stage = "perspectives"
     question: str = ""
     challenge: str = ""
+    context: list[DiscussionMessage] = Field(default_factory=list, max_length=20)
 
 
 class CouncilEvent(BaseModel):
@@ -154,6 +164,12 @@ class CouncilEvent(BaseModel):
     assumption: str | None = None
     recommendation: str = ""
     evidenceBase: str = ""  # deterministic: records on the topic, of total in scope; thin flag
+    focus: Literal["topic", "question", "overall", "none"] = "topic"  # how themes were chosen
+    themes: list[str] = Field(default_factory=list)  # customer themes this turn draws on
+    # Debate: whom this turn answers, the stance taken, and a question put back to them.
+    respondingTo: str = ""
+    stance: Literal["agree", "partly_agree", "disagree", "outside_evidence", "none"] = "none"
+    counterQuestion: str = ""
     uncertainties: list[str] = Field(default_factory=list)
     quantitative: list[QuantitativeClaim] = Field(default_factory=list)
     evidence: list[Evidence] = Field(default_factory=list)  # the cited feedback records, resolved

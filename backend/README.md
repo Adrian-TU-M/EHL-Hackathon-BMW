@@ -28,7 +28,7 @@ curl http://127.0.0.1:8001/health
 | `GET /customer/themes?…&limit` | – | Ranked themes with `QuantitativeClaim`s, top subcategories, segments, linked study results |
 | `GET /customer/evidence?…&theme&type&q&limit` | – | `Evidence[]` (original passages with file, row and ID) |
 | `POST /customer/analysis` `{vehicle, market, powertrain?, horizon?, prompt?}` | yes (~40–70 s, cached) | Findings + cited evidence + coverage + themes |
-| `POST /customer/perspective` `{scope, topic, stage, question?, challenge?}` | yes (~7–15 s) | One `CouncilEvent` (actor `customer`) for stage `perspectives`, `challenge` or `revision` |
+| `POST /customer/perspective` `{scope, topic?, stage, question?, challenge?, context?}` | yes (~7–17 s) | One `CouncilEvent` (actor `customer`) for stage `perspectives`, `challenge`, `revision` or `discussion`, with `evidenceBase`, `focus`, `themes` and the cited `evidence` |
 | `POST /customer/reload` | – | Re-ingests after adding data or editing mappings |
 | `GET /customer/dashboard?vehicle&market&powertrain&source&category` | – | Everything the Customer Intelligence page needs: KPIs with claims, rankings per raw feedback type (with Source C severity), category tree, segment splits, theme cross-check, full study table, filter options |
 | `GET /customer/features?vehicle&market&powertrain` | – | Every feature (source category) ranked by unique records: `dislikes` (Defect, Difficult to Use) and `likes` (Likes, Wants), most mentioned first. Used by the Customer Intelligence page |
@@ -38,6 +38,13 @@ curl http://127.0.0.1:8001/health
 `market`, `powertrain`, `source` and `category` accept `All`. The frontend reaches the API through the Vite proxy at `/customer-api` (override with `VITE_CUSTOMER_API_URL`, or the proxy target with `CUSTOMER_API_TARGET`).
 
 `topic` may be a frontend `Topic` (`Displays`, `Charging`, …), a theme name (`Charging & range`), or a keyword. Response field names mirror `src/lib/types` (`Evidence`, `Finding`, `CouncilEvent`, `QuantitativeClaim`). Vehicles and markets are plain strings, because they come from the data. Errors: `422` invalid request, `503` Ollama unavailable, `502` unparseable model output.
+
+### Open discussions (no fixed topic)
+Leave `topic` empty (or `"overall"`) for an open council. The agent then:
+- focuses on the themes the `question`, `challenge` or latest `context` message names. Recognition uses `aliases` and specific keywords in `mappings/themes.yaml`, so "what about the screens and buttons?" maps to Infotainment;
+- otherwise covers the scope's strongest customer themes (four with complaints or requests, two positive) as one overall position.
+
+`stage: "discussion"` argues with the latest message from another participant (its own earlier turns, actor `customer`, are skipped and shown to it as "YOU" so it builds on them). It names that participant, takes a `stance` (`agree` | `partly_agree` | `disagree` | `outside_evidence`), states its reasons with cited evidence (`because`, appended to `statement`), and puts a `counterQuestion` back when it disagrees. The response's `respondingTo` names whom it answered. `context` holds up to 20 earlier turns (`{actor, statement}`), and the last 8 are shown to the model as conversation, never as evidence. The response's `focus` (`topic` | `question` | `overall` | `none`) and `themes` say what it drew on. Questions outside customer evidence (costs, sales, engineering) are declined, with the customer angle added. Frontend helper: `askCustomerAgent(scope, message, context)` in `src/lib/api/customer.ts`.
 
 ### Integrating with the council (moderator/judge)
 `perspective` is a single bounded call with no internal loops. The moderator's state machine decides when to call it: once in `perspectives`, once per `challenge`, and at most once in `revision`. `evidenceIds` contains feedback IDs (e.g. `G60-0148`) and study references (`STUDY:<sheet>:<row>:<vehicle>`). Resolve a feedback ID with `/customer/evidence?q=<id>` or from `analysis.evidence`.

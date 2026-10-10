@@ -51,6 +51,34 @@ def resolve_themes(data: CustomerData, topic: str | None) -> list[str]:
     return sorted(hit["theme"].unique())
 
 
+OPEN_TOPICS = {"", "all", "overall", "general", "everything", "open"}
+_GENERIC_PARTS = {"overall technology", "overall", "other", "general", "operation", "function", "unclassified"}
+
+
+def is_open_topic(topic: str | None) -> bool:
+    return (topic or "").strip().lower() in OPEN_TOPICS
+
+
+def themes_mentioned(data: CustomerData, text: str) -> list[str]:
+    """Themes whose name, app topic or source category is mentioned in free text
+    ("what about charging and the seats?" -> charging and seat themes)."""
+    text = (text or "").lower()
+    if not text.strip():
+        return []
+    found: set[str] = set()
+    names = data.rows[["theme", "topic", "category_l2"]].drop_duplicates()
+    for col in ("theme", "topic", "category_l2"):
+        for name, group in names.groupby(col):
+            for part in re.split(r"[,&/()]| and ", str(name).lower()):
+                part = part.strip()
+                if len(part) < 4 or part in _GENERIC_PARTS:
+                    continue
+                stem = part[:-1] if part.endswith("s") else part
+                if re.search(r"\b" + re.escape(stem) + r"s?\b", text):
+                    found |= set(group["theme"])
+    return sorted(t for t in found if t != UNCLASSIFIED)
+
+
 def record_polarity(record_rows: pd.DataFrame) -> str:
     present = set(record_rows["polarity"])
     return next(p for p in POLARITY_ORDER if p in present or p == UNCLASSIFIED)

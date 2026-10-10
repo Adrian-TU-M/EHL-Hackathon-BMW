@@ -185,10 +185,15 @@ export const liveCustomerSource: CustomerDataSource = {
 /** One council turn from the live Customer Agent (POST /customer/perspective). */
 export interface CustomerPerspectiveRequest {
   scope: { vehicle: string; market: string; powertrain: string | null };
-  topic: string;
-  stage: "perspectives" | "challenge" | "revision";
+  /** A topic, or "" / "overall" for an open discussion: the agent then focuses on the topics the
+   * question or latest message names, or covers the scope's strongest customer themes. */
+  topic?: string;
+  /** "discussion" = reply to the latest message (or `question`) in an open conversation. */
+  stage: "perspectives" | "challenge" | "revision" | "discussion";
   question?: string;
   challenge?: string;
+  /** Previous turns by other participants (context only, never treated as evidence). */
+  context?: { actor: string; statement: string }[];
 }
 export interface CustomerPerspective {
   id: string;
@@ -199,6 +204,13 @@ export interface CustomerPerspective {
   assumption: string | null;
   recommendation: string;
   evidenceBase: string;
+  /** How the themes were chosen: the named topic, topics named in the question, or overall. */
+  focus: "topic" | "question" | "overall" | "none";
+  themes: string[];
+  /** Debate: whom this turn answers, the stance taken, and a question put back to them. */
+  respondingTo: string;
+  stance: "agree" | "partly_agree" | "disagree" | "outside_evidence" | "none";
+  counterQuestion: string;
   uncertainties: string[];
   quantitative: QuantitativeClaim[];
   evidence: CustomerEvidence[];
@@ -212,6 +224,16 @@ export function fetchCustomerPerspective(req: CustomerPerspectiveRequest, signal
     signal,
     timeoutMs: 180000, // local qwen3:8b; turns queue behind each other in Ollama
   });
+}
+
+/** Open-discussion turn: ask the Customer Agent anything, with the conversation so far. */
+export function askCustomerAgent(
+  scope: CustomerPerspectiveRequest["scope"],
+  message: string,
+  context: CustomerPerspectiveRequest["context"] = [],
+  signal?: AbortSignal,
+): Promise<CustomerPerspective> {
+  return fetchCustomerPerspective({ scope, topic: "", stage: "discussion", question: message, context }, signal);
 }
 
 /** Health probe used to choose between live data and the demo fallback. */

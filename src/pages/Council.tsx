@@ -24,6 +24,12 @@ import { liveCustomerSource } from "../lib/api/customer";
 import "../components/customer/customer.css";
 import type { AgentState, Topic } from "../lib/types";
 import { JudgeHandoff } from "../components/council/JudgeHandoff";
+const STANCE: Record<string, string> = {
+  agree: "agrees with",
+  partly_agree: "partly agrees with",
+  disagree: "disagrees with",
+  outside_evidence: "outside customer evidence, replying to",
+};
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 export default function Council() {
   const {
@@ -237,6 +243,9 @@ export default function Council() {
             {event?.model && (
               <small className="council-live-tag" data-testid="live-turn">
                 Live · {event.model.replace("ollama:", "")} · BMW feedback
+                {event.respondingTo && event.stance && event.stance !== "none" && (
+                  <> · {STANCE[event.stance]} {event.respondingTo}</>
+                )}
               </small>
             )}
             {event?.evidenceBase && (

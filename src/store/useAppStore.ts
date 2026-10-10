@@ -320,6 +320,11 @@ export const useAppStore = create<AppStore>()(
             if (e.actor !== "customer" || !["perspectives", "challenge", "revision"].includes(e.stage)) return;
             const prev = events[i - 1];
             const stage = e.stage as CustomerPerspectiveRequest["stage"];
+            // The discussion so far (scripted turns), so the customer argues with what was actually said.
+            const context = events
+              .slice(0, i)
+              .filter((x) => x.actor !== "customer")
+              .map((x) => ({ actor: x.actor, statement: x.statement }));
             turns.push({
               id: e.id,
               req: {
@@ -328,6 +333,7 @@ export const useAppStore = create<AppStore>()(
                 stage,
                 question: `How should the next ${requirement.vehicle} improve ${topic.toLowerCase()} for customers in ${requirement.market}?`,
                 challenge: stage === "perspectives" ? "" : (prev?.statement ?? ""),
+                context,
               },
             });
             events[i] = { ...e, pending: true, statement: "", evidenceIds: [], assumption: undefined };
@@ -374,10 +380,13 @@ export const useAppStore = create<AppStore>()(
         try {
           const turn = await fetchCustomerPerspective(req);
           const notes = [turn.assumption, ...turn.uncertainties].filter(Boolean).join(" ");
+          const reply = turn.counterQuestion ? `${turn.statement} ${turn.counterQuestion}` : turn.statement;
           patch(
             {
-              statement: turn.recommendation ? `${turn.statement} Recommendation: ${turn.recommendation}` : turn.statement,
+              statement: turn.recommendation ? `${reply} Recommendation: ${turn.recommendation}` : reply,
               evidenceBase: turn.evidenceBase || undefined,
+              respondingTo: turn.respondingTo || undefined,
+              stance: turn.stance,
               evidenceIds: turn.evidenceIds,
               assumption: notes || "Based on supplied BMW customer feedback; shares describe the feedback, not all customers.",
               model: turn.model,
@@ -420,6 +429,13 @@ export const useAppStore = create<AppStore>()(
                 topic: state.council.topic,
                 stage: "challenge",
                 challenge: reason ?? "",
+                context: [
+                  ...state.council.events
+                    .slice(0, state.council.cursor + 1)
+                    .filter((x) => !x.pending && x.statement)
+                    .map((x) => ({ actor: x.actor, statement: x.statement })),
+                  { actor: "PM", statement: reason ?? "" },
+                ],
               }),
             );
           }

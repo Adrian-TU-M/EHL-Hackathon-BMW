@@ -28,6 +28,11 @@ def _invert(groups: dict[str, list[str]]) -> dict[str, str]:
     return {str(code).strip().lower(): name for name, codes in groups.items() for code in codes}
 
 
+def _specific(keywords: list[str]) -> list[str]:
+    """Keywords specific enough to recognise a theme in conversation."""
+    return [k for k in keywords if " " in k.strip() or len(k.strip().rstrip("*")) >= 6]
+
+
 def _keyword_pattern(keyword: str) -> re.Pattern[str]:
     """Whole word/phrase match; a trailing '*' allows any word ending ("charg*")."""
     word = keyword.lower().strip()
@@ -42,6 +47,13 @@ class ThemeRule:
     topic: str | None
     keywords: tuple[re.Pattern[str], ...]
     exclude: tuple[re.Pattern[str], ...] = ()
+    # Free-text recognition only: aliases + specific keywords (phrases, or words of 6+ letters).
+    # Short category words ("key", "lock", "range") are too generic for conversation.
+    text_patterns: tuple[re.Pattern[str], ...] = ()
+
+    def mentioned_in(self, text: str) -> bool:
+        """Does free text (a question, a council message) talk about this theme?"""
+        return any(k.search(text) for k in self.text_patterns)
 
     def matches(self, label: str) -> bool:
         return any(k.search(label) for k in self.keywords) and not any(
@@ -67,6 +79,7 @@ class Mappings:
                 t.get("topic"),
                 tuple(_keyword_pattern(k) for k in t["keywords"]),
                 tuple(_keyword_pattern(k) for k in t.get("exclude", [])),
+                tuple(_keyword_pattern(k) for k in [*t.get("aliases", []), *_specific(t["keywords"])]),
             )
             for t in themes
         ]
@@ -102,6 +115,11 @@ class Mappings:
 
     def is_unclassified(self, category: object) -> bool:
         return _clean(category).lower() in self._unclassified
+
+    def themes_in_text(self, text: str) -> list[str]:
+        """Every configured theme the text mentions (keywords or aliases), in config order."""
+        lower = (text or "").lower()
+        return [r.theme for r in self.theme_rules if lower.strip() and r.mentioned_in(lower)]
 
     def theme(self, category: object) -> tuple[str, str | None]:
         """Return (theme, frontend topic or None). Unseen labels become their own theme."""
