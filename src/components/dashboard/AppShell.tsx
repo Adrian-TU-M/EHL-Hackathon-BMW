@@ -187,7 +187,7 @@ export default function AppShell() {
         </div>
         <main className="page-content" key={location.pathname}>
           <Outlet />
-          {nextPage && (
+          {nextPage && location.pathname !== "/customer" && (
             <NavLink className="journey-next" to={nextPage.to}>
               <div>
                 <span>

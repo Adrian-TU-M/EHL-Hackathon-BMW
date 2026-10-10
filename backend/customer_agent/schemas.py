@@ -62,6 +62,8 @@ class Evidence(BaseModel):
     feedbackTypes: list[str]
     passage: str
     classificationRows: int
+    channel: str = ""
+    severity: str | None = None
     quantitative: QuantitativeClaim | None = None
 
 
@@ -88,6 +90,7 @@ class StudyRef(BaseModel):
     attribute: str
     metric: str
     value: float | None
+    bottomBox: float | None = None  # distribution studies only
     comparison: dict[str, float]  # other vehicles in the same study & market
     quantitative: QuantitativeClaim
 
@@ -156,3 +159,142 @@ class CouncilEvent(BaseModel):
 
 
 ThemeStat.model_rebuild()
+
+
+# ---------- Customer Intelligence dashboard (deterministic, no LLM) ----------
+
+
+class DashboardFilters(BaseModel):
+    vehicle: str
+    market: str = "All"
+    powertrain: str = "All"
+    source: str = "All"
+    category: str = "All"  # source category label (e.g. VFC level 2)
+
+
+class RankItem(BaseModel):
+    category: str
+    theme: str
+    records: int
+    severity: dict[str, int] = Field(default_factory=dict)  # level -> records (when derivable)
+
+
+class Ranking(BaseModel):
+    type: str  # raw feedback type label, e.g. "Likes", "Defect"
+    polarity: Polarity
+    records: int
+    claim: QuantitativeClaim
+    items: list[RankItem]
+
+
+class TreeLeaf(BaseModel):
+    name: str
+    records: int
+
+
+class TreeNode(BaseModel):
+    category: str
+    theme: str
+    records: int
+    positive: int
+    negative: int
+    request: int
+    children: list[TreeLeaf]
+
+
+class SegmentValue(BaseModel):
+    value: str
+    negative: int
+    total: int
+    share: float | None
+
+
+class SegmentSplit(BaseModel):
+    dimension: str
+    category: str
+    values: list[SegmentValue]
+    hidden: list[str]  # segment values below the minimum sample size
+
+
+class StudyRow(BaseModel):
+    id: str
+    source: str
+    sheet: str
+    kind: str
+    market: str
+    vehicle: str
+    attribute: str
+    theme: str
+    metric: str
+    value: float | None
+    bottomBox: float | None
+    distribution: dict[str, float] | None
+    year: str
+    levelsNote: str
+
+
+class DashboardOptions(BaseModel):
+    sources: list[tuple[str, int]]
+    categories: list[tuple[str, int]]
+    types: list[str]
+    severityLevels: list[str]
+    available: list[dict]  # vehicle x market x powertrain combinations with feedback
+    studyAvailable: list[dict]  # vehicle x market combinations with study data
+
+
+class DashboardKpis(BaseModel):
+    records: QuantitativeClaim
+    improvement: QuantitativeClaim
+    likes: QuantitativeClaim
+    satisfaction: StudyRef | None
+
+
+class Dashboard(BaseModel):
+    filters: DashboardFilters
+    dataSource: Literal["live"] = "live"
+    records: int
+    rows: int
+    byType: dict[str, int]
+    kpis: DashboardKpis
+    rankings: list[Ranking]
+    tree: list[TreeNode]
+    segments: list[SegmentSplit]
+    themes: list[ThemeStat]
+    studies: list[StudyRow]
+    coverage: Coverage
+    options: DashboardOptions
+    minSegment: int
+
+
+class QuotePage(BaseModel):
+    total: int
+    offset: int
+    items: list[Evidence]
+
+
+class Drilldown(BaseModel):
+    filters: DashboardFilters
+    category: str | None
+    theme: str | None
+    type: str | None
+    claim: QuantitativeClaim
+    subcategories: list[tuple[str, int]]
+    studyRefs: list[StudyRef]
+    quotes: QuotePage
+
+
+class FeatureRow(BaseModel):
+    """One source category (e.g. VFC level 2) with unique-record counts per feedback type."""
+
+    category: str
+    theme: str
+    records: int  # records in this table's side (negative or positive)
+    byType: dict[str, int]
+
+
+class FeatureRanking(BaseModel):
+    filters: DashboardFilters
+    records: int  # all unique feedback records in scope (denominator)
+    dislikes: list[FeatureRow]  # Defect + Difficult to Use, most mentioned first
+    likes: list[FeatureRow]  # Likes + Wants, most mentioned first
+    coverage: Coverage

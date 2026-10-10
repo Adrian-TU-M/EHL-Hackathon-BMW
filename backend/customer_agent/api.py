@@ -17,7 +17,22 @@ from .ingest import load_customer_data
 from .llm import LLMOutputError, LLMUnavailable, OllamaClient
 from .mappings import Mappings
 from .retrieval import search
-from .schemas import AnalysisResult, CouncilEvent, Coverage, Evidence, PerspectiveRequest, Scope, ThemeStat
+from .dashboard import build_dashboard, drilldown, feature_ranking, quotes
+from .manifest import load_manifest
+from .schemas import (
+    AnalysisResult,
+    CouncilEvent,
+    Coverage,
+    Dashboard,
+    DashboardFilters,
+    Drilldown,
+    Evidence,
+    FeatureRanking,
+    PerspectiveRequest,
+    QuotePage,
+    Scope,
+    ThemeStat,
+)
 from .stats import coverage, theme_stats
 
 settings = load_settings()
@@ -28,7 +43,13 @@ _lock = threading.Lock()
 def _load() -> None:
     data = load_customer_data(settings.data_dir, settings.manifest_path, settings.mappings_dir)
     maps = Mappings(settings.mappings_dir)
-    _state.update(data=data, maps=maps, agent=CustomerAgent(data, maps, OllamaClient(settings)))
+    levels: list[str] = []
+    for spec in load_manifest(settings.manifest_path):
+        for lvl in ((spec.options.get("derived") or {}).get("severity") or {}).get("levels", []):
+            if lvl not in levels:
+                levels.append(lvl)
+    _state.update(data=data, maps=maps, severity_levels=levels,
+                  agent=CustomerAgent(data, maps, OllamaClient(settings)))
 
 
 @asynccontextmanager
@@ -109,3 +130,41 @@ def post_analysis(scope: Scope) -> AnalysisResult:
 @app.post("/customer/perspective", response_model=CouncilEvent)
 def post_perspective(request: PerspectiveRequest) -> CouncilEvent:
     return _run_llm(_state["agent"].perspective, request)
+
+
+def _filters(vehicle: str, market: str, powertrain: str, source: str, category: str) -> DashboardFilters:
+    return DashboardFilters(vehicle=vehicle, market=market, powertrain=powertrain, source=source,
+                            category=category)
+
+
+@app.get("/customer/dashboard", response_model=Dashboard)
+def get_dashboard(vehicle: str, market: str = "All", powertrain: str = "All", source: str = "All",
+                  category: str = "All") -> Dashboard:
+    """All deterministic aggregates for the Customer Intelligence page in one call."""
+    return build_dashboard(_state["data"], _state["maps"],
+                           _filters(vehicle, market, powertrain, source, category), _state["severity_levels"])
+
+
+@app.get("/customer/quotes", response_model=QuotePage)
+def get_quotes(vehicle: str, market: str = "All", powertrain: str = "All", source: str = "All",
+               category: str = "All", type: str | None = None, theme: str | None = None,
+               q: str | None = None, offset: int = Query(0, ge=0),
+               limit: int = Query(24, ge=1, le=200)) -> QuotePage:
+    return quotes(_state["data"], _filters(vehicle, market, powertrain, source, category), type, theme, q,
+                  offset, limit)
+
+
+@app.get("/customer/drilldown", response_model=Drilldown)
+def get_drilldown(vehicle: str, market: str = "All", powertrain: str = "All", source: str = "All",
+                  category: str = "All", type: str | None = None, theme: str | None = None,
+                  limit: int = Query(30, ge=1, le=200)) -> Drilldown:
+    """Evidence drawer: claim, subcategories, linked study results and original quotes."""
+    return drilldown(_state["data"], _state["maps"], _filters(vehicle, market, powertrain, source, category),
+                     type, limit, theme)
+
+
+@app.get("/customer/features", response_model=FeatureRanking)
+def get_features(vehicle: str, market: str = "All", powertrain: str = "All", source: str = "All",
+                 category: str = "All") -> FeatureRanking:
+    """Every category ranked by unique records: dislikes (Defect, Difficult to Use) vs. likes and wants."""
+    return feature_ranking(_state["data"], _filters(vehicle, market, powertrain, source, category))

@@ -102,6 +102,7 @@ def test_perspective_validates_and_verifies(data_dir, load, maps):
 @pytest.mark.parametrize("text,valid,expected", [
     ("Praised (G60-1, G60-2).", {"G60-1"}, "Praised (G60-1)."),
     ("Said X (G60-9) and Y (STUDY:A:1:G60).", set(), "Said X and Y."),
+    ("[G60-1] liked it, while [G60-9] did not.", {"G60-1"}, "[G60-1] liked it, while did not."),
 ])
 def test_scrub_ids(text, valid, expected):
     assert scrub_ids(text, valid) == expected
@@ -110,3 +111,8 @@ def test_scrub_ids(text, valid, expected):
 def test_strip_numeric_claims_keeps_model_codes():
     text, removed = strip_numeric_claims("The G60 screen is slow. 3 out of 4 drivers agree.")
     assert text == "The G60 screen is slow." and removed == 1
+
+
+def test_frequency_words_keep_sentence_case():
+    text, _ = strip_numeric_claims("Several customers praise it. It is often noted by many owners.")
+    assert text == "Some customers praise it. It is noted by some owners."

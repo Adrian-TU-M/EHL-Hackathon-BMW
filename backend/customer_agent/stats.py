@@ -7,7 +7,7 @@ import pandas as pd
 
 from .ingest import CustomerData
 from .mappings import UNCLASSIFIED, Mappings
-from .retrieval import scope_rows
+from .retrieval import is_all, scope_rows
 from .schemas import Coverage, QuantitativeClaim, Scope, StudyRef, ThemeStat
 
 SAMPLE_CAVEAT = (
@@ -105,7 +105,12 @@ def study_rows(data: CustomerData, scope: Scope) -> pd.DataFrame:
     s = data.studies
     if s.empty:
         return s
-    return s[(s["market"].str.lower() == scope.market.lower()) & (s["vehicle"].str.lower() == scope.vehicle.lower())]
+    mask = pd.Series(True, index=s.index)
+    if not is_all(scope.market):
+        mask &= s["market"].str.lower() == scope.market.lower()
+    if not is_all(scope.vehicle):
+        mask &= s["vehicle"].str.lower() == scope.vehicle.lower()
+    return s[mask]
 
 
 def study_refs(data: CustomerData, maps: Mappings, scope: Scope, theme: str | None) -> list[StudyRef]:
@@ -130,16 +135,17 @@ def study_refs(data: CustomerData, maps: Mappings, scope: Scope, theme: str | No
         out.append(StudyRef(
             id=ref_id, source=f"{row['source']} / {row['sheet']}", market=row["market"],
             vehicle=row["vehicle"], attribute=row["attribute"], metric=row["metric"], value=value,
+            bottomBox=None if pd.isna(row.get("bottom_box")) else round(float(row["bottom_box"]), 3),
             comparison=comparison,
             quantitative=QuantitativeClaim(
                 numerator=value if value is not None else 0,
                 denominator=None if is_mean else 1,
-                unit="mean score" if is_mean else "share of respondents (top-3 box)",
+                unit="mean score (0-10)" if is_mean else "share of respondents (top box)",
                 sourceId=f"{row['source']} / {row['sheet']} row {row['row']}",
                 filters=[f"vehicle={row['vehicle']}", f"market={row['market']}"],
                 market=row["market"], period=str(row["year"]),
                 method="Mean as supplied by the study" if is_mean else
-                "Sum of 'Excellent', 'Delightful', 'I Love It' shares as supplied",
+                f"Sum of supplied level shares: {row.get('levels_note', 'top box')}",
                 limitations="Sample size not supplied with the study; scale as supplied. "
                 "Study values are not split by powertrain.",
             ),

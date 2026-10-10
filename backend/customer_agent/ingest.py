@@ -21,7 +21,7 @@ from .mappings import Mappings, _clean
 ROW_COLUMNS = [
     "record_id", "raw_id", "text", "country", "market", "vehicle", "powertrain",
     "powertrain_raw", "feedback_type", "polarity", "category_l2", "category_l3",
-    "theme", "topic", "channel", "customer_id", "date", "file", "excel_row", "dataset",
+    "theme", "topic", "channel", "customer_id", "date", "file", "excel_row", "dataset", "severity",
 ]
 
 
@@ -77,6 +77,12 @@ def load_feedback(item: DiscoveredFile, maps: Mappings) -> pd.DataFrame:
     out["file"] = item.path.name
     out["excel_row"] = frame.index + 2  # 1-based row number in the sheet, after the header
     out["dataset"] = item.spec.name
+    out["severity"] = ""
+    for field, rule in (item.spec.options.get("derived") or {}).items():
+        if field == "severity":
+            pattern = re.compile(rule["pattern"], re.IGNORECASE)
+            out["severity"] = out["text"].map(
+                lambda t: (m.group(1).lower() if (m := pattern.search(t)) else ""))
     out = out[out["raw_id"] != ""]
     out["record_id"] = out["raw_id"]
     return out[ROW_COLUMNS]
@@ -145,7 +151,8 @@ def parse_study_means(item: DiscoveredFile, maps: Mappings) -> list[dict]:
                     "kind": "study_means", "market": maps.market(country), "country_label": country,
                     "vehicle": maps.vehicle(model), "model_label": model, "attribute": attribute,
                     "metric": "mean", "value": float(value), "distribution": None,
-                    "year": year, "sample_size": None, "row": i + 1,
+                    "year": year, "sample_size": None, "row": i + 1, "bottom_box": None,
+                    "levels_note": "mean score as supplied (0-10 scale)",
                 })
         elif label.iat[i]:
             attribute = label.iat[i]
@@ -158,6 +165,7 @@ def parse_study_distribution(item: DiscoveredFile, maps: Mappings) -> list[dict]
     frame = pd.read_excel(item.path, sheet_name=item.sheet, header=None, dtype=object)
     marker = item.spec.options.get("match_header")
     top = {lvl.lower() for lvl in item.spec.options.get("positive_levels", [])}
+    bottom = {lvl.lower() for lvl in item.spec.options.get("negative_levels", [])}
     sheet = str(item.sheet)
     market_label = sheet.split("_")[0] if item.spec.options.get("market_from_sheet") else ""
     year = _year(sheet) if item.spec.options.get("year_from_sheet") else "unknown"
@@ -181,12 +189,16 @@ def parse_study_distribution(item: DiscoveredFile, maps: Mappings) -> list[dict]
     for question, q_row, dist in blocks:
         for model, levels in dist.items():
             top_box = sum(v for k, v in levels.items() if k.lower() in top) if top else None
+            bottom_box = sum(v for k, v in levels.items() if k.lower() in bottom) if bottom else None
             out.append({
                 "source": item.path.name, "sheet": sheet, "dataset": item.spec.name,
                 "kind": "study_distribution", "market": maps.market(market_label),
                 "country_label": market_label, "vehicle": maps.vehicle(model), "model_label": model,
                 "attribute": question, "metric": "top_box_share", "value": top_box,
                 "distribution": levels, "year": year, "sample_size": None, "row": q_row,
+                "bottom_box": bottom_box,
+                "levels_note": f"top box = {' + '.join(item.spec.options.get('positive_levels', []))}; "
+                f"bottom box = {' + '.join(item.spec.options.get('negative_levels', []))}",
             })
     return out
 

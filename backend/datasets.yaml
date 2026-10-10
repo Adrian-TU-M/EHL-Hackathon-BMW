@@ -18,6 +18,12 @@ sources:
       category_l2: Vfc level2 Name
       category_l3: Vfc level3 Name
       source: Source
+    # Optional field derived from the text (first capture group, lower-cased).
+    # Source C comments start with "I had a <severity> problem with ...".
+    derived:
+      severity:
+        pattern: "^I had an? (very minor|minor|moderate|serious|very serious) problem"
+        levels: [very minor, minor, moderate, serious, very serious]
       # Not present in today's files; map them when a dataset provides them.
       # customer_id: Customer ID
       # date: Feedback Date
@@ -36,4 +42,5 @@ sources:
     match_header: "% of column, sample base"
     market_from_sheet: true # e.g. US_2025 -> US
     year_from_sheet: true
-    positive_levels: ["Excellent", "Delightful", "I Love It"]   # top-3 box of the 7-point scale
+    positive_levels: ["Delightful", "I Love It"]                     # top box of the 7-point scale
+    negative_levels: ["I Hate It", "A Failure", "Unsatisfactory"]     # bottom box

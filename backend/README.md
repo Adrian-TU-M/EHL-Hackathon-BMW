@@ -30,6 +30,12 @@ curl http://127.0.0.1:8001/health
 | `POST /customer/analysis` `{vehicle, market, powertrain?, horizon?, prompt?}` | yes (~40–70 s, cached) | Findings + cited evidence + coverage + themes |
 | `POST /customer/perspective` `{scope, topic, stage, question?, challenge?}` | yes (~7–15 s) | One `CouncilEvent` (actor `customer`) for stage `perspectives`, `challenge` or `revision` |
 | `POST /customer/reload` | – | Re-ingests after adding data or editing mappings |
+| `GET /customer/dashboard?vehicle&market&powertrain&source&category` | – | Everything the Customer Intelligence page needs: KPIs with claims, rankings per raw feedback type (with Source C severity), category tree, segment splits, theme cross-check, full study table, filter options |
+| `GET /customer/features?vehicle&market&powertrain` | – | Every feature (source category) ranked by unique records: `dislikes` (Defect, Difficult to Use) and `likes` (Likes, Wants), most mentioned first. Used by the Customer Intelligence page |
+| `GET /customer/quotes?…&type&theme&q&offset&limit` | – | Paginated original feedback (`{total, offset, items}`) |
+| `GET /customer/drilldown?…&type&theme` | – | Evidence drawer: claim, subcategories, linked study results, quotes |
+
+`market`, `powertrain`, `source` and `category` accept `All`. The frontend reaches the API through the Vite proxy at `/customer-api` (override with `VITE_CUSTOMER_API_URL`, or the proxy target with `CUSTOMER_API_TARGET`).
 
 `topic` may be a frontend `Topic` (`Displays`, `Charging`, …), a theme name (`Charging & range`), or a keyword. Response field names mirror `src/lib/types` (`Evidence`, `Finding`, `CouncilEvent`, `QuantitativeClaim`). Vehicles and markets are plain strings, because they come from the data. Errors: `422` invalid request, `503` Ollama unavailable, `502` unparseable model output.
 

@@ -106,7 +106,8 @@ def test_study_parsing_picks_up_models_and_markets(data_dir, load):
     dist = studies[studies["kind"] == "study_distribution"]
     assert set(dist["market"]) == {"United States"}
     seats = dist[(dist["attribute"] == "Overall comfort of the seats") & (dist["vehicle"] == "X10")].iloc[0]
-    assert seats["value"] == pytest.approx(0.7)       # Excellent + Delightful + I Love It
+    assert seats["value"] == pytest.approx(0.4)       # top box: Delightful + I Love It
+    assert seats["bottom_box"] == pytest.approx(0.1)  # I Hate It + A Failure + Unsatisfactory
     assert seats["sample_size"] is None
 
 

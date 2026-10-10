@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import threading
 
 import pandas as pd
 
@@ -94,7 +95,7 @@ INLINE_ID = re.compile(r"(STUDY:[\w:.-]+|\b[A-Z][A-Z0-9]*-\d+\b)")
 def scrub_ids(text: str, valid: set[str]) -> str:
     """Remove inline citations the model wrote that did not survive validation."""
     out = INLINE_ID.sub(lambda m: m.group(0) if m.group(0) in valid else "", text)
-    out = re.sub(r"\(\s*(,\s*)*\)", "", out)          # empty "( , )" left behind
+    out = re.sub(r"[(\[]\s*(,\s*)*[)\]]", "", out)    # empty "( , )" or "[]" left behind
     out = re.sub(r"\(\s*,\s*", "(", out)
     out = re.sub(r",\s*\)", ")", out)
     return re.sub(r"\s+([.,;])", r"\1", re.sub(r"\s{2,}", " ", out)).strip()
@@ -105,7 +106,8 @@ def strip_numeric_claims(text: str) -> tuple[str, int]:
     kept = [s for s in sentences if not NUMERIC_CLAIM.search(s) and not META_CLAIM.search(s)]
     out = " ".join(kept)
     for pattern, repl in FREQUENCY_WORDS:
-        out = pattern.sub(repl, out)
+        # Keep sentence-initial capitals ("Several customers" -> "Some customers").
+        out = pattern.sub(lambda m: repl.capitalize() if repl and m.group(0)[0].isupper() else repl, out)
     return out, len(sentences) - len(kept)
 
 
@@ -164,6 +166,13 @@ class CustomerAgent:
         self.maps = maps
         self.llm = llm
         self._cache: dict[str, object] = {}
+        self._locks: dict[str, threading.Lock] = {}
+        self._locks_guard = threading.Lock()
+
+    def _key_lock(self, key: str) -> threading.Lock:
+        """One lock per cache key: concurrent identical requests share one model run."""
+        with self._locks_guard:
+            return self._locks.setdefault(key, threading.Lock())
 
     # ---------- context building (deterministic) ----------
 
@@ -289,8 +298,12 @@ class CustomerAgent:
 
     def analyze(self, scope: Scope, max_themes: int = 6, quotes_per_theme: int = 8) -> AnalysisResult:
         key = "analysis:" + _scope_key(scope, f"{max_themes}:{quotes_per_theme}")
-        if key in self._cache:
-            return self._cache[key]  # type: ignore[return-value]
+        with self._key_lock(key):
+            if key in self._cache:
+                return self._cache[key]  # type: ignore[return-value]
+            return self._analyze(scope, key, max_themes, quotes_per_theme)
+
+    def _analyze(self, scope: Scope, key: str, max_themes: int, quotes_per_theme: int) -> AnalysisResult:
         cov = coverage(self.data, scope)
         rows = scope_rows(self.data, scope)
         all_stats = theme_stats(self.data, self.maps, scope)

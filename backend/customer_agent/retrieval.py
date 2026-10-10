@@ -16,10 +16,14 @@ from .schemas import Evidence, Scope
 POLARITY_ORDER = ("Complaint", "Request", "Positive", UNCLASSIFIED)
 
 
+def is_all(value: str | None) -> bool:
+    return not value or value.strip().lower() == "all"
+
+
 def _match(series: pd.Series, value: str | None) -> pd.Series:
-    if not value:
+    if is_all(value):
         return pd.Series(True, index=series.index)
-    return series.str.lower() == value.lower()
+    return series.str.lower() == value.strip().lower()
 
 
 def scope_rows(data: CustomerData, scope: Scope) -> pd.DataFrame:
@@ -79,6 +83,8 @@ def to_evidence(data: CustomerData, record_rows: pd.DataFrame) -> Evidence:
         feedbackTypes=sorted({t for t in all_rows["feedback_type"] if t}),
         passage=first["text"],
         classificationRows=len(all_rows),
+        channel=first["channel"],
+        severity=first["severity"] or None,
     )
 
 

@@ -14,8 +14,20 @@ import { initialCouncil, advanceCouncil } from "../lib/council/machine";
 import { intelligenceService } from "../lib/api/service";
 import { scenarios } from "../lib/scoring";
 import { auditEvent } from "../lib/audit";
+/** Customer Intelligence filters; shared so the Council page can reuse the same scope. */
+export interface CustomerScopeFilters {
+  vehicle: string;
+  market: string;
+  powertrain: string;
+  source: string;
+  category: string;
+  feedbackType: string;
+  query: string;
+}
 interface AppStore extends AnalysisSnapshot {
   started: boolean;
+  customerFilters?: CustomerScopeFilters;
+  setCustomerFilters: (filters: CustomerScopeFilters) => void;
   persistenceError?: string;
   startAnalysis: (scope: Scope) => Promise<void>;
   decide: (input: DecisionInput) => Promise<void>;
@@ -65,6 +77,9 @@ export const useAppStore = create<AppStore>()(
       audit: [],
       weights: scenarios[0].weights,
       council: initialCouncil,
+      setCustomerFilters(customerFilters) {
+        set({ customerFilters });
+      },
       async startAnalysis(scope) {
         const fixtures = await intelligenceService.createAnalysis(scope);
         const confirmed = { ...scope, confirmedAt: new Date().toISOString() };
