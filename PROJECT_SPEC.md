@@ -4,11 +4,29 @@
 **Context:** TUM AI Hackathon — BMW Challenge, Munich (team-provided brief)
 **Product principle:** AI analyzes. AI challenges. AI explains. Humans decide.
 
-This document is the complete team product brief, followed by implementation contracts and integration guidance. Challenge descriptions and dataset names below are supplied by the team; their contents have not been independently inspected. No real BMW datasets or licensed BMW vehicle assets were present in the repository at project initialization. All initial application evidence is synthetic and must be marked DEMO. This is an unofficial hackathon concept.
+This document is the complete team product brief, followed by implementation contracts and integration guidance. Challenge descriptions and dataset names below are supplied by the team; the moderator now inventories the supplied workbook/PDF contents privately, while the other dashboard analysis remains synthetic. No real BMW datasets or licensed BMW vehicle assets were present in the repository at project initialization. All initial application evidence is synthetic and must be marked DEMO. This is an unofficial hackathon concept.
 
 ## Document scope
 
 The product requirements below are authoritative. The frontend visual specification is retained in full. Implementation choices and open questions follow them; recommendations do not imply that a production backend, real inference, or retrieval security exists in the prototype.
+
+## Moderator implementation contract — October 2026
+
+This contract supersedes the scripted council behavior described later in this document. The moderator runs in a separate Python/FastAPI service. Specialist and judge reasoning remain adapter-owned. The supplied eight Drive datasets and Discord-supplied BMW Group Report 2025 form the initial source inventory. External sources are also allowed, following the organizer clarification relayed on 10 October 2026. Public HTTPS HTML, text and PDF imports retain publisher, declared source quality, retrieval/publication dates, content hashes, scope and locators. No agent may silently inject uncaptured web content into a confirmed discussion: new imports are available to new agendas, while existing agendas keep their frozen snapshots. Primary OEM documentation, official statistics and original research are preferred; external pages do not automatically establish a verified competitive gap. Raw inputs, extracted passages, source hashes, and the SQLite checkpoint/event database stay in ignored private storage.
+
+The PM confirms a versioned, evidence-derived agenda once. Up to six topics are proposed with the entire explained backlog. Agenda weights are customer need 40%, severity 35%, future relevance 20%, verified competitive gap 5%. Unknown factors remain unknown; show supported score contribution, upper bound and known-weight coverage without renormalization. Pins and substantiated severe issues precede score order. Every rating carries references and rationale. Topics are customer-facing questions, not preapproved solutions.
+
+Workflow: agenda confirmation → neutral topic brief → three concurrent independent positions → claim checks → one challenge round (all challenges before consolidated replies) → judge assessment → optional single, answerable clarification → closure and judge packet → next topic. Each specialist may abstain. Consensus never constitutes a closure gate. Close with completed, insufficient evidence, unresolved disagreement, budget exhausted, or PM stopped. Queue human review and continue without approving requirements. Pauses and interruptions preserve checkpoints; finish/skip produce explicit incomplete outcomes. Resume never renews exhausted budgets. Default limits are 45 seconds/call, 300 active seconds/topic and 60,000 total model tokens/topic, with 20% reserved for assessment and closure; one output-repair attempt fits within the same limits.
+
+Contracts: Agenda, TopicBrief, AgentPosition, Claim, Challenge, Assumption, JudgePacket and TopicOutcome. Evidence domains are separate from agent identities. Ordered events include session/run/topic IDs, sequence, timestamp, source IDs and assumption versions. Source scope, exclusions, units, dates, denominators and calculations are checked in code. Semantic source support is a separate model check; an absent verifier is disclosed, never represented as validation. Published discussion and source excerpts are untrusted content, not instructions.
+
+Feedback is deduplicated by source file + feedback ID while retaining all classifications/row locators and positive, mixed and unclassified observations. Expected rows/IDs: F70 4076/2128, G60 5005/4000, G70 4690/4000. IDs are not unique customers. Preserve country, powertrain, source and missing dates. China has no supplied feedback. EU studies, geographic Europe feedback, G68 vs G60 and G60_G68 sales must remain distinct. US study sample totals of 1 are normalized proportions, not respondent counts. Unknown rating scales and sample sizes stay unknown. Sales 2030 is a supplied future figure; zero volumes do not establish unavailability. Equipment is tied to document edition, market, derivative, standard/optional status and package dependencies; uncertain table extraction is not verified availability.
+
+Annual report focus: pages 42–46, 53–57, 77–81 and 262–265, preserving group/brand/model-family aggregation and the difference between results, 2026 outlook, targets and announcements. Corporate strategy/R&D supports alignment, not proof of model-specific feasibility or customer demand. No verified competitor feature matrix was supplied initially; external peer documentation may fill the gap only with equivalent market, derivative, date and equipment-status comparisons. Until then, competitor abstention and comparability challenges are valid outcomes.
+
+Assumptions have IDs, versions, scope, authors, rationale, evidence, dependencies and validation needs. Proposed, contested, accepted-for-scenario, refuted and superseded are distinct states. Acceptance does not make an assumption factual. Preferences, missing data, limitations and source forecasts are not interchangeable with assumptions. Changes invalidate dependent assessments and preserve their history. The judge receives original claims, positions, challenges, rebuttals, counterevidence, alternatives, assumption versions, unresolved issues, coverage limitations and the complete published transcript with source locators.
+
+Acceptance requires source-count/lineage checks, deterministic scoring and numerical checks, scope-transfer failures, independent openings, dissent retention, conditional clarification, every closure path, pause/restart/reconnect/idempotency and targeted assumption invalidation. Moderator-quality cases compare independent positions with moderated output; model quality remains unevaluated until PM review, even when deterministic tests pass. Production authentication/deployment and new specialist/judge algorithms are outside this change.
 
 # BMW NEXT — AI Product Intelligence & Decision Platform
 
@@ -178,7 +196,7 @@ The system should support future ingestion of public sources about:
 
 External claims must carry verifiable source references and publication dates.
 
-**Important:** Do not assume Codex has direct access to our Google Drive. Use real files only when accessible in the repository or explicitly supplied. Otherwise, construct clearly labelled synthetic demo fixtures.
+**Important:** Do not assume direct access to Google Drive. Supplied files are ingested privately when accessible. External evidence is also permitted through the captured source-intake workflow in the authoritative moderator contract. Synthetic fixtures must be clearly labelled and never substituted silently for missing evidence.
 
 Do not commit confidential BMW customer data or personal information to a public repository.
 
@@ -627,7 +645,7 @@ Each specialist agent has its own dedicated page.
 
 ## 10.5 Agent Council
 
-A visually compelling debate environment with animated 3D agent representations, a fixed discussion sequence, summaries, and an expandable transcript.
+A debate environment with animated 3D agent representations, evidence-derived agendas, deterministic workflow gates, summaries and an expandable published transcript.
 
 ## 10.6 Decisions & Scenarios
 
@@ -1194,7 +1212,7 @@ Add functional controls:
 
 The prototype must follow the fixed stages using a deterministic state machine.
 
-Use mock agent messages for now, but make the data stream replaceable by a real backend later.
+The council consumes incremental FastAPI events. Explicit deterministic integration adapters are available for testing; missing live agent configuration is shown as unavailable.
 
 Do not generate endless simulated dialogue.
 
@@ -1559,30 +1577,34 @@ interface QuantitativeClaim {
 
 ## Integration responsibilities
 
-| Team module         | Integration point                           | Production responsibility                                                                                                  |
-| ------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Data engineering    | lib/types, lib/api                          | Ingest provided XLSX/PDF privately; deduplicate classification rows using source IDs; retain lineage and permissions       |
-| Customer RAG        | IntelligenceService.listEvidence            | Enforce customer-domain retrieval with backend credentials and authorization                                               |
-| Market RAG          | IntelligenceService.listEvidence            | Distinguish 2024/2025 observations from supplied 2030 future figures; retain dates and units                               |
-| Competitor RAG      | IntelligenceService.listEvidence            | Verify model, trim, market, availability, date and source URL; no unsupported cross-market comparisons                     |
-| Agent orchestration | IntelligenceService.streamCouncil           | Emit ordered typed events; enforce one challenge round, optional single clarification, duration/token limits, cancellation |
-| Product backend     | requirement read/write and decision methods | Optimistic concurrency, immutable version approval, transactional audit writes and idempotency                             |
-| Frontend            | components, pages, store                    | Rendering, navigation, filters, evidence drilldowns, deliberate human review, accessible 3D controls                       |
-| Reporting           | lib/export                                  | Render one consistent snapshot with current scope, scores, evidence exclusions, scenarios and audit                        |
+| Team module         | Integration point                                 | Production responsibility                                                                                                  |
+| ------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Data engineering    | lib/types, lib/api                                | Ingest provided XLSX/PDF privately; deduplicate classification rows using source IDs; retain lineage and permissions       |
+| Customer RAG        | CUSTOMER_AGENT_URL; scoped retrieval capability   | Return typed positions/challenges/rebuttals/clarifications using customer evidence plus authorized shared context          |
+| Market RAG          | MARKET_AGENT_URL; scoped retrieval capability     | Distinguish 2024/2025 observations from supplied 2030 future figures; retain dates and units                               |
+| Competitor RAG      | COMPETITOR_AGENT_URL; scoped retrieval capability | Verify model, trim, market, availability, date and source URL; no unsupported cross-market comparisons                     |
+| Moderator model     | MODERATOR_AGENT_URL                               | Formulate neutral questions and check semantic support separately from deterministic validation                            |
+| Judge               | JUDGE_AGENT_URL; complete packet access           | Return typed scoring inputs and versioned proposals under the team's rubric, retaining dissent and unknowns                |
+| Agent orchestration | backend/moderator and /api/moderator              | Emit ordered typed events; enforce one challenge round, optional single clarification, duration/token limits, cancellation |
+| Product backend     | requirement read/write and decision methods       | Optimistic concurrency, immutable version approval, transactional audit writes and idempotency                             |
+| Frontend            | components, pages, store                          | Rendering, navigation, filters, evidence drilldowns, deliberate human review, accessible 3D controls                       |
+| Reporting           | lib/export                                        | Render one consistent snapshot with current scope, scores, evidence exclusions, scenarios and audit                        |
 
-Suggested HTTP mapping: GET /analyses/:id/evidence; GET /analyses/:id/requirements; POST /analyses/:id/councils; GET /councils/:id/events (SSE); POST /councils/:id/control; PATCH /requirements/:id with expectedVersion; POST /requirements/:id/decisions; POST /evidence/:id/exclusions; GET /analyses/:id/audit. Backend errors must distinguish unavailable data, access denied, version conflict, timeout and validation errors. A disconnect must not silently repeat a decision or council stage.
+The implemented moderator routes are `/api/moderator/agendas`, `/sessions/:id/confirm`, `/sessions/:id/controls`, `/sessions/:id/events`, `/sessions/:id/outcomes`, `/sessions/:id/export` and the evidence/review/assumption routes documented in `backend/README.md`. Other analysis/requirement write APIs remain future integration work. Backend errors distinguish unavailable data, version conflict, timeout and validation errors. A disconnect must not silently repeat a decision or council stage.
 
 ## Deterministic prioritization
+
+The following formula belongs to the retained synthetic dashboard requirement-scoring demo. Moderator agenda scoring is separate: supported weighted contribution plus the possible unknown-weight interval, without renormalization. The live judge retains ownership of its final scoring rubric.
 
 Criteria are bounded 0–5 assessments: observed need, severity, competitive gap, future relevance and feasibility (ease). The displayed priority is `100 * sum(knownWeight * criterion / 5) / sum(knownWeight)`. Unknown inputs are excluded from the weighted sum, coverage is shown, and all unknown inputs or zero active weight produces an unknown score. Evidence strength is shown independently; weak evidence triggers review rather than quietly becoming a fabricated business score. Rough effort is qualitative. Weight changes update rankings and append an audit event. Scenario presets express PM preferences, not probabilities or predictions.
 
 ## Council state machine
 
-States: idle → topic → perspectives → challenge → assessment → revision → proposal → review. Revision is the single optional clarification slot and explicitly records whether used. Pause and interruption retain the current stage. Resume continues from that stage. Review is terminal for one run; reopening creates a separately traceable run. A timer advances only while running; a maximum duration and fixed event list bound processing. User challenges pause processing and are logged with a rationale. Real inference later must obey the same controller and typed events.
+Stages: agenda confirmation → topic brief → independent positions → validation → challenges → consolidated rebuttals → rebuttal validation → assessment → optional clarification/validation/reassessment → closure → next topic. Human review is a separate outcome decision and does not block automatic advancement. Pause and interruption retain the current stage. Resume continues from that stage. Exhausting the confirmed agenda or session budget is terminal for a run; reopening an exhausted topic requires a linked new run. Server checkpoints and evidence gates advance the workflow; no frontend timer or fixed message list controls progress. User challenges pause processing and are published to the judge packet. A run retains every completed outcome. See the authoritative moderator contract above and backend/README.md for the implemented API, budgets and recovery behavior.
 
 ## Persistence and security
 
-Browser localStorage stores a versioned demo session, PM review states, scores and audit history; it is editable local convenience storage and is not a secure immutable production audit database. Corrupt or incompatible browser state is recoverable with a fresh demo session. Confidential data must never enter public fixtures, committed files, client-side secrets or public asset folders. Production authentication, authorization, domain retrieval restrictions, database durability and audit immutability belong to backend services.
+Browser localStorage retains the synthetic dashboard state and the moderator session ID. Moderator checkpoints, frozen source catalogs, ordered events, assumption history and human reviews persist privately in SQLite. Stage publications and modifying commands commit atomically. Corrupt demo browser state is recoverable with a fresh demo session. Confidential data must never enter public fixtures, committed files, client-side secrets or public asset folders. Scoped retrieval capabilities restrict the evidence offered to each specialist; trusted local PM routes are not a production authentication boundary. Production authorization, distributed durability and immutable enterprise audit infrastructure remain future work.
 
 ## Asset and design policy
 
@@ -1636,4 +1658,4 @@ The user's later request supersedes the original white/minimal visual direction.
 
 Agent identities are redesigned as five distinct animated metal sculptures with original GLSL surfaces and labels anchored to their 3D positions. The actual Paper Mesh Gradient shader indexed on 21st.dev is adapted under Apache-2.0, with license and notices retained. The initial unbranded sedan is removed. Real BMW series reference photography and community-created BMW model embeds replace it. A user can inspect the exterior, but validated driving physics, performance predictions and exact engineering geometry remain unimplemented rather than being implied by the word simulation.
 
-All data, decisions, scoring, review/version logic, council stage controls and PDF export remain the local demo described above. Real BMW reference imagery does not turn synthetic findings into real research. No new live AI or backend has been introduced by the visual redesign.
+All data, decisions, scoring, review/version logic, council stage controls and PDF export remain the local demo described above. Real BMW reference imagery does not turn synthetic findings into real research. That visual redesign did not introduce live inference; the later moderator implementation adds a separate FastAPI backend and HTTP agent adapters, as described in the authoritative contract above.

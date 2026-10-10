@@ -4,8 +4,12 @@ import { Search, ArrowUpRight, Clock3, FileText } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { Badge, PageHeader, EmptyState } from "../components/ui/Primitives";
 import { EvidenceDialog } from "../components/dashboard/EvidenceDialog";
+import { useModeratorStore } from "../store/useModeratorStore";
+import { SourceCards } from "../components/council/ModeratorReview";
 export default function Audit() {
   const audit = useAppStore((s) => s.audit);
+  const moderator = useModeratorStore();
+  const [moderatorIds, setModeratorIds] = useState<string[] | null>(null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All activity");
   const [order, setOrder] = useState("Newest first");
@@ -36,6 +40,53 @@ export default function Audit() {
         </div>
         <Badge tone="blue">LOCAL DEMO HISTORY</Badge>
       </div>
+      {moderator.session && (
+        <section className="moderator-section">
+          <h2>Persisted moderator event history</h2>
+          <p>
+            Run {moderator.session.run_id} · source snapshot{" "}
+            {moderator.session.agenda.source_snapshot}. The demo history below
+            is separate.
+          </p>
+          <details>
+            <summary>
+              Inspect ordered server events ({moderator.events.length})
+            </summary>
+            {moderator.events.map((e) => (
+              <article key={e.id} className="moderator-record">
+                <strong>
+                  #{e.sequence} · {e.actor} / {e.stage}
+                </strong>
+                <p>{e.statement}</p>
+                <small>
+                  {e.timestamp} · {e.topic_id || "Session"}
+                </small>
+                {!!e.evidence_ids.length && (
+                  <button
+                    className="text-link"
+                    onClick={() => setModeratorIds(e.evidence_ids)}
+                  >
+                    Inspect frozen sources
+                  </button>
+                )}
+                <pre>
+                  {JSON.stringify(
+                    {
+                      assumption_versions: e.assumption_versions,
+                      data: e.data,
+                    },
+                    null,
+                    2,
+                  )}
+                </pre>
+              </article>
+            ))}
+          </details>
+        </section>
+      )}
+      {moderatorIds && (
+        <SourceCards ids={moderatorIds} onClose={() => setModeratorIds(null)} />
+      )}
       <div className="filter-bar">
         <div className="search-field">
           <Search size={16} />
@@ -145,9 +196,9 @@ export default function Audit() {
         )}
       </div>
       <p className="chart-note">
-        Events are appended by the application and stored in this browser. This
-        is not a secure or immutable production audit database. Backend
-        persistence and access control are integration tasks.
+        The demo history is stored in this browser. Moderator events above are
+        checkpointed in the local backend. Production access control and an
+        immutable enterprise audit database remain integration tasks.
       </p>
       {ids && <EvidenceDialog ids={ids} onClose={() => setIds(null)} />}
     </>

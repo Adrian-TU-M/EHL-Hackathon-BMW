@@ -17,6 +17,11 @@ import {
   Check,
 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
+import {
+  connectModerator,
+  useModeratorStore,
+} from "../../store/useModeratorStore";
+import { moderatorApi } from "../../lib/council/api";
 import { vehicleNames } from "../../lib/mock-data";
 import { Badge, Button } from "../ui/Primitives";
 const navigation = [
@@ -31,8 +36,7 @@ const navigation = [
 export default function AppShell() {
   const started = useAppStore((s) => s.started);
   const scope = useAppStore((s) => s.scope);
-  const status = useAppStore((s) => s.council.status);
-  const tick = useAppStore((s) => s.tickCouncil);
+  const moderatorId = useModeratorStore((s) => s.id);
   const location = useLocation();
   const activeIndex = navigation.findIndex(
     (item) => item.to === location.pathname,
@@ -43,10 +47,8 @@ export default function AppShell() {
   const [toast, setToast] = useState("");
   const [storageError, setStorageError] = useState(false);
   useEffect(() => {
-    if (status !== "running") return;
-    const timer = setInterval(tick, 4200);
-    return () => clearInterval(timer);
-  }, [status, tick]);
+    if (moderatorId) return connectModerator(moderatorId);
+  }, [moderatorId]);
   useEffect(() => {
     setOpen(false);
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -65,7 +67,10 @@ export default function AppShell() {
     setExporting(true);
     try {
       const { downloadReport } = await import("../../lib/export/report");
-      await downloadReport(useAppStore.getState());
+      const moderator = moderatorId
+        ? await moderatorApi.export(moderatorId)
+        : undefined;
+      await downloadReport({ ...useAppStore.getState(), moderator });
       setToast("Your product intelligence report has been downloaded.");
     } catch {
       setToast("The report could not be generated. Please try again.");
@@ -103,8 +108,8 @@ export default function AppShell() {
           <div className="session-card">
             <span className="session-dot" />
             <div>
-              <strong>Demo environment</strong>
-              <span>Local session · synthetic data</span>
+              <strong>Prototype workspace</strong>
+              <span>Source-backed council · demo dashboard</span>
             </div>
           </div>
           <p>
@@ -144,7 +149,7 @@ export default function AppShell() {
             </span>
           </div>
           <div>
-            <Badge tone="blue">DEMO</Badge>
+            <Badge tone="blue">PROTOTYPE</Badge>
             <Button
               variant="secondary"
               className="export-button"
@@ -205,7 +210,7 @@ export default function AppShell() {
             BMW NEXT <span className="muted">/</span> Product intelligence, with
             perspective.
           </span>
-          <span>Synthetic demo · Human approval required</span>
+          <span>Prototype · Human review required</span>
         </footer>
       </div>
       {toast && (

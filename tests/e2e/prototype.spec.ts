@@ -131,55 +131,110 @@ test("specialist pages filter actual fixture records and disclose sources", asyn
   await expect(page.getByRole("dialog")).toContainText("hypothetical peer");
   await assertFits(page);
 });
-test("council pause, interruption, challenge, bounded stages and PM handoff", async ({
+test("server council agenda, pause, challenge, replay, source cards and human review", async ({
   page,
 }) => {
-  await start(page);
-  await page.getByRole("link", { name: "Agent council", exact: true }).click();
-  await page.clock.install();
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
   await page
-    .getByRole("button", { name: "Start discussion", exact: true })
+    .getByLabel("Market", { exact: true })
+    .selectOption("United States");
+  await page
+    .getByRole("button", { name: "Start Product Analysis", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm scope & begin" }).click();
+  await page.getByRole("link", { name: "Agent council", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Prepare agenda", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "Pause discussion" }),
+    page.getByRole("heading", { name: "Review the proposed agenda" }),
   ).toBeVisible();
-  await page.clock.fastForward(4300);
-  await page.getByRole("button", { name: "Pause discussion" }).click();
-  const speaker = await page.locator(".speaker-card>p").textContent();
-  await page.clock.fastForward(12000);
-  expect(await page.locator(".speaker-card>p").textContent()).toBe(speaker);
-  await page.getByRole("button", { name: "Challenge", exact: true }).click();
+  await expect(
+    page.getByText("DETERMINISTIC INTEGRATION MODE", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Confirm agenda & start" }).click();
   await page
-    .getByLabel("What needs closer examination?")
-    .fill("Validate prevalence using unique feedback records.");
-  await page.getByRole("button", { name: "Record challenge" }).click();
-  await expect(page.locator(".challenge-record")).toContainText(
-    "Validate prevalence",
-  );
-  await page.getByRole("button", { name: "Resume discussion" }).click();
-  await page.getByRole("button", { name: "Interrupt", exact: true }).click();
+    .getByRole("button", { name: "Pause discussion", exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: "Resume discussion" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Challenge", exact: true }).click();
+  await page
+    .getByLabel("Rationale or specific question")
+    .fill("Validate prevalence using unique feedback records.");
+  await page
+    .getByRole("button", { name: "Record challenge", exact: true })
+    .click();
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Resume discussion" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Resume discussion" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Moderator outcomes · human review" }),
+  ).toBeVisible({ timeout: 20000 });
+  await expect(
+    page.getByRole("button", { name: "Prepare linked new run" }),
+  ).toBeVisible({ timeout: 30000 });
+  await page
+    .getByRole("button", { name: /Show complete published transcript/ })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Complete published transcript",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".moderator-section").filter({
+      has: page.getByRole("heading", {
+        name: "Complete published transcript",
+        exact: true,
+      }),
+    }),
+  ).toContainText("Validate prevalence using unique feedback records.");
+  const outcomes = page.locator(".moderator-section").filter({
+    has: page.getByRole("heading", {
+      name: "Moderator outcomes · human review",
+    }),
+  });
+  await outcomes
+    .getByText("Claims, alternatives and disagreement record", { exact: true })
+    .first()
+    .click();
+  await outcomes
+    .getByRole("button", { name: "Inspect claim sources", exact: true })
+    .first()
+    .click();
+  await expect(page.getByRole("dialog")).toContainText("Feedback!");
+  await page.getByRole("button", { name: "Close dialog" }).click();
+  await outcomes
+    .getByRole("button", { name: "Review outcome v1", exact: true })
+    .first()
+    .click();
+  await page.getByLabel("Status", { exact: true }).selectOption("Deferred");
+  await page
+    .getByLabel("Rationale", { exact: true })
+    .fill("Need representative validation before deciding.");
+  await page
+    .getByRole("button", { name: "Record version-specific decision" })
+    .click();
+  await expect(outcomes).toContainText("PM Deferred of v1");
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export versioned records" }).click();
+  expect((await download).suggestedFilename()).toMatch(
+    /moderator-run-.*\.json$/,
+  );
+  await assertFits(page);
+  expect(errors).toEqual([]);
   await page.screenshot({
-    path: "test-results/council-desktop.png",
+    path: "test-results/moderator-outcomes-desktop.png",
     fullPage: true,
     animations: "disabled",
   });
-  await page.getByRole("button", { name: "Resume discussion" }).click();
-  for (let i = 0; i < 11; i++) await page.clock.runFor(4300);
-  await expect(
-    page.getByRole("button", { name: "Continue to PM review" }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Expand debate" }).click();
-  await expect(page.locator(".transcript-event")).toHaveCount(11);
-  await page.getByRole("button", { name: "Continue to PM review" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Shape the next generation." }),
-  ).toBeVisible();
-  await expect(
-    page.locator(".requirement-list").getByText("Approved", { exact: true }),
-  ).toHaveCount(0);
 });
 test("review, versioning, evidence exclusion, scoring, persistence, audit and PDF export", async ({
   page,
@@ -280,12 +335,33 @@ test("mobile layout, navigation, deep links and reduced motion", async ({
   await assertFits(page);
   await page.getByRole("button", { name: "Open navigation" }).click();
   await page.getByRole("link", { name: "Agent council", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: /Evidence in focus/ }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Prepare agenda", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Review the proposed agenda" }),
+  ).toBeVisible();
   await assertFits(page);
   await page.screenshot({
     path: "test-results/council-mobile.png",
     fullPage: true,
     animations: "disabled",
   });
+  await page
+    .getByRole("button", { name: "Import external source", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByLabel("Public HTTPS source URL")).toBeVisible();
+  await assertFits(page);
+  await page.screenshot({
+    path: "test-results/external-source-mobile.png",
+    fullPage: true,
+    animations: "disabled",
+  });
+  await page.getByRole("button", { name: "Close dialog" }).click();
   await page.goto("/decisions");
   await expect(
     page.getByRole("heading", { name: "Shape the next generation." }),

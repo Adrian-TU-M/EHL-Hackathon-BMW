@@ -260,6 +260,57 @@ export function createReport(snapshot: AnalysisSnapshot) {
     if (e.evidenceIds.length) text(`Sources: ${e.evidenceIds.join(", ")}`, 8);
     if (e.assumption) text(`Assumption: ${e.assumption}`, 9);
   }
+  if (snapshot.moderator) {
+    const { session, events } = snapshot.moderator;
+    next("EVIDENCE-GROUNDED MODERATOR");
+    heading("Moderator run and human review");
+    text(
+      `Run ${session.run_id}. Mode ${session.mode}. Status ${session.status}. Source snapshot ${session.agenda.source_snapshot}.`,
+      9,
+    );
+    text(
+      "The earlier dashboard pages use synthetic demo data. This section contains a separate server moderator record. Complete versioned packets and events are available from the council JSON export.",
+      9,
+    );
+    for (const id of session.agenda.selected_ids) {
+      const topic = session.agenda.topics.find((t) => t.id === id)!;
+      text(
+        `${topic.question} Agenda interval ${topic.lower_score}–${topic.upper_score}; known weight ${topic.coverage}%. ${topic.rationale}`,
+        9,
+      );
+    }
+    for (const outcome of session.outcomes) {
+      ensure(60);
+      heading(`${outcome.packet.brief.question} / v${outcome.version}`);
+      text(
+        `Closure: ${outcome.closure_reason}. Human review: ${outcome.review_status}. Assessment valid: ${outcome.assessment_valid}.`,
+        9,
+      );
+      text(outcome.assessment?.summary || "No completed judge assessment.", 10);
+      for (const claim of outcome.packet.claims)
+        text(
+          `${claim.id} [${claim.kind}; ${claim.validation}]: ${claim.statement} Sources: ${claim.evidence_ids.join(", ")}. ${claim.issues.join("; ")}`,
+          9,
+        );
+      for (const c of outcome.packet.challenges)
+        text(
+          `Disagreement ${c.id}: ${c.status}. ${c.question} ${c.response || "No rebuttal"}`,
+          9,
+        );
+      for (const a of outcome.packet.assumptions)
+        text(
+          `Assumption ${a.id} v${a.version} (${a.status}): ${a.statement}. Validate: ${a.validation_needed}`,
+          9,
+        );
+      for (const d of outcome.decisions)
+        text(`PM ${d.status} of v${d.version}: ${d.rationale}`, 9);
+    }
+    for (const event of events) {
+      ensure(25);
+      label(`${event.sequence} / ${event.actor} / ${event.stage}`);
+      text(event.statement, 9);
+    }
+  }
   next("CHRONOLOGICAL AUDIT");
   heading("The decision record");
   text(
@@ -288,7 +339,7 @@ export function createReport(snapshot: AnalysisSnapshot) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(144, 158, 176);
-    doc.text("BMW NEXT / SYNTHETIC DEMO / HUMAN REVIEW REQUIRED", 20, 285);
+    doc.text("BMW NEXT / PROTOTYPE / HUMAN REVIEW REQUIRED", 20, 285);
     doc.text(`${i} / ${pages}`, 190, 285, { align: "right" });
   }
   return doc;
@@ -307,5 +358,6 @@ function snapshotData(s: AnalysisSnapshot): AnalysisSnapshot {
     audit: s.audit,
     weights: s.weights,
     council: s.council,
+    moderator: s.moderator,
   };
 }

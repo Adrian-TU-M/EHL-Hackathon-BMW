@@ -1,392 +1,756 @@
 import { lazy, Suspense, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Play,
-  Pause,
-  Square,
-  ArrowRight,
-  ChevronDown,
-  MessageSquare,
-  FileText,
-  Maximize2,
-  Check,
-  CircleDot,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Play, Pause, Download, ArrowUp, ArrowDown } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { useModeratorStore } from "../store/useModeratorStore";
 import { Badge, Button, Loading, Modal } from "../components/ui/Primitives";
-import { EvidenceDialog } from "../components/dashboard/EvidenceDialog";
-import { agentMeta } from "../components/agents/AgentSculpture";
-import { stages } from "../lib/council/machine";
-import type { AgentState, Topic } from "../lib/types";
+import { moderatorApi, downloadRecords } from "../lib/council/api";
+import type {
+  AgendaTopic,
+  ModeratorControl,
+  ModeratorSession,
+} from "../lib/council/contracts";
+import type { CouncilState, Topic } from "../lib/types";
+import {
+  ModeratorReview,
+  SourceCards,
+} from "../components/council/ModeratorReview";
+import "../styles/moderator.css";
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
+const workflow = [
+  "Topic brief",
+  "Independent positions",
+  "Claim checks",
+  "Challenges",
+  "Rebuttals",
+  "Judge assessment",
+  "Optional clarification",
+  "Closure",
+];
+
 export default function Council() {
+  const scope = useAppStore((s) => s.scope);
   const {
-    council,
-    requirements,
-    scope,
-    startCouncil,
-    controlCouncil,
-    evidence,
-  } = useAppStore();
-  const [topic, setTopic] = useState<Topic>(council.topic);
-  const [expanded, setExpanded] = useState(false);
-  const [challenge, setChallenge] = useState(false);
-  const [rationale, setRationale] = useState("");
-  const [ids, setIds] = useState<string[] | null>(null);
-  const [showcase, setShowcase] = useState(false);
-  const [visualState, setVisualState] = useState<AgentState>("idle");
-  const navigate = useNavigate();
-  const event = council.events[council.cursor];
-  const stageIndex = stages.findIndex((s) => s.id === event?.stage);
-  const active = council.status === "running";
-  const paused = ["paused", "interrupted"].includes(council.status);
-  const complete = council.status === "complete";
-  const currentSources = evidence.filter((e) =>
-    event?.evidenceIds.includes(e.id),
-  );
+    session: s,
+    events,
+    error,
+    connected,
+    accept,
+    setError,
+  } = useModeratorStore();
+  const [busy, setBusy] = useState(false),
+    [selected, setSelected] = useState<string[] | null>(null),
+    [pins, setPins] = useState<string[]>([]);
+  const [override, setOverride] = useState<ModeratorControl | null>(null),
+    [rationale, setRationale] = useState("");
+  const [remaining, setRemaining] = useState<string[]>([]),
+    [ids, setIds] = useState<string[] | null>(null),
+    [expanded, setExpanded] = useState(false);
+  const [sourceForm, setSourceForm] = useState(false),
+    [sourceNotice, setSourceNotice] = useState("");
+  async function perform(fn: () => Promise<ModeratorSession>) {
+    setBusy(true);
+    setError(undefined);
+    try {
+      accept(await fn());
+    } catch (e) {
+      await useModeratorStore.getState().refresh();
+      setError(e instanceof Error ? e.message : "Moderator unavailable");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function prepare() {
+    setSelected(null);
+    setPins([]);
+    await perform(() => moderatorApi.prepare(scope, s?.id));
+  }
+  const chosen = selected || s?.agenda.selected_ids || [],
+    topic = s?.agenda.topics.find((t) => t.id === s.work?.brief.topic_id),
+    latest = events.at(-1);
+  const active = s?.status === "running",
+    confirmed = !!s?.agenda.confirmed_at,
+    paused =
+      s && ["paused", "interrupted", "unavailable", "ready"].includes(s.status);
+  const scene: CouncilState = {
+    status:
+      !s || !confirmed
+        ? "idle"
+        : active
+          ? "running"
+          : s.status === "complete"
+            ? "complete"
+            : "paused",
+    cursor: events.length - 1,
+    elapsedMs: (s?.active_seconds || 0) * 1000,
+    topic: (topic?.area || "Displays") as Topic,
+    run: 1,
+    events: events.map((e) => ({
+      id: e.id,
+      actor: ["customer", "market", "competitor", "judge"].includes(e.actor)
+        ? (e.actor as "customer" | "market" | "competitor" | "judge")
+        : "moderator",
+      stage:
+        e.stage === "challenge" || e.stage === "rebuttal"
+          ? "challenge"
+          : e.stage === "assessment"
+            ? "assessment"
+            : e.stage === "perspectives"
+              ? "perspectives"
+              : e.stage === "closure"
+                ? "review"
+                : "topic",
+      statement: e.statement,
+      evidenceIds: e.evidence_ids,
+    })),
+  };
+  function openOverride(action: ModeratorControl) {
+    setRationale("");
+    setOverride(action);
+    setRemaining(
+      s?.agenda.selected_ids.slice(s.cursor + (s.work ? 1 : 0)) || [],
+    );
+  }
+  function move(id: string, direction: number) {
+    const next = [...remaining],
+      i = next.indexOf(id),
+      j = i + direction;
+    if (j < 0 || j >= next.length) return;
+    [next[i], next[j]] = [next[j], next[i]];
+    setRemaining(next);
+  }
   return (
-    <div className="council-page">
+    <div className="council-page moderator-page">
       <div className="council-page-header">
         <div>
-          <div className="eyebrow">
-            <span className="live-dot" /> THE INTELLIGENCE COUNCIL
-          </div>
+          <div className="eyebrow">THE INTELLIGENCE COUNCIL</div>
           <h1>
-            Different perspectives.
+            Evidence in focus.
             <br />
-            <span>One considered direction.</span>
+            <span>Every disagreement visible.</span>
           </h1>
-          <p>Evidence in focus. Assumptions in the open. You in control.</p>
+          <p>
+            Confirm the agenda once. Review each outcome as the moderator
+            advances.
+          </p>
         </div>
-        <Badge tone="dark">SCRIPTED DEMO COUNCIL</Badge>
+        <Badge tone="dark">
+          {s?.mode === "deterministic"
+            ? "DETERMINISTIC INTEGRATION MODE"
+            : s
+              ? "SERVER MODERATOR"
+              : "AWAITING SOURCES"}
+        </Badge>
       </div>
+      <div className="moderator-notice">
+        The council uses a versioned private source collection. Sources outside
+        Drive are allowed and can be imported before preparing an agenda. Other
+        dashboard pages retain their synthetic demo analysis.{" "}
+        {s?.mode === "deterministic" &&
+          "Integration mode quotes sources and exercises the workflow; it does not generate final requirement scores."}{" "}
+        <button className="text-link" onClick={() => setSourceForm(true)}>
+          Import external source
+        </button>
+      </div>
+      {sourceNotice && (
+        <div className="moderator-notice" role="status">
+          {sourceNotice}
+        </div>
+      )}
+      {error && (
+        <div className="moderator-notice error" role="alert">
+          {error}
+        </div>
+      )}
+      {s?.availability.length ? (
+        <div className="moderator-notice" role="status">
+          Live configuration unavailable: {s.availability.join(" · ")}
+        </div>
+      ) : null}
       <div className="council-stagebar">
-        {stages.map((s, i) => (
+        {workflow.map((label, i) => (
           <div
-            key={s.id}
-            className={`${i === stageIndex ? "current" : ""} ${i < stageIndex ? "done" : ""}`}
+            key={label}
+            className={
+              s?.work?.stage ===
+              [
+                "topic",
+                "perspectives",
+                "validation",
+                "challenges",
+                "rebuttals",
+                "assessment",
+                "clarification",
+                "close",
+              ][i]
+                ? "current"
+                : ""
+            }
           >
-            <span>
-              {i < stageIndex ? (
-                <Check size={11} />
-              ) : (
-                String(i + 1).padStart(2, "0")
-              )}
-            </span>
-            <strong>{s.label}</strong>
-            {i < stages.length - 1 && <i />}
+            <span>{i + 1}</span>
+            <strong>{label}</strong>
           </div>
         ))}
       </div>
       <div className="council-layout">
         <aside className="council-context">
-          <div className="eyebrow">ON THE TABLE</div>
-          <label className="field-label" htmlFor="council-topic">
-            Discussion topic
-          </label>
-          <select
-            id="council-topic"
-            value={topic}
-            disabled={active || paused}
-            onChange={(e) => setTopic(e.target.value as Topic)}
-          >
-            {requirements.map((r) => (
-              <option key={r.topic}>{r.topic}</option>
-            ))}
-          </select>
-          <h2>{requirements.find((r) => r.topic === topic)?.title}</h2>
-          <div className="council-scope">
-            <span>
-              VEHICLE <strong>BMW {scope.vehicle}</strong>
-            </span>
-            <span>
-              MARKET <strong>{scope.market}</strong>
-            </span>
-            <span>
-              HORIZON <strong>{2026 + scope.horizon}</strong>
-            </span>
-          </div>
+          <div className="eyebrow">CONFIRMED SCOPE</div>
+          <h2>
+            {s?.agenda.scope.vehicle || scope.vehicle} /{" "}
+            {s?.agenda.scope.market || scope.market}
+          </h2>
+          <p>
+            {s?.agenda.scope.powertrain || scope.powertrain} ·{" "}
+            {2026 + (s?.agenda.scope.horizon || scope.horizon)}
+          </p>
+          <p>
+            {s?.agenda.scope.prompt ||
+              scope.prompt ||
+              "Balanced customer priorities"}
+          </p>
           <div className="council-rules">
-            <span>
-              <CircleDot size={13} /> 3 independent perspectives
-            </span>
-            <span>
-              <CircleDot size={13} /> 1 challenge round
-            </span>
-            <span>
-              <CircleDot size={13} /> 1 clarification maximum
-            </span>
-            <span>
-              <CircleDot size={13} /> Final decision stays with you
-            </span>
+            <span>3 independent positions</span>
+            <span>1 challenge per specialist</span>
+            <span>1 clarification maximum</span>
+            <span>45s per call · 5 active minutes per topic</span>
           </div>
           <div className="council-controls">
-            {council.status === "idle" || complete ? (
-              <Button onClick={() => startCouncil(topic)}>
-                <Play size={15} />
-                {complete ? "Start a new discussion" : "Start discussion"}
+            {!s || s.status === "complete" ? (
+              <Button onClick={prepare} disabled={busy}>
+                {busy
+                  ? "Preparing…"
+                  : s
+                    ? "Prepare linked new run"
+                    : "Prepare agenda"}
               </Button>
-            ) : (
+            ) : null}
+            {s?.status === "awaiting_confirmation" ? (
               <Button
-                onClick={() => controlCouncil(active ? "pause" : "resume")}
+                disabled={busy || !chosen.length}
+                onClick={() =>
+                  perform(async () => {
+                    const next = await moderatorApi.confirm(s, chosen, pins);
+                    return moderatorApi.control(next, "start");
+                  })
+                }
+              >
+                Confirm agenda & start
+              </Button>
+            ) : null}
+            {active || paused ? (
+              <Button
+                disabled={busy || !!s?.work?.blocked_preference}
+                onClick={() =>
+                  perform(() =>
+                    moderatorApi.control(
+                      s!,
+                      active
+                        ? "pause"
+                        : s!.status === "ready"
+                          ? "start"
+                          : "resume",
+                    ),
+                  )
+                }
               >
                 {active ? <Pause size={15} /> : <Play size={15} />}{" "}
                 {active ? "Pause discussion" : "Resume discussion"}
               </Button>
-            )}
-            <div>
+            ) : null}
+            {confirmed && s?.status !== "complete" ? (
+              <>
+                {(
+                  [
+                    "interrupt",
+                    "challenge",
+                    "skip",
+                    "reorder",
+                    "finish",
+                  ] as const
+                ).map((action) => (
+                  <Button
+                    key={action}
+                    variant="secondary"
+                    disabled={busy || (action === "challenge" && !s.work)}
+                    onClick={() =>
+                      action === "interrupt"
+                        ? perform(() => moderatorApi.control(s, action))
+                        : openOverride(action)
+                    }
+                  >
+                    {
+                      {
+                        interrupt: "Interrupt",
+                        challenge: "Challenge",
+                        skip: "Skip current topic",
+                        reorder: "Reorder remaining topics",
+                        finish: "Finish session",
+                      }[action]
+                    }
+                  </Button>
+                ))}
+              </>
+            ) : null}
+            {s && (
               <Button
                 variant="secondary"
-                disabled={!active && !paused}
-                onClick={() => controlCouncil("interrupt")}
-              >
-                <Square size={13} /> Interrupt
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={!active && !paused}
-                onClick={() => {
-                  controlCouncil("pause");
-                  setChallenge(true);
+                disabled={busy}
+                onClick={async () => {
+                  try {
+                    downloadRecords(await moderatorApi.export(s.id));
+                  } catch (e) {
+                    setError(String(e));
+                  }
                 }}
               >
-                <MessageSquare size={14} /> Challenge
+                <Download size={14} /> Export versioned records
               </Button>
-            </div>
+            )}
+            {s?.parent_session_id && (
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() =>
+                  perform(() => moderatorApi.session(s.parent_session_id!))
+                }
+              >
+                Inspect previous linked run
+              </Button>
+            )}
           </div>
           <div className="council-runtime">
-            <span className={active ? "live-dot" : "quiet-dot"} />
-            {active
-              ? "Council in session"
-              : paused
-                ? "Paused for your perspective"
-                : complete
-                  ? "Ready for PM review"
-                  : "Awaiting your direction"}
+            <span>
+              {s?.status.replaceAll("_", " ") || "No session"} ·{" "}
+              {connected ? "events connected" : "events disconnected"}
+            </span>
             <small>
-              {Math.round(council.elapsedMs / 1000)}s / 120s maximum
+              {s?.outcomes.length || 0} / {s?.agenda.selected_ids.length || 0}{" "}
+              topics closed · {s?.tokens || 0} model tokens charged
             </small>
           </div>
+          {s?.work?.blocked_preference && (
+            <div className="moderator-notice">
+              A scope or substantive preference change needs a newly confirmed
+              agenda.
+              <Button variant="secondary" onClick={prepare} disabled={busy}>
+                Prepare linked agenda
+              </Button>
+            </div>
+          )}
         </aside>
         <section className="council-center">
           <div className="chamber-caption">
             <span>
-              COUNCIL CHAMBER <span className="muted">/</span> 01
+              COUNCIL CHAMBER /{" "}
+              {s ? Math.min(s.cursor + 1, s.agenda.selected_ids.length) : "—"}
             </span>
-            <button
-              onClick={() => setShowcase(true)}
-              aria-label="Open agent state showcase"
-            >
-              <SlidersHorizontal size={14} /> Avatars
-            </button>
+            <span>{topic?.label || "Agenda preparation"}</span>
           </div>
-          <Suspense
-            fallback={<Loading label="Preparing the council chamber…" />}
-          >
-            <CouncilScene council={council} />
+          <Suspense fallback={<Loading label="Preparing council chamber…" />}>
+            <CouncilScene council={scene} />
           </Suspense>
           <div className="speaker-card">
-            <div className="flex-between">
-              <span className="eyebrow">
-                {event
-                  ? `${agentMeta[event.actor].name.toUpperCase()} / ${agentMeta[event.actor].role.toUpperCase()}`
-                  : "FIVE PERSPECTIVES, IN CONVERSATION"}
-              </span>
-              <div
-                className={`voice-bars ${active ? "active" : ""}`}
-                aria-hidden="true"
-              >
-                <i />
-                <i />
-                <i />
-                <i />
-                <i />
-              </div>
+            <div className="eyebrow">
+              {latest
+                ? `${latest.actor.toUpperCase()} / ${latest.stage}`
+                : "MODERATOR"}
             </div>
-            <p key={event?.id} aria-live="polite">
-              {event?.statement ||
-                "Your council is ready. Choose a customer experience and start the discussion. Each specialist brings a distinct perspective; the judge evaluates the evidence before you decide."}
+            <p aria-live="polite">
+              {latest?.statement ||
+                "Prepare an evidence-grounded agenda. No discussion starts from a predefined requirement."}
             </p>
-            {council.challenge && (
-              <div className="challenge-record">
-                <strong>Your challenge</strong>
-                <span>{council.challenge}</span>
-              </div>
-            )}
+            {latest?.evidence_ids.length ? (
+              <button
+                className="text-link"
+                onClick={() => setIds(latest.evidence_ids)}
+              >
+                Inspect cited sources ({latest.evidence_ids.length})
+              </button>
+            ) : null}
             <button
               className="text-link"
               onClick={() => setExpanded(!expanded)}
-              disabled={council.cursor < 0}
             >
-              {expanded ? "Collapse discussion" : "Expand debate"}
-              <ChevronDown size={14} className={expanded ? "rotate" : ""} />
+              {expanded
+                ? "Collapse transcript"
+                : "Show complete published transcript"}{" "}
+              ({events.length})
             </button>
           </div>
         </section>
         <aside className="council-evidence">
-          <div className="flex-between">
-            <span className="eyebrow">EVIDENCE IN FOCUS</span>
-            <FileText size={16} />
-          </div>
-          {currentSources.length ? (
-            currentSources.slice(0, 3).map((e) => (
-              <button
-                className="council-source"
-                key={e.id}
-                onClick={() => setIds([e.id])}
-              >
-                <Badge tone="dark">{e.domain}</Badge>
-                <p>{e.passage}</p>
-                <span>
-                  {e.id} · SYNTHETIC <Maximize2 size={12} />
-                </span>
-                {e.exclusionReason && (
-                  <strong className="error">Excluded by PM</strong>
-                )}
-              </button>
-            ))
-          ) : (
-            <div className="council-source-empty">
-              <FileText size={26} />
-              <p>Source references will follow each agent’s statement.</p>
-            </div>
-          )}
-          <div className="council-assumption">
-            <span className="eyebrow">ASSUMPTIONS & LIMITATIONS</span>
-            <p>
-              {event?.assumption ||
-                "No real datasets are connected. The discussion demonstrates the workflow, not verified BMW findings."}
-            </p>
-          </div>
-          {stageIndex >= 3 && (
-            <div className="judge-note">
-              <span className="eyebrow">JUDGE’S POSITION</span>
+          <div className="eyebrow">DECISION COVERAGE</div>
+          <h3>{topic?.question || "Source-grounded agenda"}</h3>
+          <p>
+            {topic?.rationale ||
+              "Every candidate remains in the backlog with its score interval and known-weight coverage."}
+          </p>
+          {s?.work && (
+            <>
               <p>
-                Coherent customer need; illustrative evidence. Prevalence and
-                feasibility remain unresolved.
+                {Math.round(s.work.active_seconds)} / {s.limits.topic_seconds}{" "}
+                active seconds
+                <br />
+                {s.work.tokens} / {s.limits.topic_tokens} topic tokens
               </p>
-              <small>Provisional · subject to human challenge</small>
-            </div>
+              <p>
+                {
+                  s.work.claims.filter((c) => c.validation === "supported")
+                    .length
+                }{" "}
+                supported claims ·{" "}
+                {
+                  s.work.claims.filter((c) => c.validation !== "supported")
+                    .length
+                }{" "}
+                unsupported/unverified
+              </p>
+              {s.work.challenges.map((c) => (
+                <p key={c.id}>
+                  <Badge>{c.status}</Badge> {c.question}
+                </p>
+              ))}
+            </>
+          )}
+          {topic && (
+            <button
+              className="text-link"
+              onClick={() => setIds(topic.evidence_ids)}
+            >
+              Inspect topic evidence ({topic.evidence_ids.length})
+            </button>
           )}
         </aside>
       </div>
-      {expanded && (
-        <section className="transcript">
+      {s && (
+        <section className="moderator-section">
           <div className="flex-between">
-            <h2>The discussion, in full.</h2>
-            <Badge tone="dark">VISIBLE AGENT STATEMENTS</Badge>
+            <h2>
+              {confirmed
+                ? "Frozen agenda & backlog"
+                : "Review the proposed agenda"}
+            </h2>
+            <Badge>
+              {chosen.length} selected / {s.agenda.topics.length} candidates
+            </Badge>
           </div>
-          <p className="small">
-            Generated discussion summaries, challenges and assessments. No
-            hidden model reasoning.
+          <p>
+            Need 40% · severity 35% · future relevance 20% · verified
+            competitive gap 5%. Missing factors retain their possible range.
+            Pins come first, then substantiated severe issues, supported score,
+            PM relevance, coverage, and stable ID.
           </p>
-          {council.events.slice(0, council.cursor + 1).map((e, i) => (
-            <div className="transcript-event" key={e.id}>
-              <span className="mono">{String(i + 1).padStart(2, "0")}</span>
-              <div>
-                <strong style={{ color: agentMeta[e.actor].color }}>
-                  {agentMeta[e.actor].name} <span>{e.stage}</span>
-                </strong>
-                <p>{e.statement}</p>
-                {e.assumption && <small>Assumption: {e.assumption}</small>}
-                {e.evidenceIds.length > 0 && (
-                  <button
-                    className="text-link"
-                    onClick={() => setIds(e.evidenceIds)}
-                  >
-                    {e.evidenceIds.join(" · ")}
-                    <FileText size={12} />
-                  </button>
-                )}
-              </div>
-            </div>
+          {s.agenda.warnings.map((w) => (
+            <p key={w} className="muted">
+              {w}
+            </p>
+          ))}
+          <div className="moderator-agenda">
+            {s.agenda.topics.map((t) => (
+              <AgendaRow
+                key={t.id}
+                topic={t}
+                selected={chosen.includes(t.id)}
+                pinned={pins.includes(t.id) || t.pinned}
+                frozen={confirmed}
+                position={s.agenda.selected_ids.indexOf(t.id) + 1}
+                toggle={() =>
+                  setSelected(
+                    chosen.includes(t.id)
+                      ? chosen.filter((i) => i !== t.id)
+                      : [...chosen, t.id],
+                  )
+                }
+                pin={() =>
+                  setPins(
+                    pins.includes(t.id)
+                      ? pins.filter((i) => i !== t.id)
+                      : [...pins, t.id],
+                  )
+                }
+                sources={setIds}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+      {expanded && (
+        <section className="moderator-section">
+          <h2>Complete published transcript</h2>
+          {events.map((e) => (
+            <article className="moderator-record" key={e.id}>
+              <small>
+                #{e.sequence} · {e.topic_id || "Session"} · {e.actor} /{" "}
+                {e.stage}
+              </small>
+              <p>{e.statement}</p>
+              {!!e.evidence_ids.length && (
+                <button
+                  className="text-link"
+                  onClick={() => setIds(e.evidence_ids)}
+                >
+                  Source cards
+                </button>
+              )}
+              <details>
+                <summary>Structured event and assumption versions</summary>
+                <pre>{JSON.stringify(e.data, null, 2)}</pre>
+                <pre>{JSON.stringify(e.assumption_versions)}</pre>
+              </details>
+            </article>
           ))}
         </section>
       )}
-      <div className="council-review-footer">
-        <div>
-          <strong>
-            {complete
-              ? "The next move is yours."
-              : "An open discussion. A deliberate decision."}
-          </strong>
-          <span>
-            {complete
-              ? "Review the proposal, compare alternatives, and record your rationale."
-              : "The council never approves a requirement on your behalf."}
-          </span>
-        </div>
-        <Button disabled={!complete} onClick={() => navigate("/decisions")}>
-          Continue to PM review <ArrowRight size={16} />
-        </Button>
-      </div>
-      {ids && <EvidenceDialog ids={ids} onClose={() => setIds(null)} />}{" "}
-      {challenge && (
+      <ModeratorReview />
+      {ids && <SourceCards ids={ids} onClose={() => setIds(null)} />}
+      {sourceForm && (
+        <ExternalSourceForm
+          onClose={() => setSourceForm(false)}
+          imported={(message) => {
+            setSourceNotice(message);
+            setSourceForm(false);
+          }}
+        />
+      )}
+      {override && s && (
         <Modal
-          title="Bring your perspective"
-          onClose={() => setChallenge(false)}
+          title={`${override[0].toUpperCase()}${override.slice(1)} session`}
+          onClose={() => setOverride(null)}
         >
           <p>
-            The discussion is paused. Your challenge will stay visible in the
-            council and audit trail. In this demo, it does not generate a new AI
-            response.
+            {override === "challenge"
+              ? "Your question is published to the judge packet. The workflow pauses before resuming."
+              : "This override preserves completed topics and records your rationale."}
           </p>
-          <label className="field-label" htmlFor="council-challenge">
-            What needs closer examination?
+          {override === "reorder" && (
+            <ol className="moderator-order">
+              {remaining.map((id, i) => (
+                <li key={id}>
+                  <span>{s.agenda.topics.find((t) => t.id === id)?.label}</span>
+                  <button
+                    aria-label={`Move ${id} earlier`}
+                    disabled={i === 0}
+                    onClick={() => move(id, -1)}
+                  >
+                    <ArrowUp size={15} />
+                  </button>
+                  <button
+                    aria-label={`Move ${id} later`}
+                    disabled={i === remaining.length - 1}
+                    onClick={() => move(id, 1)}
+                  >
+                    <ArrowDown size={15} />
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+          <label className="field-label" htmlFor="override-rationale">
+            Rationale or specific question
           </label>
           <textarea
-            id="council-challenge"
-            rows={4}
+            id="override-rationale"
             value={rationale}
             onChange={(e) => setRationale(e.target.value)}
-            placeholder="Challenge a source, assumption, or interpretation…"
+            rows={4}
           />
           <Button
-            disabled={!rationale.trim()}
-            onClick={() => {
-              controlCouncil("challenge", rationale);
-              setChallenge(false);
-              setRationale("");
+            disabled={busy || !rationale.trim()}
+            onClick={async () => {
+              await perform(() =>
+                moderatorApi.control(s, override, rationale, remaining),
+              );
+              setOverride(null);
             }}
           >
-            Record challenge
+            Record {override}
           </Button>
         </Modal>
       )}
-      {showcase && (
-        <Modal
-          title="Agent state studio"
-          wide
-          onClose={() => setShowcase(false)}
-        >
-          <p>
-            Procedural sculptures share a state contract with the council
-            workflow.
-          </p>
-          <select
-            aria-label="Agent visualization state"
-            value={visualState}
-            onChange={(e) => setVisualState(e.target.value as AgentState)}
-          >
-            {[
-              "idle",
-              "thinking",
-              "speaking",
-              "challenging",
-              "waiting",
-              "evaluating",
-              "paused",
-              "complete",
-            ].map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-          <div className="showcase-scene">
-            <CouncilScene council={council} showcase={visualState} />
-          </div>
-        </Modal>
-      )}
     </div>
+  );
+}
+
+function ExternalSourceForm({
+  onClose,
+  imported,
+}: {
+  onClose: () => void;
+  imported: (message: string) => void;
+}) {
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  return (
+    <Modal title="Import an external source" onClose={onClose}>
+      <p>
+        Use a public HTTPS HTML, text or PDF source. Publication, market and
+        model claims must match the document. New imports enter new agendas;
+        confirmed runs retain their evidence.
+      </p>
+      <form
+        className="moderator-source-form"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const data = new FormData(e.currentTarget);
+          const body = Object.fromEntries(data.entries());
+          setBusy(true);
+          setError("");
+          try {
+            const result = await moderatorApi.external({
+              ...body,
+              published_at: body.published_at || null,
+              vehicle: body.vehicle || null,
+              region: body.region || null,
+            });
+            imported(result.message);
+          } catch (e) {
+            setError(String(e));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {error && <p role="alert">{error}</p>}
+        <label className="field-label" htmlFor="external-url">
+          Public HTTPS source URL
+        </label>
+        <input
+          id="external-url"
+          name="url"
+          type="url"
+          required
+          placeholder="https://…"
+        />
+        <label className="field-label" htmlFor="external-title">
+          Document title
+        </label>
+        <input id="external-title" name="title" required />
+        <label className="field-label" htmlFor="external-publisher">
+          Publisher
+        </label>
+        <input id="external-publisher" name="publisher" required />
+        <label className="field-label" htmlFor="external-domain">
+          Evidence domain
+        </label>
+        <select id="external-domain" name="domain" defaultValue="competitor">
+          {["competitor", "market", "customer", "product", "corporate"].map(
+            (d) => (
+              <option key={d}>{d}</option>
+            ),
+          )}
+        </select>
+        <label className="field-label" htmlFor="external-quality">
+          Declared source quality
+        </label>
+        <select id="external-quality" name="quality" defaultValue="unverified">
+          {["unverified", "primary", "secondary"].map((d) => (
+            <option key={d}>{d}</option>
+          ))}
+        </select>
+        <label className="field-label" htmlFor="external-vehicle">
+          BMW applicability documented by source
+        </label>
+        <select id="external-vehicle" name="vehicle" defaultValue="">
+          <option value="">Unspecified / context</option>
+          {["F70", "G60", "G68", "G70", "G60_G68"].map((v) => (
+            <option key={v}>{v}</option>
+          ))}
+        </select>
+        <label className="field-label" htmlFor="external-region">
+          Documented market
+        </label>
+        <select id="external-region" name="region" defaultValue="">
+          <option value="">Unspecified / context</option>
+          {["Germany", "EU", "Europe", "United States", "China"].map((v) => (
+            <option key={v}>{v}</option>
+          ))}
+        </select>
+        <label className="field-label" htmlFor="external-date">
+          Publication date (leave blank if unknown)
+        </label>
+        <input id="external-date" name="published_at" type="date" />
+        <Button type="submit" disabled={busy}>
+          {busy ? "Importing…" : "Import and preserve source"}
+        </Button>
+      </form>
+    </Modal>
+  );
+}
+
+function AgendaRow({
+  topic: t,
+  selected,
+  pinned,
+  frozen,
+  position,
+  toggle,
+  pin,
+  sources,
+}: {
+  topic: AgendaTopic;
+  selected: boolean;
+  pinned: boolean;
+  frozen: boolean;
+  position: number;
+  toggle: () => void;
+  pin: () => void;
+  sources: (ids: string[]) => void;
+}) {
+  return (
+    <article className={`moderator-record ${selected ? "selected" : ""}`}>
+      <div className="flex-between">
+        <label>
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={frozen || !t.eligible}
+            onChange={toggle}
+          />{" "}
+          {frozen && position > 0 ? `${position}. ` : ""}
+          <strong>{t.label}</strong>
+        </label>
+        <Badge>
+          {selected ? "Selected" : "Backlog"}{" "}
+          {t.exploratory ? "· exploratory" : ""}
+        </Badge>
+      </div>
+      <p>{t.question}</p>
+      <p>
+        <strong>
+          {t.lower_score}–{t.upper_score} / 100
+        </strong>{" "}
+        · known weight {t.coverage}% · {t.observation_count} / {t.denominator}{" "}
+        scoped observations
+      </p>
+      <details>
+        <summary>Selection rationale and evidence</summary>
+        <p>{t.rationale}</p>
+        {Object.entries(t.ratings).map(([key, r]) => (
+          <p key={key}>
+            <strong>
+              {key}: {r.value ?? "unknown"}
+            </strong>{" "}
+            — {r.rationale}{" "}
+            {!!r.evidence_ids.length && (
+              <button
+                className="text-link"
+                onClick={() => sources(r.evidence_ids)}
+              >
+                Evidence
+              </button>
+            )}
+          </p>
+        ))}
+        <p>{t.limitations.join(" ")}</p>
+        <button className="text-link" onClick={() => sources(t.evidence_ids)}>
+          All supporting signals and counterevidence
+        </button>
+      </details>
+      {!frozen && selected && (
+        <label>
+          <input type="checkbox" checked={pinned} onChange={pin} /> PM pin
+          (discuss first)
+        </label>
+      )}
+    </article>
   );
 }

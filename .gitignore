@@ -11,3 +11,8 @@ output/
 *.tsbuildinfo
 # Never commit raw confidential challenge datasets.
 private-data/
+backend/.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+.playwright-cli/

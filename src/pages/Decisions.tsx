@@ -9,6 +9,7 @@ import {
   Info,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { ModeratorReview } from "../components/council/ModeratorReview";
 import {
   Badge,
   Button,
@@ -60,6 +61,7 @@ export default function Decisions() {
   }
   return (
     <>
+      <ModeratorReview />
       <PageHeader
         eyebrow="YOUR PERSPECTIVE / THE FINAL WORD"
         title="Shape the next generation."

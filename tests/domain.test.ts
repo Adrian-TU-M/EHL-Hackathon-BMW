@@ -1,12 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createFixtures, defaultScope } from "../src/lib/mock-data";
 import { scenarios, scoreRequirement } from "../src/lib/scoring";
-import {
-  advanceCouncil,
-  buildCouncilEvents,
-  initialCouncil,
-  MAX_DURATION_MS,
-} from "../src/lib/council/machine";
+import { initialCouncil, avatarState } from "../src/lib/council/machine";
 import { useAppStore } from "../src/store/useAppStore";
 import { createReport } from "../src/lib/export/report";
 const fixtures = createFixtures(defaultScope);
@@ -78,35 +73,15 @@ describe("Scope and source lineage", () => {
     }
   });
 });
-describe("Bounded council", () => {
-  it("keeps the prescribed sequence and completes without approving requirements", () => {
-    let c = {
-      ...initialCouncil,
-      status: "running" as const,
-      events: buildCouncilEvents(fixtures.requirements[0], 1),
-    } as typeof initialCouncil;
-    for (let i = 0; i < 50; i++) c = advanceCouncil(c);
-    expect(c.status).toBe("complete");
-    expect(c.events[c.cursor].stage).toBe("review");
-    expect(c.events.filter((e) => e.stage === "challenge")).toHaveLength(2);
-    expect(c.elapsedMs).toBeLessThan(MAX_DURATION_MS);
-    expect(fixtures.requirements[0].status).toBe("Pending review");
-  });
-  it("does not advance while paused or interrupted", () => {
-    for (const status of ["paused", "interrupted"] as const) {
-      const state = { ...initialCouncil, status, cursor: 3 };
-      expect(advanceCouncil(state)).toBe(state);
-    }
-  });
-  it("pauses at the deterministic duration cap", () => {
+describe("Council presentation", () => {
+  it("uses server workflow status for avatars without advancing locally", () => {
     expect(
-      advanceCouncil({
-        ...initialCouncil,
-        status: "running",
-        elapsedMs: MAX_DURATION_MS - 1000,
-        events: buildCouncilEvents(fixtures.requirements[0], 1),
-      }).status,
+      avatarState({ ...initialCouncil, status: "paused" }, "customer"),
     ).toBe("paused");
+    expect(
+      avatarState({ ...initialCouncil, status: "complete" }, "judge"),
+    ).toBe("complete");
+    expect(avatarState(initialCouncil, "moderator")).toBe("idle");
   });
 });
 describe("Human review and audit", () => {
@@ -115,24 +90,20 @@ describe("Human review and audit", () => {
   });
   it("requires a rationale and rejects stale versions", async () => {
     await expect(
-      useAppStore
-        .getState()
-        .decide({
-          requirementId: "REQ-001",
-          expectedVersion: 1,
-          status: "Approved",
-          rationale: "",
-        }),
+      useAppStore.getState().decide({
+        requirementId: "REQ-001",
+        expectedVersion: 1,
+        status: "Approved",
+        rationale: "",
+      }),
     ).rejects.toThrow("rationale");
     await expect(
-      useAppStore
-        .getState()
-        .decide({
-          requirementId: "REQ-001",
-          expectedVersion: 9,
-          status: "Approved",
-          rationale: "Reviewed.",
-        }),
+      useAppStore.getState().decide({
+        requirementId: "REQ-001",
+        expectedVersion: 9,
+        status: "Approved",
+        rationale: "Reviewed.",
+      }),
     ).rejects.toThrow("changed");
   });
   it("invalidates approval on significant edit and records before/after", async () => {

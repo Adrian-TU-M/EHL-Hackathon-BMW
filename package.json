@@ -9,7 +9,12 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "format": "prettier --write src tests *.ts *.json README.md ASSETS.md"
+    "format": "prettier --write src tests *.ts *.json README.md ASSETS.md",
+    "dev:moderator": "backend/.venv/bin/python -m uvicorn moderator.app:app --app-dir backend --host 127.0.0.1 --port 8000",
+    "dev:moderator:demo": "MODERATOR_ADAPTER=deterministic backend/.venv/bin/python -m uvicorn moderator.app:app --app-dir backend --host 127.0.0.1 --port 8000",
+    "test:moderator": "backend/.venv/bin/python -m pytest -q backend/tests",
+    "ingest:moderator": "cd backend && .venv/bin/python -m moderator.ingest",
+    "eval:moderator": "cd backend && .venv/bin/python -m moderator.evaluate"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.0",

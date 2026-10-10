@@ -1,13 +1,11 @@
 import type {
   AnalysisSnapshot,
-  CouncilEvent,
   DecisionInput,
   Evidence,
   Requirement,
   Scope,
 } from "../types";
 import { createFixtures } from "../mock-data";
-import { buildCouncilEvents } from "../council/machine";
 /** Implement this boundary with authenticated HTTP/SSE for real backend integration.
  * Retrieval authorization belongs on the server, never in a client domain filter. */
 export interface IntelligenceService {
@@ -16,11 +14,6 @@ export interface IntelligenceService {
     signal?: AbortSignal,
   ): Promise<Pick<AnalysisSnapshot, "evidence" | "findings" | "requirements">>;
   listEvidence(scope: Scope, signal?: AbortSignal): Promise<Evidence[]>;
-  streamCouncil(
-    requirement: Requirement,
-    run: number,
-    signal?: AbortSignal,
-  ): AsyncIterable<CouncilEvent>;
   saveDecision(input: DecisionInput): Promise<void>;
 }
 export const demoService: IntelligenceService = {
@@ -31,12 +24,6 @@ export const demoService: IntelligenceService = {
   async listEvidence(scope, signal) {
     signal?.throwIfAborted();
     return createFixtures(scope).evidence;
-  },
-  async *streamCouncil(requirement, run, signal) {
-    for (const event of buildCouncilEvents(requirement, run)) {
-      signal?.throwIfAborted();
-      yield event;
-    }
   },
   async saveDecision(input) {
     if (!input.rationale.trim())
@@ -75,11 +62,6 @@ export interface ProductionIntelligenceService extends IntelligenceService {
     weights: AnalysisSnapshot["weights"],
     rationale: string,
   ): Promise<AnalysisSnapshot["audit"][number]>;
-  controlCouncil(
-    runId: string,
-    action: "pause" | "resume" | "interrupt" | "challenge",
-    rationale?: string,
-  ): Promise<AnalysisSnapshot["council"]>;
   listAudit(
     analysisId: string,
     signal?: AbortSignal,

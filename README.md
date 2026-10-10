@@ -1,132 +1,89 @@
-# ehlhackathonbmw
-
-Our project for the EHL x BMW hackathon.
-
----
-
 # BMW NEXT — AI Product Intelligence
 
-An unofficial BMW challenge prototype: choose a vehicle and market, inspect source-linked evidence, watch a bounded AI council discussion, compare priorities, record version-specific human decisions, and export a real PDF.
+Unofficial EHL × BMW hackathon prototype. The moderator prepares evidence-grounded agendas and orchestrates Customer, Market Trends and Competitor specialists, then gives a judge traceable evidence, dissent and unknowns. The PM confirms the agenda once and reviews versioned outcomes while subsequent topics advance automatically.
 
-Read [PROJECT_SPEC.md](PROJECT_SPEC.md) for the complete product specification, system architecture, user journey, team contracts and open questions. The original project introduction above is retained from the teammate's Entire README commit.
+[PROJECT_SPEC.md](PROJECT_SPEC.md) contains the product specification. [backend/README.md](backend/README.md) defines moderator APIs and team service contracts.
 
 ## Run locally
 
-Use Node.js 22.12+ (tested with Node 25.7) and npm.
+Use Node.js 22.12+ and Python 3.11+. From the repository root:
 
-```bash
+```sh
 npm ci
+python3 -m venv backend/.venv
+backend/.venv/bin/python -m pip install -r backend/requirements.lock
+```
+
+The source collection lives in ignored `private-data/inputs/`. Supply these exact filenames:
+
+```text
+F70_feedback_hackathon.xlsx
+G60_feedback_hackathon.xlsx
+G70_feedback_hackathon.xlsx
+F70_G60_G68_G70_customer_studies.xlsx
+sales_volumes.xlsx
+F70_OptionList.PDF
+G60_OptionList.PDF
+G70_OptionList.PDF
+BMW-Group-Report-2025-en.pdf
+```
+
+Ingest privately, then start the backend and frontend in separate terminals:
+
+```sh
+npm run ingest:moderator
+npm run dev:moderator:demo
 npm run dev
 ```
 
-Open the Local URL printed by Vite (normally http://127.0.0.1:5173). No API keys, paid services, database, login, or confidential dataset is needed. The dev server binds to loopback. To share a demo across devices, deliberately configure an appropriate host and access policy.
+Vite normally serves http://127.0.0.1:5173 and proxies `/api/moderator` to localhost:8000. `MODERATOR_API_URL` overrides the development proxy. Run one backend worker. The default backend data directory is `private-data`; `MODERATOR_DATA_DIR` overrides it. Neither raw source text nor extracted catalogs should enter Git or public assets.
 
-```bash
-npm run build       # TypeScript checks and production bundle in dist/
-npm run preview     # Serve that production build locally
-npm test            # Domain logic, state machine, review/version and PDF tests
-npm run test:e2e    # Five end-to-end browser workflows, desktop and mobile
-npm run format      # Format source, tests and configuration
+`dev:moderator:demo` explicitly uses deterministic integration adapters: they quote sources and exercise workflow gates but do not generate final requirement scores. To use the team's live services, configure the five `*_AGENT_URL` variables in [backend/.env.example](backend/.env.example), then run `npm run dev:moderator`. Missing live configuration is shown as unavailable, with no silent scripted fallback. The specialist reasoning and final judge rubric are outside this implementation.
+
+The other dashboard pages retain their synthetic analysis and versioned demo requirements. The council's source-backed outcomes are clearly separate. The frontend can still explore those dashboard pages without confidential data or a backend.
+
+## Council workflow
+
+1. Prepare an agenda from scoped feedback, studies, equipment and strategic evidence. Review the six proposed questions and complete explained backlog; select or pin topics and confirm once.
+2. The moderator opens a neutral brief and gathers the three positions concurrently, without sharing openings beforehand. Specialists receive their own evidence domain plus permitted product/corporate context.
+3. Deterministic source/scope/calculation checks and a separate semantic checker assess claims. All three specialists get one challenge opportunity; challenges are collected before consolidated rebuttals. Unsupported replies cannot declare a verified resolution.
+4. The judge assesses the complete packet. One specific, material clarification is allowed only when the identified specialist can answer from authorized evidence. Missing peer research is disclosed rather than filled with speculation.
+5. Topics close as completed, insufficient evidence, unresolved disagreement, budget exhausted or PM stopped. Agreement does not decide closure. Outcomes queue for human review; the moderator advances automatically without approving requirements.
+
+Pause/resume, interrupt, challenge, skip, reorder remaining topics and finish are available. Reconnection replays ordered events and deduplicates IDs. Server restart pauses recoverable work; completed records and frozen catalogs persist in SQLite. An exhausted topic requires a linked new run rather than a renewed budget.
+
+Agenda weights are need 40%, severity 35%, future relevance 20%, verified competitive gap 5%. Each assessment carries rationale and source IDs; unknown factors retain their possible score range. This is separate from the judge's final requirement scoring. Keyword severity screening is provisional; PM substantiation or a pin is needed to place an issue ahead of ordinary score order.
+
+Assumptions are versioned conditional scenarios with dependencies and validation needs. Changing one invalidates only dependent assessments, retains history and reopens human review. Unknown information, methodological limitations, PM preferences and source forecasts stay distinct from assumptions.
+
+## Sources outside Drive
+
+External sources are allowed following the organizer clarification. Use **Import external source** in the council to capture a public HTTPS HTML, plain-text or PDF document with publisher, domain, scope, declared quality and publication date when known. Source hashes, immutable extracted passages, retrieval time and exact locators are retained privately. Imported content is evidence, never an instruction.
+
+New imports become available to new agendas. Confirmed discussions keep their original source snapshot. Official OEM documentation, official statistics and original research provide stronger provenance than unsupported comparisons; declaring a page primary does not independently verify its claims. A peer page alone cannot establish a verified competitive gap without an equivalent BMW/peer configuration comparison.
+
+The initial feedback collection has no China observations. G60/G70 feedback is predominantly US. EU studies and geographic Europe remain distinct; G68 is not G60. US study totals of one are normalized proportions, not respondent counts. The rating scale and respondent counts remain unknown. G60/G68 sales remain grouped; 2030 values are supplied future figures. Zero sales do not prove model unavailability.
+
+Selected standard-equipment PDF matrices retain native row/column/glyph references and German derivatives. Optional/package tables remain unverified page context. Annual-report retrieval focuses on pages 42–46, 53–57, 77–81 and 262–265; strategy investment establishes alignment rather than feature demand or engineering feasibility.
+
+## Validation and evaluation
+
+```sh
+npm test                       # Frontend domain/state/export tests
+npm run test:moderator          # Workflow, source, boundary and private lineage tests
+npm run build                  # TypeScript and production bundle
+npm run test:e2e                # Dedicated synthetic FastAPI fixture + Chrome UI tests
+npm run eval:moderator          # Same-opening baseline vs moderated artifacts
 ```
 
-Browser tests use an installed Google Chrome via Playwright's `chrome` channel. Install Chrome, or change the channel and install Playwright Chromium with `npx playwright install chromium`. The tests use an isolated browser profile and enable software WebGL for machines without a GPU. The Playwright configuration starts or reuses the local development server. Screenshots, traces and downloaded PDFs go to ignored `test-results/`.
+Browser tests require installed Google Chrome and the Python environment above. They use ports 8001/5175 and synthetic fixtures; no private collection or live models are needed. Private-data tests skip when the collection is absent. Screenshots, traces and downloads go to ignored `test-results/`.
 
-For static hosting, serve `dist/` and rewrite non-file routes to `index.html`. No production deployment is configured.
+The evaluation harness has seven cases spanning vehicles/markets, sparse evidence, mixed signals and material transfer risks. It assesses the exact same independent openings in a separate judge-only baseline run, records both packets/assessments, and measures traceability and disagreement retention. PM issue-coverage and review-effort judgments remain pending. Deterministic integration success does not establish improved AI decision quality. Live evaluation setup is in [backend/README.md](backend/README.md).
 
-## Demo walkthrough
+## Export and boundaries
 
-1. Select F70 / G60 / G70, market, available demo powertrain, a 3–5-year horizon and an optional goal. Confirm the scope. F70 currently offers combustion in the demo; other derivative/market availability is an integration question.
-2. Explore genuine BMW reference photography for each series. Choose “Explore in 3D” to open its corresponding community-created BMW model on Sketchfab, with drag-to-orbit and scroll-to-zoom. Close the viewer to return to photography. Use Overview's category controls to connect requirements with sources. These visual references are not engineering or driving simulations.
-3. Explore customer feedback search and filters, synthetic satisfaction samples, market sensitivity controls and hypothetical competitor comparisons. Click sources for passages, dates, source location, calculation inputs and limitations.
-4. Start the council. Its fixed sequence has three perspectives, one challenge round, one clarification, an assessment, proposal and PM review. Pause, resume, interrupt, challenge or expand the discussion. The Avatars studio previews the shared visual states.
-5. Compare scenario presets and adjust weights. Review a requirement with a rationale: approve, reject, edit, challenge, defer, request evidence or reopen. Editing creates a new version and clears prior approval. Excluding evidence reopens linked requirements.
-6. Inspect Audit Trail, then use Export report on any workspace page to download a multi-page PDF with the current scope, requirements, scoring, scenarios, sources, assumptions, council statements and audit history.
+**Export versioned records** downloads canonical JSON: frozen agenda, original positions, claims, challenges/rebuttals, assumptions/history, outcomes, human decisions and ordered events. The workspace PDF adds moderator summaries and review history to the synthetic dashboard report. JSON is the complete reconstructable record; source IDs resolve to the private frozen catalog.
 
-The demo initializes provisional requirements so all pages can be explored immediately. Council proposals revisit those seeded requirements rather than inventing new runtime content. Free-text goals and challenges are recorded, but do not invoke actual AI inference.
+Production authentication, deployment, distributed workers and immutable enterprise audit infrastructure remain outside scope. Local services and the browser are trusted development participants; capability-scoped retrieval restricts the evidence offered to specialist adapters, while local PM endpoints expose the authorized inventory. Scanned PDFs, JavaScript-only pages and optional-equipment matrices need additional verified extraction.
 
-## Structure and integration points
-
-```text
-src/
-  components/
-    vehicle/        BMW photography and on-demand series-specific Sketchfab viewers
-    agents/         Five procedural sculptures and typed animation states
-    council/        One scene containing all five entities
-    dashboard/      Navigation and source explorer
-    charts/         Risk/impact visualization
-    requirements/   Human review and editing
-    ui/             Shared controls, dialogs, motion and error boundary
-  pages/            Home and seven workspace views
-  lib/
-    types/          Scope, evidence, findings, requirement, decision and audit contracts
-    api/            IntelligenceService, demo adapter and production extension contract
-    mock-data/      Explicitly synthetic fixtures; no private data
-    scoring/        Deterministic priorities, coverage and scenario weights
-    council/        Bounded deterministic state machine and visible scripted statements
-    audit/          Structured event construction
-    export/         Snapshot-based PDF generation
-  store/            Zustand state, browser persistence and domain mutations
-```
-
-- **Data/retrieval teammates:** replace synthetic ingestion in `lib/api/service.ts`. Keep source IDs, locations, dates, deduplication units and quantitative denominators intact. Original feedback repeated across classification rows must not become additional observations.
-- **Agent teammates:** implement the `IntelligenceService` streaming contract. `CouncilEvent` represents publishable discussion output, not private chain-of-thought. Backend orchestration must enforce the stage sequence, limits, cancellation and retrieval-domain authorization. The mock currently buffers its finite event list before timed playback; production SSE must be consumed incrementally with reconnect/idempotency handling.
-- **Backend teammates:** implement authenticated analysis/requirement/evidence persistence with optimistic version checks and transactional append-only audit writes. The extended production service contract documents the required operations. Do not rely on client-side role filters to restrict agent retrieval.
-- **Frontend teammates:** use `useAppStore` selectors and the shared domain types. Keep calculations in `lib/scoring`, workflow transitions in `lib/council`, and components focused on rendering/interactions.
-- **3D teammates:** `lib/vehicles.ts` maps each series to its reference photograph and public Sketchfab model. Replace the embed with approved local GLBs when exact model assets are available. Accurate spatial hotspots and engineering simulation require separately validated geometry and models. Asset provenance and rights limits are in [ASSETS.md](ASSETS.md).
-
-Suggested HTTP/SSE routes are documented in PROJECT_SPEC.md. Keep the backend technology interchangeable; FastAPI, a relational store and domain-specific retrieval are planned interfaces, not installed services.
-
-## What is real and what is simulated
-
-| Working now                                                   | Current limit / next integration                                                                |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Responsive routes, accessible dialogs and keyboard controls   | No authentication or server deployment                                                          |
-| Genuine BMW series imagery and distinct F70/G60/G70 3D embeds | Community model reference views; internet required; no validated engineering/driving simulation |
-| Five animated procedural agent entities                       | No voice or live model inference; hidden/offscreen council animation is paused                  |
-| Deterministic bounded council with pause/resume and audit     | Scripted statements; challenges are retained but do not produce dynamic responses               |
-| Feedback drilldowns and explicit study sample calculations    | All passages, study ratings, market curves and competitor patterns are synthetic                |
-| Deterministic scoring and scenario comparison                 | Rubric ratings, impact, risk and effort need real validation; no ROI or sales uplift is claimed |
-| Human decisions, requirement versions and local audit         | Versioned browser localStorage only; not shared or tamper-proof backend persistence             |
-| Actual downloadable PDF with pagination                       | Uses built-in Helvetica; extended writing systems need an embedded Unicode font in production   |
-
-Evidence strength is separate from priority. Unknown scores remain unknown; known-input weight coverage is visible. Approval is attached to one version. Browser reload pauses any active council for deliberate resumption. Starting a new analysis replaces the previous locally saved demo; export first if you want its report.
-
-BMW photography is bundled locally. Google Fonts uses system fallbacks when offline; optional Sketchfab 3D embeds require internet access and use the provider's own navigation. Close the 3D viewer to return to the reference photograph. The council uses local lighting without an external HDR dependency. The production bundle lazy-loads 3D, analytics and PDF modules; Three.js remains the largest chunk (about 1.2 MB before gzip).
-
-The midnight studio redesign includes the genuine BMW roundel, cinematic series selection, a 21st.dev-listed Paper Mesh Gradient shader (Apache-2.0), five new procedural agent sculptures, numbered navigation in the brief's seven-page order, and next-step links on every stage. Motion honors the system's reduced-motion preference. Photography remains BMW copyrighted reference media; see ASSETS.md before any public commercial release.
-
-## Verification
-
-The automated suite covers:
-
-- Unknown-aware scoring, deterministic weighted means and zero-weight handling.
-- Powertrain-appropriate topics and source/finding lineage.
-- Bounded stage order, duration cap and pause/interruption behavior.
-- Required rationales, stale-version rejection, edit invalidation and evidence exclusions.
-- A valid multi-page PDF generated from the same application snapshot.
-- BMW series selection and embed switching, scope confirmation, source filters, specialist routes, all council controls, review/version/exclusion, scenario weights, reload persistence, audit, PDF download, mobile navigation and deep links.
-
-The exported PDF is additionally rendered for visual inspection. Dependency installation after the security updates reports zero known advisories. `npm run build` reports a large Three.js chunk warning; it is documented rather than hidden. There are no configured live AI/backend environment variables to verify.
-
-## Entire collaboration
-
-This repository uses the Entire remote transport:
-
-```text
-entire://aws-eu-central-1.entire.io/et/bmw-hack/ehlhackathonbmw
-```
-
-Normal Git commands work. The teammate's README commit `97a27e8` was verified and fetched successfully. Entire's checked-in setup currently lists Claude Code for agent tracking; Git synchronization is separate from agent session hooks.
-
-```bash
-git pull --ff-only              # Start with a clean working tree
-# Edit files and run the relevant checks
-git add .
-git commit -m "Describe the change"
-git pull --rebase origin main    # Integrate teammates' latest commits
-git push origin main
-```
-
-Pull before starting work and before pushing; pulling before every local commit is unnecessary. With unfinished edits, either commit them locally first or temporarily use `git stash push -u`, pull, and `git stash pop`. Resolve conflicts deliberately. Do not force-push shared `main`. Feature branches are preferable for larger parallel changes.
-
-Do not commit confidential BMW datasets or personal information. Place private ingestion inputs in ignored `private-data/` and keep credentials in ignored environment files. This repository includes synthetic fixtures only.
+BMW reference images and optional Sketchfab embeds are documented in [ASSETS.md](ASSETS.md). They are reference media, not verified CAD or a driving simulation. The large Three.js build chunk remains lazy-loaded.
