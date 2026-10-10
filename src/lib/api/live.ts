@@ -71,6 +71,7 @@ export interface Debate {
   scope: LiveScope;
   model: string;
   turns: Turn[];
+  moderation?: Turn[];
   evidence: Source[];
   limitations: string[];
   decision: string;

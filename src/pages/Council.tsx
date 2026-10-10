@@ -32,9 +32,10 @@ const STANCE: Record<string, string> = {
 };
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 import LiveCouncil from "./LiveCouncil";
+import ModeratorCouncil from "./ModeratorCouncil";
 export default function Council() {
   const [params] = useSearchParams();
-  return params.get("demo") === "1" ? <DemoCouncil /> : <LiveCouncil />;
+  return params.get("demo") === "1" ? <DemoCouncil /> : params.has("source_run") ? <LiveCouncil /> : <ModeratorCouncil />;
 }
 function DemoCouncil() {
   const {

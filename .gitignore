@@ -18,3 +18,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 backend/data/
+
+# Python package build metadata
+*.egg-info/
+backend/build/

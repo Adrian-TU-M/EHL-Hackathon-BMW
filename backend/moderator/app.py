@@ -6,10 +6,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import Field
+from backend.config import Settings
 
 from .adapters import DeterministicAdapters, HttpAdapters
+from .local import OllamaAdapters
+from .catalog_bridge import specialist_catalog
 from .engine import Conflict, Engine
 from .external import ExternalInput, extend_catalog, fetch_source
 from .models import (
@@ -37,6 +40,10 @@ class RetrievalInput(Model):
     ids: list[str] = Field(max_length=100)
 
 
+class VoiceInput(Model):
+    assessment_id: str
+
+
 def create_app(engine: Engine | None = None):
     @asynccontextmanager
     async def lifespan(app):
@@ -46,15 +53,13 @@ def create_app(engine: Engine | None = None):
         else:
             private = Path(os.getenv("MODERATOR_DATA_DIR", str(ROOT / "private-data")))
             try:
-                catalog = load_catalog(private / "inputs", private / "catalogs")
+                catalog = specialist_catalog(load_catalog(Settings.from_env().data_dir.expanduser(), private / "catalogs"))
                 error = None
             except (FileNotFoundError, ValueError) as e:
                 catalog, error = None, str(e)
-            adapters = (
-                DeterministicAdapters()
-                if os.getenv("MODERATOR_ADAPTER", "http") == "deterministic"
-                else HttpAdapters()
-            )
+            mode = os.getenv("MODERATOR_ADAPTER", "ollama")
+            adapters = (DeterministicAdapters() if mode == "deterministic" else
+                        HttpAdapters() if mode == "http" else OllamaAdapters())
             app.state.engine = Engine(
                 catalog, Store(private / "moderator.sqlite3"), adapters
             )
@@ -86,13 +91,20 @@ def create_app(engine: Engine | None = None):
     @app.get("/api/moderator/health")
     async def health(request: Request):
         e = request.app.state.engine
+        runtime = {}
+        if e.adapters.mode == "ollama":
+            from backend.api.competitor import status
+            state = await status()
+            runtime = {"model": state.get("model"), "model_installed": state.get("model_installed"),
+                       "ollama_url": e.adapters.settings.ollama_base_url}
         return {
-            "available": bool(e.catalog) and not e.adapters.missing(),
+            "available": bool(e.catalog) and not e.adapters.missing() and runtime.get("model_installed", True),
             "mode": e.adapters.mode,
             "source_snapshot": e.catalog.snapshot_hash if e.catalog else None,
             "limitations": e.adapters.missing()
             + ([request.app.state.data_error] if request.app.state.data_error else []),
             "source_count": len(e.catalog.sources) if e.catalog else 0,
+            **runtime,
         }
 
     @app.get("/api/moderator/inventory")
@@ -160,6 +172,27 @@ def create_app(engine: Engine | None = None):
     @app.get("/api/moderator/sessions/{sid}/outcomes")
     async def outcomes(sid: str, request: Request):
         return request.app.state.engine.get(sid).outcomes
+
+    @app.post("/api/moderator/sessions/{sid}/outcomes/{tid}/voice")
+    async def voice(sid: str, tid: str, body: VoiceInput, request: Request):
+        from backend.council.judge import assessment_text
+        from backend.judge.models import JudgeAssessment as NativeAssessment, JudgeRequest
+        from backend.judge.service import digest
+        from backend.voice import synthesize
+        session = request.app.state.engine.get(sid)
+        outcome = next((item for item in session.outcomes if item.topic_id == tid), None)
+        if not outcome:
+            raise HTTPException(404, "Completed topic outcome not found")
+        if not outcome.assessment_valid or not outcome.assessment or not outcome.assessment.native_assessment:
+            raise HTTPException(409, "A valid completed Judge assessment is required for voice")
+        assessment = NativeAssessment.model_validate(outcome.assessment.native_assessment)
+        if assessment.id != body.assessment_id:
+            raise HTTPException(409, "The Judge assessment changed. Refresh before playback.")
+        native_request = outcome.assessment.native_request
+        if not native_request or assessment.input_digest != digest(JudgeRequest.model_validate(native_request)):
+            raise HTTPException(409, "The saved evidence packet no longer matches this Judge assessment.")
+        path = await synthesize(assessment_text(assessment))
+        return FileResponse(path, media_type="audio/mpeg", headers={"Cache-Control": "private, max-age=3600"})
 
     @app.get("/api/moderator/sessions/{sid}/packet")
     async def packet(sid: str, request: Request):

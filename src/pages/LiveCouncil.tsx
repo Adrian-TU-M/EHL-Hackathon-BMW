@@ -1,3 +1,4 @@
+import { LiveJudgeReview } from "../components/council/LiveJudgeReview";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, LoaderCircle, Play, ShieldCheck } from "lucide-react";
@@ -120,9 +121,10 @@ export default function LiveCouncil() {
         <ArrowLeft size={15} /> Back to market research
       </Link>
       <p className="cx-note">
-        Market uses the evidence-grounded Market Trends agent. Other council
-        roles use local adapters on this branch. All participants run on the
-        shared Ollama model. Feature success percentages remain unmeasured.
+        Customer, Market and Competitor examine the saved proposal. The
+        Moderator frames the discussion and the Judge assesses its evidence.
+        All five use the shared local Qwen model. Feature success percentages
+        remain unmeasured.
       </p>
       {runtime && !runtime.debate_ready && (
         <div className="cx-error" role="status">
@@ -235,6 +237,7 @@ export default function LiveCouncil() {
             </Link>
             <span className="cx-live-badge">Awaiting PM review</span>
           </div>
+          {result.moderation?.map((turn, i) => <section className="cx-result" key={`moderator-${i}`}><span className="eyebrow">MODERATOR · {i === 0 ? "DEBATE BRIEF" : "CLOSING"}</span><p>{turn.position.rationale}</p></section>)}
           {result.turns.map((turn, i) => (
             <article
               key={`${turn.agent_id}-${turn.stage}`}
@@ -302,6 +305,7 @@ export default function LiveCouncil() {
               )}
             </article>
           ))}
+          <LiveJudgeReview debate={result} />
           <details className="cx-details">
             <summary>Run provenance & limitations</summary>
             <p>

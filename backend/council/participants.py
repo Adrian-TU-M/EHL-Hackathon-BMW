@@ -152,3 +152,9 @@ Return issues=[] when there are no such unsupported assertions. For a real issue
 PARTICIPANTS = {role: (lambda settings, role=role: GroundedParticipant(role, settings)) for role in ROLES}
 from backend.agents.market import MarketParticipant
 PARTICIPANTS['market'] = MarketParticipant
+from backend.council.customer import CustomerParticipant
+from backend.council.judge import JudgeParticipant
+from backend.council.moderator import ModeratorParticipant
+PARTICIPANTS['customer'] = CustomerParticipant
+PARTICIPANTS['judge'] = JudgeParticipant
+PARTICIPANTS['moderator'] = ModeratorParticipant

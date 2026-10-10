@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import os
 from pathlib import Path
 
 from .models import Catalog, DiscussionEvent, Session
@@ -12,7 +13,26 @@ class Store:
 
     def __init__(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(path)
+        self.lock_file = path.with_suffix(path.suffix + ".lock").open("a+")
+        try:
+            if os.name == "nt":
+                import msvcrt
+                if self.lock_file.seek(0, 2) == 0:
+                    self.lock_file.write("\0")
+                    self.lock_file.flush()
+                self.lock_file.seek(0)
+                msvcrt.locking(self.lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(self.lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as error:
+            self.lock_file.close()
+            raise RuntimeError("The moderator database is already open in another backend. Run one backend worker; tests must use a temporary MODERATOR_DATA_DIR.") from error
+        try:
+            self.db = sqlite3.connect(path)
+        except BaseException:
+            self.lock_file.close()
+            raise
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.executescript("""
@@ -89,3 +109,4 @@ class Store:
 
     def close(self):
         self.db.close()
+        self.lock_file.close()

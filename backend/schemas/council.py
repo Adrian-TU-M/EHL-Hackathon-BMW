@@ -30,6 +30,10 @@ class DebateResult(Contract):
     question: str
     model: str
     turns: list[CouncilTurn]
+    # Framing and closing are kept separate from the six substantive turns.
+    moderation: list[CouncilTurn] = Field(default_factory=list)
+    judge_assessment: dict | None = None
+    judge_request: dict | None = None
     evidence: list[EvidenceRecord]
     decision: Literal['awaiting_pm_review'] = 'awaiting_pm_review'
     limitations: list[str]

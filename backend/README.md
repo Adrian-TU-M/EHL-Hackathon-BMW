@@ -1,10 +1,46 @@
 # BMW NEXT local agent backend
 
-This branch connects the **Market Trends page and PM-triggered council** to real
-Ollama inference. Start with [the Market agent guide](MARKET.md). Shared Competitor
-backend infrastructure is included; this branch's Competitors page still uses the
-older demo UI until its frontend is merged. Other platform modules remain demos.
-Standalone analysis never starts a council automatically.
+One FastAPI process now hosts Customer, Market Trends, Competitor, Moderator and Judge. All inference uses the shared `OLLAMA_BASE_URL` and `OLLAMA_MODEL` (default `http://127.0.0.1:11434`, `qwen3:8b`). Standalone analysis never starts a council automatically. Presentation generation remains excluded.
+
+## Unified teammate quickstart
+
+From your own repository checkout, with Node 22.12+, Python 3.11+ and Ollama installed:
+
+```bash
+npm ci
+# First setup only: preserve an existing backend/.env and its key.
+[ -f backend/.env ] || cp backend/.env.example backend/.env
+# Default BMW_DATA_DIR uses the authorized files in private-data/inputs.
+ollama pull qwen3:8b
+npm run dev
+```
+
+Run `ollama serve` separately first if Ollama is not already running. `npm run dev` prepares the Python environment, builds **missing** `backend/data/evidence.json` and `backend/data/market.json`, and starts the unified backend on **127.0.0.1:8001** plus frontend on **127.0.0.1:5173**. Private inputs must include the three feedback workbooks, three option-list PDFs, sales workbook, customer studies and BMW Group 2025 annual report (the report may be in the parent directory). Setup reads these files without modifying them and preserves public-source verification dates; it does not scrape or call Qwen.
+
+Existing private indexes are kept so saved proposals remain reproducible. After intentionally updating inputs or a reviewed catalog, run `npm run setup:backend -- --rebuild-indexes`, then restart the backend and create fresh analyses. Rebuilding can invalidate the evidence snapshots in earlier proposals. Missing inputs produce a setup error with the files required; no fabricated index is substituted.
+
+Use `npm run dev:frontend` with an existing backend, or `npm run setup:backend` followed by `npm run dev:backend` for manual service management. Do not start the older specialist servers on competing ports. `BMW_PYTHON` can select a preconfigured interpreter; `JUDGE_PYTHON` remains a compatibility alias. Shell environment values take precedence over `backend/.env`, then root `.env`.
+
+The legacy `dev:moderator` command now aliases the same unified backend on 8001. Only the explicitly named `dev:moderator:demo` command switches Judge/Moderator to deterministic fixtures; it also uses 8001. Never run these alongside an existing backend.
+
+Optional Judge speech needs `ELEVENLABS_API_KEY` in `backend/.env`; `ELEVENLABS_VOICE_ID` and `ELEVENLABS_MODEL_ID` may also be set. Only the saved Judge text is sent for speech. Local inference and PM review do not require an ElevenLabs key. Keep secrets server-side and never use a `VITE_` API-key variable.
+
+| Shared route prefix | Purpose |
+| --- | --- |
+| `/api/health` | Unified process health |
+| `/customer-api/customer/*` | Customer aggregates, evidence, analysis and perspectives |
+| `/customer-api/health` | Customer dataset and Ollama readiness |
+| `/api/market/*` | Market dashboard, source checks and analysis jobs |
+| `/api/competitor/*` | Competitor sources, readiness and analysis jobs |
+| `/api/jobs/*`, `/api/council/debate` | Persisted jobs and PM-triggered saved-proposal debates |
+| `/api/moderator/*` | Full-scope agenda, bounded live council and session review |
+| `/api/judge/*` | Standalone Judge rubric API |
+| `/api/review/*` | Persisted proposal-council assessment, PM decisions and discussion |
+| `/api/voice/*` | ElevenLabs readiness and saved Judge narration |
+
+Run all Python checks with `npm run test:backend`. The pytest configuration covers all backend modules; live-model tests are explicitly marked. Each laptop keeps its own private datasets, SQLite sessions, indexes, model files and API keys. Start one backend worker, not a worker pool.
+
+`requirements.txt` is the unified dependency manifest used by `pyproject.toml` and setup. The old `requirements.lock` is now a compatibility redirect to that manifest, not a frozen lock; its former Moderator-only pins were incomplete for the merged agents.
 
 ## Start (repository root, Python 3.11+)
 
@@ -12,7 +48,7 @@ Standalone analysis never starts a council automatically.
 python3 -m venv backend/.venv
 source backend/.venv/bin/activate
 python -m pip install -r backend/requirements.txt
-cp backend/.env.example backend/.env
+[ -f backend/.env ] || cp backend/.env.example backend/.env
 ```
 
 Install Ollama from https://ollama.com/download or `brew install ollama` on macOS.
@@ -26,8 +62,7 @@ In another terminal, download the team's model once and build the evidence index
 
 ```bash
 ollama pull qwen3:8b
-python -m backend.ingest --data-dir /Users/shaur/TUM/BMWHack/BMW-Data
-python -m backend.market.ingest --data-dir /Users/shaur/TUM/BMWHack/BMW-Data
+python -m backend.bootstrap
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001 --env-file backend/.env
 ```
 
@@ -77,7 +112,7 @@ A successful response contains claims, recommendations, positive/negative
 hypothetical effects, alternatives, uncertainties, cited evidence records and a
 research activity log. Read it again at `/api/competitor/runs/{run_id}`. The log
 records retrieval actions, not private reasoning. A run may take several minutes
-on a laptop; it has a 360-second total budget and a 120-second per-model-call
+on a laptop; it has a 360-second total budget and a 180-second default per-model-call
 timeout, configurable in `.env`. A failed run is never replaced with fake results.
 
 ## How it works
@@ -131,8 +166,7 @@ conditional recommendations, not approved requirements or proven forecasts.
   rebuild. Do not label customer speculation as official competitor equipment.
 - The separate Market importer reads sales_volumes.xlsx and preserves its combined
   G60_G68 grouping explicitly. The Market importer also reads 34 scoped items from the supplied 2025 customer-study workbook; means and ordinal shares stay separate. See [MARKET.md](MARKET.md) for feature sources and refresh checks.
-- `backend/data/` holds private indexes and runs and is gitignored. Raw source
-  data, local `.env`, model files and Python environments must stay untracked.
+- `backend/data/` holds private indexes and runs and is gitignored. The Moderator branch includes the team-authorized input files; additional raw data, local `.env`, model files and Python environments stay untracked.
 
 ## Team integration
 
@@ -145,7 +179,7 @@ immutable proposal version. These local endpoints are not production auth.
 ## Checks and errors
 
 ```bash
-python -m unittest discover -s backend/tests -v
+python -m pytest -q backend/tests
 # Explicit real-model/API check after starting the server:
 python -m backend.smoke --api-url http://127.0.0.1:8001
 ```
@@ -163,9 +197,9 @@ References: [Ollama tool calling](https://docs.ollama.com/capabilities/tool-call
 [Ollama structured output](https://docs.ollama.com/capabilities/structured-outputs),
 [Qwen3 8B](https://ollama.com/library/qwen3:8b).
 
-## Live page and council integration (10 October 2026)
+## Live page and council integration
 
-The Competitor branch's frontend integration (not yet merged here) calls this backend. Choose a brand, model and feature,
+The integrated Competitor page calls this backend. Choose a brand, model and feature,
 then **Analyze this feature**. The page uses `/api/competitor/sources` and
 `/api/competitor/status`, submits `POST /api/competitor/jobs`, and polls
 `GET /api/jobs/{id}`. It never silently substitutes demo output on failure.
@@ -177,7 +211,7 @@ Run the single backend worker from the repository root:
 ```sh
 ollama serve
 backend/.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
-npm run dev -- --port 5173
+npm run dev:frontend
 ```
 
 Vite proxies `/api` to loopback port 8001. For a separately hosted frontend,
@@ -196,10 +230,7 @@ challenges Competitor), generates the lead agent revision, and obtains a Judge a
 are defined by the backend. Claim IDs, citations and response targets are checked;
 a separate Qwen pass checks the generated arguments/questions with one repair maximum. All are fallible AI outputs requiring PM review.
 
-All participants use the same `OLLAMA_MODEL` (default `qwen3:8b`). Market uses the
-new evidence agent. Customer, Competitor and Judge council participants are local
-adapters, not the teammates' separate implementations. Market has dated
-sales/adoption evidence, but no causal feature-success measurement. BMW raw equipment tables do not yet establish exact trim absence.
+All participants use the same `OLLAMA_MODEL` (default `qwen3:8b`). Customer uses its native scoped-feedback implementation, Market its evidence agent, Competitor its research and council contracts, Moderator the local orchestration adapter, and Judge the teammate scoring rubric. Customer citations are carried into the Judge input. The exact Judge request and assessment are saved for later PM review and narration. Market has dated sales/adoption evidence, but no causal feature-success measurement. BMW raw equipment tables do not yet establish exact trim absence.
 A zero or unknown gap must not become an invented competitive weakness.
 
 The source run, request and finished debate are persisted through the job
@@ -209,7 +240,7 @@ A backend restart marks an unfinished job interrupted, requiring an explicit
 new run. A failed validation is visible as failed, never completed. Only one
 analysis/debate runs at a time. The synchronous analysis route remains available
 for scripts. No council is started by page mount or standalone analysis.
-Council calls allow at least 240 seconds per model response, with a 15-minute
+Council calls have bounded per-response timeouts, with a 30-minute
 total debate bound. Drafts and grounding reviews have separate output limits.
 Failed jobs retain the stage and error; timeouts never produce a completed debate.
 Completed debates expose a saved link containing both the analysis and job UUIDs.
@@ -230,13 +261,14 @@ revision/judge turns identify answered claim IDs. Keep the grounding validator
 or equivalent when replacing an adapter. Use the shared model configuration.
 Never call the coordinator from an individual agent or make automatic PM decisions.
 Frontend `/council` is live by default; the old scripted visualization exists
-only at `/council?demo=1`. Other platform pages/exports still use their demo
-adapter and do not automatically include live council decisions.
+only at `/council?demo=1`. Decisions includes an inbox for persisted live reviews.
+Scenario scoring and the existing PDF export still use their demo adapter and
+do not automatically include live council decisions.
 
 Tests:
 
 ```sh
-backend/.venv/bin/python -m unittest discover -s backend/tests -v
+backend/.venv/bin/python -m pytest -q backend/tests
 npm test
 # Backend and Ollama must already be running; invokes real inference:
 LIVE_OLLAMA=1 npx playwright test tests/e2e/market-live.spec.ts

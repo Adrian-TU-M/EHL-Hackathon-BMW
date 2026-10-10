@@ -11,7 +11,7 @@ from backend.market.studies import study_records
 from backend.schemas.evidence import EvidenceRecord
 
 def build(data_dir, output):
-    curated=json.loads(Path('backend/evidence/market.json').read_text())
+    curated=json.loads((Path(__file__).resolve().parents[1]/'evidence/market.json').read_text())
     records=curated['records']; series=curated['series']
     workbook_path=data_dir/'sales_volumes.xlsx'
     digest=hashlib.sha256(workbook_path.read_bytes()).hexdigest()

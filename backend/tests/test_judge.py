@@ -3,6 +3,7 @@ from copy import deepcopy
 import pytest
 from fastapi.testclient import TestClient
 from judge.api import create_app
+from judge.providers import ModelAIAdapter
 from judge.adapters import DemoAIAdapter, DemoModeratorAdapter
 from judge.models import JudgeRequest, DraftAssessment, Weights
 from judge.scoring import score, influence
@@ -127,7 +128,7 @@ def test_unconfigured_adapter_fails_without_demo_fallback(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("JUDGE_API_KEY", raising=False)
     monkeypatch.setenv("JUDGE_BASE_URL", "https://api.openai.com/v1")
-    client = TestClient(create_app())
+    client = TestClient(create_app(ai=ModelAIAdapter()))
     response = client.post("/analyses/test/judge-assessments", json=request_data())
     assert response.status_code == 503
     assert "not configured" in response.json()["detail"]

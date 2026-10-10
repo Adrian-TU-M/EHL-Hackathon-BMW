@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { ModeratorReview } from "../components/council/ModeratorReview";
+import { LiveReviewInbox } from "../components/council/LiveReviewInbox";
 import {
   Badge,
   Button,
@@ -19,6 +20,7 @@ import {
   EmptyState,
 } from "../components/ui/Primitives";
 import { ReviewDialog } from "../components/requirements/ReviewDialog";
+import { JudgePanel } from "../components/requirements/JudgePanel";
 import { EvidenceDialog } from "../components/dashboard/EvidenceDialog";
 import { RiskImpact } from "../components/charts/RiskImpact";
 import {
@@ -61,6 +63,7 @@ export default function Decisions() {
   }
   return (
     <>
+      <LiveReviewInbox />
       <ModeratorReview />
       <PageHeader
         eyebrow="YOUR PERSPECTIVE / THE FINAL WORD"
@@ -75,6 +78,16 @@ export default function Decisions() {
           </Button>
         }
       />
+      <details className="details-panel">
+        <summary>
+          Advanced · assess supplied requirements with the Judge
+        </summary>
+        <p>
+          Review the current portfolio, add project background or original
+          source passages, and request a separate local Judge assessment.
+        </p>
+        <JudgePanel />
+      </details>
       <div className="strategy-bar">
         <div>
           <span className="eyebrow">YOUR STRATEGY</span>

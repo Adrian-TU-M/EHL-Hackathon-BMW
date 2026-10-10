@@ -109,6 +109,8 @@ export interface JudgeAssessment {
   unresolved_issues: string[];
   scoring_inputs: Record<string, unknown>[];
   proposals: Record<string, unknown>[];
+  native_assessment?: import("../api/judge").JudgeAssessment | null;
+  native_request?: Record<string, unknown> | null;
 }
 export interface JudgePacket {
   id: string;
@@ -166,7 +168,7 @@ export interface ModeratorSession {
   id: string;
   run_id: string;
   parent_session_id?: string;
-  mode: "deterministic" | "http";
+  mode: "deterministic" | "http" | "ollama";
   status:
     | "awaiting_confirmation"
     | "ready"

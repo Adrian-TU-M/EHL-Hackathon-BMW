@@ -42,6 +42,9 @@ class Evidence(Model):
     observation_id: str | None = None
     exclusion_reason: str | None = None
     quantitative: dict | None = None
+    # Only ingestion/manual technical review may mark a source as engineering
+    # evidence. Customer satisfaction and product announcements do not qualify.
+    supports_criteria: list[Criterion] = Field(default_factory=list)
 
 
 class Feature(Model):

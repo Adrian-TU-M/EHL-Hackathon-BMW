@@ -38,13 +38,15 @@ def assessment_schema():
 class ModelAIAdapter:
     execution = "live"
 
-    def __init__(self, *, transport=None):
-        self.base_url = os.getenv("JUDGE_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    def __init__(self, *, transport=None, settings=None):
+        from backend.config import Settings
+        shared = settings or Settings.from_env()
+        self.base_url = (shared.ollama_base_url if settings else os.getenv("JUDGE_BASE_URL", shared.ollama_base_url)).rstrip("/")
         official = urlparse(self.base_url).hostname == "api.openai.com"
         default_format = "responses" if official else "chat" if self.base_url.endswith("/v1") else "ollama"
-        self.api_format = os.getenv("JUDGE_API_FORMAT", default_format)
-        default_model = "qwen3:4b-instruct" if self.api_format == "ollama" else "gpt-4.1-mini" if official else ""
-        self.model = os.getenv("JUDGE_MODEL", default_model)
+        self.api_format = "ollama" if settings else os.getenv("JUDGE_API_FORMAT", default_format)
+        default_model = shared.ollama_model if self.api_format == "ollama" else "gpt-4.1-mini" if official else ""
+        self.model = shared.ollama_model if settings else os.getenv("JUDGE_MODEL", default_model)
         self.provider = "openai" if official else "qwen" if self.model.lower().startswith("qwen") else "openai-compatible"
         self.timeout_seconds = float(os.getenv("JUDGE_MODEL_TIMEOUT_SECONDS", "300" if self.local_endpoint() else "60"))
         if not 1 <= self.timeout_seconds <= 3600:
@@ -56,6 +58,8 @@ class ModelAIAdapter:
         self.local = self.local_endpoint()
         self.destination = urlparse(self.base_url).hostname
         self.transport = transport
+        self.validation_error = ""
+        self.last_usage = {}
 
     def local_endpoint(self):
         return urlparse(self.base_url).hostname in ("127.0.0.1", "localhost", "::1")
@@ -106,14 +110,20 @@ a fixture or a blanket 'not evaluated'. For positive support cite an EXACT quote
 from attached evidence. Each known criterion needs a supported argument linked
 to THAT feature. Give concrete benefits, drawbacks and alternatives with concise
 decision explanations. Leave influence/priority null and coverage 0 for Python.
+Keep each explanation and rationale to one or two concise sentences. Use one
+short exact quotation per supported argument (at most thirty words). Limit each
+benefits/drawbacks/risks/assumptions/uncertainties/alternatives array to two concise
+items. Do not repeat entire input passages or restate the whole debate.
 """
+        if self.validation_error:
+            instructions += "\nCorrect the previous output validation error: " + self.validation_error + ". Return a complete new assessment. Use short exact source quotes, never paraphrased quotations."
         data = request.model_dump_json(exclude={"external_processing_approved"})
         if self.api_format == "ollama":
             instructions += "\nReturn JSON matching this schema: " + json.dumps(schema)
             body = {"model": self.model, "messages": [
                 {"role": "system", "content": instructions}, {"role": "user", "content": data}],
                 "stream": False, "think": False, "format": schema,
-                "options": {"temperature": 0, "num_ctx": 32768, "num_predict": 20000}}
+                "options": {"temperature": 0, "num_ctx": 32768, "num_predict": 10000}}
             endpoint = "/api/chat"
         elif self.api_format == "responses":
             body = {"model": self.model, "instructions": instructions, "input": data,
@@ -134,7 +144,13 @@ decision explanations. Leave influence/priority null and coverage 0 for Python.
         headers = {"Authorization": f"Bearer {self.key}"} if self.key else {}
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(self.timeout_seconds, connect=5), transport=self.transport) as client:
-                response = await client.post(self.base_url + endpoint, headers=headers, json=body)
+                from backend import runtime
+                lock = getattr(runtime, "inference_lock", None)
+                if lock is not None:
+                    async with lock:
+                        response = await client.post(self.base_url + endpoint, headers=headers, json=body)
+                else:
+                    response = await client.post(self.base_url + endpoint, headers=headers, json=body)
         except httpx.TimeoutException as exc:
             raise Unavailable("Model inference timed out. Try fewer features or increase JUDGE_MODEL_TIMEOUT_SECONDS for local Qwen.") from exc
         except httpx.ConnectError as exc:
@@ -148,6 +164,12 @@ decision explanations. Leave influence/priority null and coverage 0 for Python.
         if not response.is_success:
             raise ValueError(f"Model provider returned HTTP {response.status_code}; check model name, endpoint and structured-output support.")
         payload = response.json()
+        provider_usage = payload.get("usage") or {}
+        counts = {"input_tokens": payload.get("prompt_eval_count", provider_usage.get("input_tokens", provider_usage.get("prompt_tokens", 0))),
+                  "output_tokens": payload.get("eval_count", provider_usage.get("output_tokens", provider_usage.get("completion_tokens", 0)))}
+        for name, count in counts.items():
+            if isinstance(count, int) and count >= 0:
+                self.last_usage[name] = self.last_usage.get(name, 0) + count
         if self.api_format == "ollama":
             if payload.get("done") is not True or payload.get("done_reason") != "stop":
                 raise ValueError("Qwen response was incomplete; no assessment was saved.")

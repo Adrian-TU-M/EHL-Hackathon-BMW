@@ -140,13 +140,13 @@ def study_refs(data: CustomerData, maps: Mappings, scope: Scope, theme: str | No
             quantitative=QuantitativeClaim(
                 numerator=value if value is not None else 0,
                 denominator=None if is_mean else 1,
-                unit="mean score (0-10)" if is_mean else "share of respondents (top box)",
+                unit="reported mean (scale unspecified)" if is_mean else "share of respondents (top box)",
                 sourceId=f"{row['source']} / {row['sheet']} row {row['row']}",
                 filters=[f"vehicle={row['vehicle']}", f"market={row['market']}"],
                 market=row["market"], period=str(row["year"]),
                 method="Mean as supplied by the study" if is_mean else
                 f"Sum of supplied level shares: {row.get('levels_note', 'top box')}",
-                limitations="Sample size not supplied with the study; scale as supplied. "
+                limitations="Sample size not supplied with the study; mean scale and anchors are unspecified. "
                 "Study values are not split by powertrain.",
             ),
         ))

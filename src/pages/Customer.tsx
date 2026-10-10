@@ -4,7 +4,7 @@ import { AlertTriangle, ChevronDown } from "lucide-react";
 import { Button, EmptyState, Loading, PageHeader } from "../components/ui/Primitives";
 import { useAppStore } from "../store/useAppStore";
 import type { CustomerScopeFilters } from "../store/useAppStore";
-import { MARKET_OPTIONS, POWERTRAIN_OPTIONS, customerBackendAvailable, liveCustomerSource } from "../lib/api/customer";
+import { MARKET_OPTIONS, POWERTRAIN_OPTIONS, liveCustomerSource } from "../lib/api/customer";
 import type { CustomerDataSource, CustomerEvidence, CustomerFilters, Drilldown, FeatureRanking, FeatureRow } from "../lib/api/customer";
 import { demoCustomerSource } from "../lib/api/customerDemo";
 import { EvidenceDrawer } from "../components/customer/EvidenceDrawer";
@@ -44,33 +44,27 @@ export default function Customer() {
     [filters.vehicle, filters.market, filters.powertrain],
   );
 
-  const [source, setSource] = useState<CustomerDataSource | null>(null);
+  const [source] = useState<CustomerDataSource>(() =>
+    new URLSearchParams(window.location.search).get("demo") === "1" ? demoCustomerSource : liveCustomerSource,
+  );
+  const [reload, setReload] = useState(0);
   const [data, setData] = useState<FeatureRanking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<DrawerRequest | null>(null);
 
-  // Live backend when reachable, otherwise the clearly labelled demo fallback.
   useEffect(() => {
-    const ctrl = new AbortController();
-    customerBackendAvailable(ctrl.signal).then((ok) => !ctrl.signal.aborted && setSource(ok ? liveCustomerSource : demoCustomerSource));
-    return () => ctrl.abort();
-  }, []);
-
-  useEffect(() => {
-    if (!source) return;
     const ctrl = new AbortController();
     setError(null);
+    setData(null);
     source
       .features(apiFilters, ctrl.signal)
-      .then(setData)
+      .then((result) => { if (!ctrl.signal.aborted) setData(result); })
       .catch((e) => {
         if (ctrl.signal.aborted) return;
-        if (source.mode === "live")
-          setSource(demoCustomerSource); // never mix live and demo numbers
-        else setError(String(e.message ?? e));
+        setError(String(e.message ?? e));
       });
     return () => ctrl.abort();
-  }, [source, apiFilters]);
+  }, [source, apiFilters, reload]);
 
   const open = (row: FeatureRow, type?: string) =>
     setDrawer({
@@ -99,7 +93,10 @@ export default function Customer() {
     return (
       <>
         {header}
-        {error ? <EmptyState title="Customer data could not be loaded" detail={error} /> : <Loading label="Loading customer feedback…" />}
+        {error ? <>
+          <EmptyState title="Customer data could not be loaded" detail={error} />
+          <Button onClick={() => setReload((value) => value + 1)}>Retry customer data</Button>
+        </> : <Loading label="Loading customer feedback…" />}
       </>
     );
 

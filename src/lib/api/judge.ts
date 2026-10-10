@@ -125,7 +125,7 @@ export interface JudgeCouncil {
   }[];
 }
 
-const base = "/api";
+const base = "/api/judge";
 async function request<T>(
   path: string,
   body?: unknown,
@@ -166,16 +166,30 @@ export function judgeRequest(snapshot: AnalysisSnapshot) {
         topic,
       }),
     ),
-    arguments: snapshot.requirements.flatMap(feature =>
-      (["customer", "market", "competitor"] as const).flatMap(domain => {
-        const sources = snapshot.evidence.filter(e => feature.evidenceIds.includes(e.id) && e.domain === domain && !e.exclusionReason);
-        return sources.length ? [{
-          id: `input-${feature.id}-v${feature.version}-${domain}`,
-          agent: domain, feature_ids: [feature.id],
-          statement: `Supplied ${domain} evidence for ${feature.title}:\n` + sources.map(e => `${e.source}: ${e.passage}`).join("\n"),
-          evidence_ids: sources.map(e => e.id), assumptions: [],
-        }] : [];
-      })),
+    arguments: snapshot.requirements.flatMap((feature) =>
+      (["customer", "market", "competitor"] as const).flatMap((domain) => {
+        const sources = snapshot.evidence.filter(
+          (e) =>
+            feature.evidenceIds.includes(e.id) &&
+            e.domain === domain &&
+            !e.exclusionReason,
+        );
+        return sources.length
+          ? [
+              {
+                id: `input-${feature.id}-v${feature.version}-${domain}`,
+                agent: domain,
+                feature_ids: [feature.id],
+                statement:
+                  `Supplied ${domain} evidence for ${feature.title}:\n` +
+                  sources.map((e) => `${e.source}: ${e.passage}`).join("\n"),
+                evidence_ids: sources.map((e) => e.id),
+                assumptions: [],
+              },
+            ]
+          : [];
+      }),
+    ),
     evidence: snapshot.evidence.map((e) => ({
       id: e.id,
       domain: e.domain,
@@ -201,7 +215,13 @@ export const judgeApi = {
   ) =>
     request<JudgeCouncil>(
       `/analyses/${encodeURIComponent(snapshot.scope.confirmedAt ?? "local")}/councils`,
-      { request: { ...judgeRequest(snapshot), external_processing_approved: externalProcessingApproved }, mode },
+      {
+        request: {
+          ...judgeRequest(snapshot),
+          external_processing_approved: externalProcessingApproved,
+        },
+        mode,
+      },
       signal,
     ),
   control: (

@@ -14,8 +14,9 @@ from .workflow import CouncilService, CouncilRepository, Conflict
 
 def create_app(ai=None, moderator=None, repository=None):
     demo = os.getenv("JUDGE_DEMO_MODE") == "1"
-    selected_ai = DemoAIAdapter() if demo else HttpAIAdapter() if os.getenv("JUDGE_MODEL_URL") else ModelAIAdapter()
-    selected_moderator = DemoModeratorAdapter() if demo else ContextModeratorAdapter() if os.getenv("JUDGE_INPUT_MODE") == "context" else HttpModeratorAdapter()
+    from backend.config import Settings
+    selected_ai = DemoAIAdapter() if demo else ModelAIAdapter(settings=Settings.from_env())
+    selected_moderator = DemoModeratorAdapter() if demo else HttpModeratorAdapter() if os.getenv("JUDGE_MODERATOR_URL") else ContextModeratorAdapter()
     judge = JudgeService(ai or selected_ai)
     councils = CouncilService(judge, moderator or selected_moderator,
                               repository or CouncilRepository())

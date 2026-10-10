@@ -37,9 +37,11 @@ export default function AppShell() {
   const started = useAppStore((s) => s.started);
   const scope = useAppStore((s) => s.scope);
   const moderatorId = useModeratorStore((s) => s.id);
+  const demoStatus = useAppStore((s) => s.council.status);
+  const tickDemo = useAppStore((s) => s.tickCouncil);
   const location = useLocation();
   const liveWorkspace =
-    location.pathname === "/market" ||
+    ["/market", "/customer", "/competitor"].includes(location.pathname) ||
     (location.pathname === "/council" &&
       !new URLSearchParams(location.search).has("demo"));
   const activeIndex = navigation.findIndex(
@@ -50,6 +52,11 @@ export default function AppShell() {
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState("");
   const [storageError, setStorageError] = useState(false);
+  useEffect(() => {
+    if (demoStatus !== "running") return;
+    const timer = setInterval(tickDemo, 4200);
+    return () => clearInterval(timer);
+  }, [demoStatus, tickDemo]);
   useEffect(() => {
     if (moderatorId) return connectModerator(moderatorId);
   }, [moderatorId]);
@@ -165,10 +172,10 @@ export default function AppShell() {
             <Button
               variant="secondary"
               className="export-button"
-              disabled={exporting || liveWorkspace}
+              disabled={exporting || (liveWorkspace && !moderatorId)}
               title={
-                liveWorkspace
-                  ? "Live results are saved locally. This report exporter covers demo analyses only."
+                liveWorkspace && !moderatorId
+                  ? "Open a completed council to export its discussion and decision record."
                   : undefined
               }
               onClick={exportReport}
@@ -209,7 +216,7 @@ export default function AppShell() {
         </div>
         <main className="page-content" key={location.pathname}>
           <Outlet />
-          {nextPage && location.pathname !== "/market" && (
+          {nextPage && !["/market", "/customer"].includes(location.pathname) && (
             <NavLink className="journey-next" to={nextPage.to}>
               <div>
                 <span>

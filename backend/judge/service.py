@@ -19,8 +19,31 @@ def digest(request: JudgeRequest) -> str:
 class JudgeService:
     def __init__(self, ai: AIAdapter):
         self.ai = ai
+        self._assessment_lock = asyncio.Lock()
 
     async def assess(self, request: JudgeRequest) -> JudgeAssessment:
+        # Standalone Judge endpoints share one provider. Keep its repair prompt
+        # and usage counters isolated when two PM requests arrive together.
+        async with self._assessment_lock:
+            return await self._assess_bounded(request)
+
+    async def _assess_bounded(self, request: JudgeRequest) -> JudgeAssessment:
+        if hasattr(self.ai, "last_usage"):
+            # One assessment may include a repair; both calls consume the same
+            # moderator budget, while a subsequent assessment starts afresh.
+            self.ai.last_usage = {"input_tokens": 0, "output_tokens": 0}
+        try:
+            return await self._assess(request)
+        except ValueError as exc:
+            if not hasattr(self.ai, "validation_error"):
+                raise
+            self.ai.validation_error = str(exc)[:700]
+            try:
+                return await self._assess(request)
+            finally:
+                self.ai.validation_error = ""
+
+    async def _assess(self, request: JudgeRequest) -> JudgeAssessment:
         draft = await asyncio.wait_for(self.ai.evaluate(request), timeout=getattr(self.ai, "call_timeout_seconds", 65))
         args = {a.id: a for a in request.arguments}
         evidence = {e.id: e for e in request.evidence}
@@ -30,6 +53,7 @@ class JudgeService:
         if len(draft.features) != len(features) or {f.feature_id for f in draft.features} != set(features):
             raise ValueError("Model must assess every feature exactly once")
         assessed = {a.argument_id: a for a in draft.arguments}
+        ungrounded = set()
         for result in draft.arguments:
             original = args[result.argument_id]
             active = []
@@ -43,9 +67,18 @@ class JudgeService:
             missing = [eid for eid in original.evidence_ids if eid not in evidence]
             result.issues.extend(f"Missing evidence: {eid}" for eid in missing)
             if result.support and not active:
-                raise ValueError("Positive support requires a validated passage citation")
+                # An uncited perspective may be a useful hypothesis. Its lack of
+                # factual support is an assessment outcome, not a service error.
+                # Fabricated quotations still fail the strict checks above.
+                result.support = None
+                result.verdict = "unknown"
+                result.issues.append("No validated passage citation; factual support remains unknown.")
+                ungrounded.add(result.argument_id)
             if result.verdict in ("unsupported", "contradicted"):
                 result.support = 0
+            elif result.verdict == "unknown":
+                result.support = None
+                ungrounded.add(result.argument_id)
             if active and all(e.provenance == "synthetic" for e in active):
                 result.support = min(result.support, 1) if result.support is not None else None
             result.influence = influence(result.support, result.relevance)
@@ -73,9 +106,26 @@ class JudgeService:
                     assessed[aid].support is not None and assessed[aid].support > 0
                     for aid in criterion.argument_ids
                 ):
-                    raise ValueError("Known criterion requires a supported argument")
+                    if set(criterion.argument_ids) & ungrounded:
+                        criterion.value = None
+                        criterion.rationale = "Unknown: the proposed supporting argument has no validated citation. " + criterion.rationale
+                        result.consequential_uncertainty = True
+                        result.uncertainties.append("A proposed criterion rating was left unknown because its supporting argument had no validated citation.")
+                    else:
+                        raise ValueError("Known criterion requires a supported argument")
+            feasibility = result.criteria["feasibility"]
+            if feasibility.value is not None:
+                engineering_sources = [evidence[c.evidence_id] for aid in feasibility.argument_ids
+                    if (assessed[aid].support or 0) > 0
+                    for c in assessed[aid].citations if "feasibility" in evidence[c.evidence_id].supports_criteria]
+                if not engineering_sources:
+                    feasibility.value = None
+                    feasibility.rationale = "Unknown: the attached evidence does not establish engineering effort, cost or implementation feasibility."
+                    result.uncertainties.append("Engineering feasibility requires a technical assessment; market signals and customer feedback cannot establish it.")
+                    result.consequential_uncertainty = True
             relevant = [evidence[c.evidence_id] for a in draft.arguments
-                        if feature.id in args[a.argument_id].feature_ids for c in a.citations]
+                        if feature.id in args[a.argument_id].feature_ids and (a.support or 0) > 0
+                        for c in a.citations]
             if not relevant:
                 result.evidence_strength = "Unknown"
             elif all(e.provenance == "synthetic" for e in relevant):

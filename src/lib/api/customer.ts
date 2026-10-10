@@ -151,8 +151,10 @@ function params(f: CustomerFilters, extra: Record<string, string | number | unde
 
 async function request<T>(path: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
   const timeout = new AbortController();
-  const timer = setTimeout(() => timeout.abort(), init.timeoutMs ?? 10000);
-  init.signal?.addEventListener("abort", () => timeout.abort());
+  const timer = setTimeout(() => timeout.abort(), init.timeoutMs ?? 30000);
+  const onAbort = () => timeout.abort();
+  init.signal?.addEventListener("abort", onAbort, { once: true });
+  if (init.signal?.aborted) timeout.abort();
   try {
     const res = await fetch(`${CUSTOMER_API_URL}${path}`, { ...init, signal: timeout.signal });
     if (!res.ok) {
@@ -168,6 +170,7 @@ async function request<T>(path: string, init: RequestInit & { timeoutMs?: number
     return (await res.json()) as T;
   } finally {
     clearTimeout(timer);
+    init.signal?.removeEventListener("abort", onAbort);
   }
 }
 
@@ -222,7 +225,7 @@ export function fetchCustomerPerspective(req: CustomerPerspectiveRequest, signal
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
     signal,
-    timeoutMs: 180000, // local qwen3:8b; turns queue behind each other in Ollama
+    timeoutMs: 600000, // shared laptop model: generation may wait behind another agent
   });
 }
 
@@ -236,7 +239,7 @@ export function askCustomerAgent(
   return fetchCustomerPerspective({ scope, topic: "", stage: "discussion", question: message, context }, signal);
 }
 
-/** Health probe used to choose between live data and the demo fallback. */
+/** Readiness probe; callers must surface live failures and never silently substitute demo data. */
 export async function customerBackendAvailable(signal?: AbortSignal): Promise<boolean> {
   try {
     await request<unknown>("/health", { signal, timeoutMs: 4000 });

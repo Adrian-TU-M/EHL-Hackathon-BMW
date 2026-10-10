@@ -1,3 +1,4 @@
+import type { JudgeCouncil } from "../api/judge";
 export type Vehicle = "F70" | "G60" | "G70";
 export type Market = "Europe" | "United States" | "China";
 export type Powertrain = "Electric" | "Plug-in hybrid" | "Combustion";
@@ -50,7 +51,8 @@ export interface Evidence {
   source: string;
   location: string;
   publishedAt: string;
-  provenance: "synthetic";
+  provenance: "synthetic" | "provided" | "external";
+  sourceUrl?: string;
   vehicle: Vehicle;
   market: Market;
   powertrain: Powertrain;
@@ -96,7 +98,7 @@ export interface Requirement {
   evidenceIds: string[];
   criteria: Record<Criterion, number | null>;
   rationale: string;
-  evidenceLevel: "Illustrative" | "Limited" | "Moderate" | "Strong";
+  evidenceLevel: "Illustrative" | "Limited" | "Moderate" | "Strong" | "Unknown";
   assumptions: string[];
   uncertainties: string[];
   impact: number;
@@ -174,6 +176,8 @@ export interface Scenario {
   assumption: string;
 }
 export interface DecisionInput {
+  idempotencyKey?: string;
+  expectedAssessmentId?: string;
   requirementId: string;
   expectedVersion: number;
   status: DecisionStatus;
@@ -181,6 +185,8 @@ export interface DecisionInput {
   description?: string;
 }
 export interface AnalysisSnapshot {
+  judgeBackground?: string;
+  judgeCouncil?: JudgeCouncil;
   moderator?: import("../council/contracts").ModeratorExport;
   scope: Scope;
   requirements: Requirement[];

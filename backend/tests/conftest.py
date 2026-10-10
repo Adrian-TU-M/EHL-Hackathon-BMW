@@ -8,6 +8,12 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+
+@pytest.fixture(autouse=True)
+def isolated_moderator_runtime(tmp_path, monkeypatch):
+    """A lifespan test must never recover or pause a real laptop council session."""
+    monkeypatch.setenv("MODERATOR_DATA_DIR", str(tmp_path / "moderator-runtime"))
+
 from customer_agent.config import BACKEND_DIR, load_settings
 from customer_agent.ingest import load_customer_data
 from customer_agent.mappings import Mappings

@@ -33,6 +33,13 @@ export async function request<T>(
   return response.json();
 }
 export const moderatorApi = {
+  health: () =>
+    request<{
+      available: boolean;
+      mode: string;
+      model?: string;
+      limitations: string[];
+    }>("/health"),
   prepare: (scope: Scope, parent_session_id?: string) =>
     request<ModeratorSession>("/agendas", { scope, parent_session_id }),
   session: (id: string) => request<ModeratorSession>(`/sessions/${id}`),

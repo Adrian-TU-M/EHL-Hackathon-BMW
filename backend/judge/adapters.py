@@ -13,11 +13,17 @@ Support anchors: 0 unsupported/contradicted; 1 illustrative or weak; 2 partial;
 3 direct but limited; 4 strong relevant evidence; 5 robust corroborated evidence.
 Relevance anchors: 0 unrelated; 1 tangential; 2 indirect; 3 relevant; 4 important;
 5 central to this feature in this vehicle/market scope. Unknown stays null.
+An argument with no attached evidence must have support null, verdict unknown,
+and citations []. It may be a relevant hypothesis, but has no factual support.
+Do not assign any known feature criterion solely from such an argument.
 Never rate synthetic evidence above support 1. Do not count repeats as corroboration.
 Feature criteria need/severity/gap/future/feasibility use 0 absent or very low,
 1 low, 2 modest, 3 moderate, 4 high, 5 very high. Feasibility means ease.
 Every known feature rating needs supported argument IDs and a rationale.
 Keep feasibility unknown without evidence; don't invent costs or engineering facts.
+Feasibility needs sources explicitly tagged supports_criteria=["feasibility"].
+The gap criterion concerns a demonstrated product/capability gap, not a gap in
+the available evidence. Missing evidence must not receive a positive gap score.
 Explain benefits, drawbacks, assumptions, alternatives and why arguments prevailed.
 Recommend only when evidence supports the proposal without consequential unresolved
 uncertainty; revise when a concrete change addresses the problem; defer when needed

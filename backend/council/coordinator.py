@@ -9,6 +9,21 @@ from backend.market.catalog import records_for
 
 STAGES = ('perspectives', 'challenge', 'revision', 'assessment', 'review')
 
+
+def _collect_evidence(participant, sources):
+    """Carry native specialist citations through to the judge and persisted result."""
+    indexed = {record.id: record for record in sources}
+    for record in getattr(participant, 'evidence', []):
+        if record.id in indexed and indexed[record.id] != record:
+            raise HTTPException(409, 'A specialist returned conflicting evidence for an existing source ID.')
+        if record.id not in indexed:
+            sources.append(record)
+            indexed[record.id] = record
+
+
+def _snapshot(value):
+    return value.model_dump(mode='json') if value is not None else None
+
 def load_proposal(request, settings):
     try: source = RunStore(settings.runs_dir).read(request.source_run_id)
     except FileNotFoundError as exc: raise HTTPException(404, 'Saved analysis not found') from exc
@@ -52,22 +67,41 @@ async def start_debate(request: DebateRequest, repository, progress=lambda _:Non
     # Assign globally stable references without modifying the persisted source.
     turns[0] = turns[0].model_copy(deep=True)
     for i,claim in enumerate(turns[0].position.claims): claim.id=f'{lead}-perspectives-{i+1}'
-    async with asyncio.timeout(900):
+    moderation = []
+    moderator = PARTICIPANTS['moderator'](settings) if 'moderator' in PARTICIPANTS else None
+    judge = None
+    async with asyncio.timeout(1800):
+        if moderator:
+            progress('Moderator: framing the PM question and specialist tasks')
+            moderation.append(await moderator.turn('perspectives',context,sources,[]))
+            context['moderator_framing'] = moderation[-1].position.rationale
         for role in [r for r in ('customer','market','competitor') if r!=lead]:
             progress(f'{role.title()} agent: independent perspective')
-            role_sources = [r for r in sources if (r.source_type == 'customer_feedback' if role == 'customer' else r.source_type in ('market_metric','industry_signal','planning_volume','customer_study') if role=='market' else r.source_type=='competitor_official')][:9]
-            turns.append(await PARTICIPANTS[role](settings).turn('perspectives',context,role_sources,[]))
+            role_sources = [r for r in sources if (r.source_type in ('customer_feedback','customer_study') if role == 'customer' else r.source_type in ('market_metric','industry_signal','planning_volume','customer_study') if role=='market' else r.source_type=='competitor_official')][:9]
+            participant = PARTICIPANTS[role](settings)
+            turns.append(await participant.turn('perspectives',context,role_sources,[]))
+            _collect_evidence(participant, sources)
         challenger='customer' if lead=='market' else 'market'
         progress(f'{challenger.title()} agent: challenging the {lead} position')
-        turns.append(await PARTICIPANTS[challenger](settings).turn('challenge',context,sources,turns))
+        participant = PARTICIPANTS[challenger](settings)
+        turns.append(await participant.turn('challenge',context,sources,turns))
+        _collect_evidence(participant, sources)
         progress(f'{lead.title()} agent: responding and revising')
-        turns.append(await PARTICIPANTS[lead](settings).turn('revision',context,sources,turns))
+        participant = PARTICIPANTS[lead](settings)
+        turns.append(await participant.turn('revision',context,sources,turns))
+        _collect_evidence(participant, sources)
         progress('Judge: assessing disagreements and evidence')
-        turns.append(await PARTICIPANTS['judge'](settings).turn('assessment',context,sources,turns))
+        judge = PARTICIPANTS['judge'](settings)
+        turns.append(await judge.turn('assessment',context,sources,turns))
+        if moderator:
+            progress('Moderator: closing the debate for PM review')
+            moderation.append(await moderator.turn('assessment',context,sources,turns))
     return DebateResult(run_id=str(uuid4()),source_run_id=source.run_id,analysis_id=source.analysis_id,
         proposal=request.proposal,scope=source.scope,question=request.question,model=settings.ollama_model,
-        turns=turns,evidence=sources,limitations=[
-        'Market uses the live market evidence agent. Customer, Competitor and Judge council adapters are local; separate teammate implementations are not merged on this branch.',
+        turns=turns,moderation=moderation,evidence=sources,
+        judge_assessment=_snapshot(getattr(judge,'assessment',None)),
+        judge_request=_snapshot(getattr(judge,'request',None)),limitations=[
+        'Customer, Market, Competitor, Moderator and Judge use the shared local Qwen runtime. The Judge applies the integrated scoring rubric to the actual specialist debate.',
         'Market data describes adoption and volume, not causal feature impact or commercial success probability.',
         'BMW trim gaps remain unverified. AI grounding checks are fallible; PM review is required.',
         'One bounded challenge/revision round. No automatic feature approval.'])

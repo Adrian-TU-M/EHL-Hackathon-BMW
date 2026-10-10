@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import threading
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query
@@ -34,6 +35,7 @@ from .schemas import (
     ThemeStat,
 )
 from .stats import coverage, theme_stats
+from .runtime import get_agent, reload_agents
 
 settings = load_settings()
 _state: dict = {}
@@ -41,20 +43,20 @@ _lock = threading.Lock()
 
 
 def _load() -> None:
-    data = load_customer_data(settings.data_dir, settings.manifest_path, settings.mappings_dir)
-    maps = Mappings(settings.mappings_dir)
+    agent = get_agent(settings=settings)
+    data, maps = agent.data, agent.maps
     levels: list[str] = []
     for spec in load_manifest(settings.manifest_path):
         for lvl in ((spec.options.get("derived") or {}).get("severity") or {}).get("levels", []):
             if lvl not in levels:
                 levels.append(lvl)
     _state.update(data=data, maps=maps, severity_levels=levels,
-                  agent=CustomerAgent(data, maps, OllamaClient(settings)))
+                  agent=agent)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    _load()
+    await asyncio.to_thread(_load)
     yield
 
 
@@ -71,9 +73,11 @@ def _scope(vehicle: str, market: str, powertrain: str | None) -> Scope:
     return Scope(vehicle=vehicle, market=market, powertrain=powertrain or None)
 
 
-def _run_llm(fn, *args):
+async def _run_llm(fn, *args):
     try:
-        return fn(*args)
+        from backend.runtime import inference_lock
+        async with inference_lock:
+            return await asyncio.to_thread(fn, *args)
     except LLMUnavailable as exc:
         raise HTTPException(status_code=503, detail={"error": "llm_unavailable", "message": str(exc)})
     except LLMOutputError as exc:
@@ -100,6 +104,7 @@ def health() -> dict:
 def reload() -> dict:
     """Re-ingest the data directory (after adding datasets or editing mappings)."""
     with _lock:
+        reload_agents()
         _load()
     return health()
 
@@ -123,13 +128,13 @@ def get_evidence(vehicle: str, market: str, powertrain: str | None = None, theme
 
 
 @app.post("/customer/analysis", response_model=AnalysisResult)
-def post_analysis(scope: Scope) -> AnalysisResult:
-    return _run_llm(_state["agent"].analyze, scope)
+async def post_analysis(scope: Scope) -> AnalysisResult:
+    return await _run_llm(_state["agent"].analyze, scope)
 
 
 @app.post("/customer/perspective", response_model=CouncilEvent)
-def post_perspective(request: PerspectiveRequest) -> CouncilEvent:
-    return _run_llm(_state["agent"].perspective, request)
+async def post_perspective(request: PerspectiveRequest) -> CouncilEvent:
+    return await _run_llm(_state["agent"].perspective, request)
 
 
 def _filters(vehicle: str, market: str, powertrain: str, source: str, category: str) -> DashboardFilters:

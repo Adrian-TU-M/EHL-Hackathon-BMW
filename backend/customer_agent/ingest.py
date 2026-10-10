@@ -152,7 +152,7 @@ def parse_study_means(item: DiscoveredFile, maps: Mappings) -> list[dict]:
                     "vehicle": maps.vehicle(model), "model_label": model, "attribute": attribute,
                     "metric": "mean", "value": float(value), "distribution": None,
                     "year": year, "sample_size": None, "row": i + 1, "bottom_box": None,
-                    "levels_note": "mean score as supplied (0-10 scale)",
+                    "levels_note": "reported mean; scale and anchors unspecified",
                 })
         elif label.iat[i]:
             attribute = label.iat[i]

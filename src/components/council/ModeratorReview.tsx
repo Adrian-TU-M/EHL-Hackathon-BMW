@@ -8,6 +8,7 @@ import type {
 } from "../../lib/council/contracts";
 import { Badge, Button, Modal } from "../ui/Primitives";
 import "../../styles/moderator.css";
+import { JudgeAudio } from "./JudgeAudio";
 
 export function SourceCards({
   ids,
@@ -129,6 +130,46 @@ export function ModeratorReview() {
             {o.assessment?.summary ||
               "No completed judge assessment. Evidence is incomplete."}
           </p>
+          {o.assessment?.native_assessment?.features.map((feature) => (
+            <div className="moderator-judge-result" key={feature.feature_id}>
+              <Badge>
+                Judge: {feature.recommendation.replaceAll("_", " ")}
+              </Badge>
+              <p>
+                Evidence: {feature.evidence_strength} · Priority{" "}
+                {feature.priority ?? "unknown"}/100 · Known-weight coverage{" "}
+                {feature.coverage}%
+              </p>
+              <small>
+                Priority is the Judge's weighted rubric score, not a success
+                probability.
+              </small>
+              <details>
+                <summary>Why the Judge reached this assessment</summary>
+                {Object.entries(feature.criteria).map(([criterion, rating]) => (
+                  <p key={criterion}>
+                    <strong>
+                      {criterion}: {rating.value ?? "unknown"}
+                      {rating.value !== null ? "/5" : ""}
+                    </strong>{" "}
+                    — {rating.rationale}
+                  </p>
+                ))}
+                {feature.risks.map((risk, index) => (
+                  <p key={index}>Risk: {risk}</p>
+                ))}
+                {feature.alternatives.map((alternative, index) => (
+                  <p key={index}>Alternative: {alternative}</p>
+                ))}
+              </details>
+            </div>
+          ))}
+          {o.assessment_valid && o.assessment?.native_assessment && (
+            <JudgeAudio
+              endpoint={`/api/moderator/sessions/${encodeURIComponent(s.id)}/outcomes/${encodeURIComponent(o.topic_id)}/voice`}
+              assessmentId={o.assessment.native_assessment.id}
+            />
+          )}
           <details>
             <summary>Claims, alternatives and disagreement record</summary>
             {o.packet.positions.map((p) => (

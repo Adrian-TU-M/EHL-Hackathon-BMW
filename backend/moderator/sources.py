@@ -181,10 +181,18 @@ def load_catalog(folder: Path, cache: Path | None = None) -> Catalog:
         *[f"{v}_OptionList.PDF" for v in FEEDBACK],
         "BMW-Group-Report-2025-en.pdf",
     ]
-    missing = [n for n in names if not (folder / n).is_file()]
+    # Accept the supplied BMWHack root, its BMW-Data child, or the committed
+    # private-data/inputs layout without copying or modifying source documents.
+    files = {
+        name: next((candidate for candidate in
+                    (folder / name, folder / "BMW-Data" / name, folder / "inputs" / name, folder.parent / name)
+                    if candidate.is_file()), folder / name)
+        for name in names
+    }
+    missing = [n for n in names if not files[n].is_file()]
     if missing:
         raise FileNotFoundError("Missing supplied artifacts: " + ", ".join(missing))
-    hashes = {n: hashlib.sha256((folder / n).read_bytes()).hexdigest() for n in names}
+    hashes = {n: hashlib.sha256(files[n].read_bytes()).hexdigest() for n in names}
     snapshot = hashlib.sha256(
         json.dumps({"extractor": "v6", **hashes}, sort_keys=True).encode()
     ).hexdigest()
@@ -211,7 +219,7 @@ def load_catalog(folder: Path, cache: Path | None = None) -> Catalog:
                 "Dates are not supplied; populations are not representative samples.",
             ],
         )
-        wb = openpyxl.load_workbook(folder / name, read_only=True, data_only=True)
+        wb = openpyxl.load_workbook(files[name], read_only=True, data_only=True)
         ws = wb["Feedback_Explorer"]
         observations = {}
         count = 0
@@ -284,7 +292,7 @@ def load_catalog(folder: Path, cache: Path | None = None) -> Catalog:
             "EU does not mean all Europe.",
         ],
     )
-    wb = openpyxl.load_workbook(folder / name, data_only=True)
+    wb = openpyxl.load_workbook(files[name], data_only=True)
     ws = wb["CN_EU_2025"]
     for col, vehicle, region in [
         (2, "G68", "China"),
@@ -389,8 +397,8 @@ def load_catalog(folder: Path, cache: Path | None = None) -> Catalog:
             "EU is distinct from Europe.",
         ],
     )
-    wb = openpyxl.load_workbook(folder / name, data_only=True)
-    formula_wb = openpyxl.load_workbook(folder / name, data_only=False)
+    wb = openpyxl.load_workbook(files[name], data_only=True)
+    formula_wb = openpyxl.load_workbook(files[name], data_only=False)
     for ws in wb:
         for r in range(2, 6):
             for col, year in [(3, 2024), (4, 2025), (5, 2030)]:
@@ -443,7 +451,7 @@ def load_catalog(folder: Path, cache: Path | None = None) -> Catalog:
         from .equipment import matrix_rows
 
         row_count = 0
-        with fitz.open(folder / name) as pdf:
+        with fitz.open(files[name]) as pdf:
             for i, page in enumerate(pdf):
                 passage = page.get_text()
                 evidence.append(
@@ -485,7 +493,7 @@ def load_catalog(folder: Path, cache: Path | None = None) -> Catalog:
         ],
     )
     pages = [*range(42, 47), *range(53, 58), *range(77, 82), *range(262, 266)]
-    with fitz.open(folder / name) as pdf:
+    with fitz.open(files[name]) as pdf:
         for page in pages:
             text = pdf[page - 1].get_text()
             evidence.append(

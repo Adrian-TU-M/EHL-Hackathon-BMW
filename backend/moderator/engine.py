@@ -93,7 +93,9 @@ class Engine:
                 self.catalog = latest_external
             else:
                 for source in latest_external.sources:
-                    if source.provenance == "external":
+                    # Reviewed specialist catalogs are rebuilt from their current
+                    # source indexes; never resurrect expired records at restart.
+                    if source.provenance == "external" and not source.id.startswith("specialist-source:"):
                         self.catalog = extend_catalog(
                             self.catalog,
                             source,
@@ -107,6 +109,13 @@ class Engine:
                 store.save_catalog(self.catalog)
         self.evidence = {e.id: e for c in self.catalogs.values() for e in c.evidence}
         for s in self.sessions.values():
+            existing_events = self.store.events(s.id)
+            event_sequence = existing_events[-1].sequence if existing_events else 0
+            if event_sequence > s.sequence:
+                s.sequence = event_sequence
+                s.status = "paused"
+                s.generation += 1
+                self.emit(s, "recovery", "System", "Recovered an older snapshot behind the event log after concurrent backend access. Session paused; existing events retained.")
             if s.status == "running":
                 if s.work and s.work.stage_started_at:
                     elapsed = min(
@@ -239,7 +248,7 @@ class Engine:
                         2000,
                         agenda.id,
                     ),
-                    45,
+                    240 if self.adapters.mode == "ollama" else 45,
                 )
                 agenda_usage = reply.tokens
                 if reply.tokens > reservation:
@@ -532,8 +541,25 @@ class Engine:
     def payload(self, s, actor, **kwargs):
         ev = self.allowed(s, actor)
         # Excerpts are a starting window; all eligible evidence remains retrievable.
-        selected = ev[:4]
-        selected += [e for e in ev if "Likes" in e.feedback_types][:2]
+        own_domain = [e for e in ev if e.domain == actor]
+        if self.adapters.mode == "ollama":
+            from .local import evidence_relevance
+            own_domain.sort(key=lambda e: -evidence_relevance(e.model_dump(), s.work.brief.model_dump()))
+        if actor in {"market", "competitor"}:
+            # Feature announcements must not disappear behind the same baseline
+            # sales rows that every topic includes.
+            own_domain.sort(key=lambda e: not e.id.startswith("specialist:"))
+        selected = own_domain[:4]
+        # Raw equipment matrices are available in the frozen source explorer but
+        # cannot establish trim fitment. Avoid feeding their undecoded columns as
+        # apparent facts into a short local specialist opening.
+        if self.adapters.mode != "ollama" or actor not in ROLES:
+            selected += [e for e in ev if e.domain != actor][:2]
+        positive = [e for e in own_domain if "Likes" in e.feedback_types]
+        # Preserve clear positive observations ahead of mixed long comments,
+        # whose overall Likes tag may refer to an unrelated part of the car.
+        positive.sort(key=lambda e: bool(set(e.feedback_types) & {"Defect", "Difficult to Use", "Wants"}))
+        selected += positive[:2]
         selected += [e for e in ev if not e.classifications and e.kind == "feedback"][
             :1
         ]
@@ -548,7 +574,12 @@ class Engine:
                 continue
             seen.add(e.id)
             item = e.model_dump()
-            item["passage"] = e.passage[:1600]
+            start = 0
+            if self.adapters.mode == "ollama" and len(e.passage) > 1600:
+                from .local import source_excerpt
+                excerpt = source_excerpt(item, s.work.brief.model_dump())
+                start = max(0, e.passage.find(excerpt) - 240)
+            item["passage"] = e.passage[start:start + 1600]
             item["excerpt_truncated"] = len(e.passage) > 1600
             excerpts.append(item)
         return {
@@ -588,6 +619,7 @@ class Engine:
                 else math.floor(s.limits.topic_tokens * (1 - s.limits.reserve_fraction))
             )
             schema = model.model_json_schema()
+            output_allowance = 10000 if assessment and self.adapters.mode == "ollama" else 1500
             # UTF-8 byte reservation bounds common byte-tokenized input conservatively.
             # Unreturned/late calls keep the reservation; successful calls charge reported usage.
             reserve = (
@@ -596,7 +628,7 @@ class Engine:
                         {"data": payload, "schema": schema}, ensure_ascii=False
                     ).encode()
                 )
-                + 2000
+                + output_allowance + 2000
             )
             if w.tokens + reserve > cap or s.tokens + reserve > s.limits.session_tokens:
                 raise Budget("Token reservation exhausted")
@@ -612,14 +644,14 @@ class Engine:
                 )
                 if remaining <= 0:
                     raise Budget("Active time exhausted")
-                timeout = min(s.limits.call_seconds, remaining)
+                timeout = min(max(s.limits.call_seconds, 900) if assessment and self.adapters.mode == "ollama" else s.limits.call_seconds, remaining)
                 reply = await asyncio.wait_for(
                     self.adapters.call(
                         actor,
                         operation,
                         {**payload, "token_allowance": reserve},
                         schema,
-                        1500,
+                        output_allowance,
                         f"{s.run_id}:{w.brief.topic_id}:{slot}:{attempt}",
                     ),
                     timeout,
@@ -1203,6 +1235,12 @@ class Engine:
                             x.model_dump() for x in self.snapshot(s).sources
                         ],
                     )
+                    # Judge receives every exact passage cited by this discussion,
+                    # not merely the generic first window of topic evidence.
+                    cited = {eid for claim in w.claims for eid in claim.evidence_ids}
+                    cited.update(eid for challenge in w.challenges for eid in challenge.response_evidence_ids)
+                    allowed_evidence = {e.id: e for e in self.allowed(s, "judge")}
+                    data["evidence"] = [allowed_evidence[eid].model_dump() for eid in sorted(cited) if eid in allowed_evidence]
                     assessment = await self.call(
                         s,
                         "judge",

@@ -115,7 +115,7 @@ def qwen_transport(calls, *, installed=True, done=True, reason="stop"):
     def respond(request):
         calls.append(request)
         if request.url.path == "/api/tags":
-            return httpx.Response(200, json={"models": [{"name": "qwen3:4b-instruct"}] if installed else []})
+            return httpx.Response(200, json={"models": [{"name": "qwen3:8b"}] if installed else []})
         assert request.url.path == "/api/chat"
         return httpx.Response(200, json={"done": done, "done_reason": reason,
             "message": {"content": json.dumps(draft_data())}})
@@ -129,7 +129,7 @@ def test_default_is_local_qwen_with_actual_context_and_no_openai_key(monkeypatch
     body = request_data() | {"background": "Actual charging project context", "pm_message": "Focus on driver usability"}
     result = asyncio.run(JudgeService(ai).assess(JudgeRequest.model_validate(body)))
     assert ai.base_url == "http://127.0.0.1:11434" and ai.api_format == "ollama"
-    assert result.provider == "qwen" and result.model == "qwen3:4b-instruct"
+    assert result.provider == "qwen" and result.model == "qwen3:8b"
     assert ai.timeout_seconds == 300 and ai.round_timeout_seconds >= 2 * ai.call_timeout_seconds
     assert all("authorization" not in request.headers for request in calls)
     wire = json.loads(calls[-1].content)
@@ -165,7 +165,7 @@ def test_missing_qwen_model_is_actionable_503_without_inference_or_demo(monkeypa
     client = TestClient(create_app(ai=ModelAIAdapter(transport=qwen_transport(calls, installed=False)), moderator=ContextModeratorAdapter()))
     assert client.get("/health").json()["model_ready"] is False
     response = client.post("/analyses/test/judge-assessments", json=request_data())
-    assert response.status_code == 503 and "ollama pull qwen3:4b-instruct" in response.json()["detail"]
+    assert response.status_code == 503 and "ollama pull qwen3:8b" in response.json()["detail"]
     response = client.post("/analyses/test/councils", json={"request": request_data(), "mode": "manual"})
     assert response.status_code == 503
     assert all(request.method == "GET" for request in calls)

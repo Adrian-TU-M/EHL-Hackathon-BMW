@@ -5,6 +5,7 @@ from typing import Any
 import httpx
 
 from backend.config import Settings
+from backend.runtime import inference_lock
 
 
 class OllamaClient:
@@ -35,7 +36,7 @@ class OllamaClient:
             payload["tools"] = tools
         if output_schema:
             payload["format"] = output_schema
-        async with httpx.AsyncClient(timeout=self.settings.ollama_timeout_seconds) as client:
+        async with inference_lock, httpx.AsyncClient(timeout=self.settings.ollama_timeout_seconds) as client:
             response = await client.post(
                 f"{self.settings.ollama_base_url}/api/chat", json=payload
             )

@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from types import SimpleNamespace
 from uuid import UUID, uuid4
 from fastapi import HTTPException
 from backend.config import Settings
@@ -102,6 +103,34 @@ class CouncilTests(unittest.IsolatedAsyncioTestCase):
         result=await CompetitorAgent(self.settings,EvidenceRepository([record(),other,record('unselected-feature')]),FakeLLM()).run(req)
         self.assertEqual([r.id for r in result.evidence],['source-1'])
         self.assertEqual(result.requested_evidence_ids,['source-1'])
+
+    async def test_integrated_roles_preserve_native_evidence_and_judge_request(self):
+        calls=[]
+        native=record('native-customer-source').model_copy(update={'source_type':'customer_feedback','brand':'BMW','model':'G60'})
+        class Participant:
+            def __init__(inner,role):
+                inner.role=role
+                inner.evidence=[]
+            async def turn(inner,stage,context,sources,prior):
+                calls.append((inner.role,stage,[r.id for r in sources]))
+                if inner.role=='customer':inner.evidence=[native]
+                if inner.role=='judge':
+                    self.assertIn(native.id,{r.id for r in sources})
+                    inner.assessment=SimpleNamespace(model_dump=lambda **kwargs:{'id':'judge-rubric','input_digest':'same-input'})
+                    inner.request=SimpleNamespace(model_dump=lambda **kwargs:{'features':[context['proposal']],'evidence_ids':[r.id for r in sources]})
+                body=draft()['position'];body['agent_id']=inner.role
+                body['claims'][0].update(id=f'{inner.role}-{stage}-1',kind='hypothesis')
+                return CouncilTurn(agent_id=inner.role,stage=stage,position=body)
+        factories={role:(lambda settings,role=role:Participant(role)) for role in ('customer','market','competitor','judge','moderator')}
+        with patch('backend.council.coordinator.PARTICIPANTS',factories):
+            result=await start_debate(self.request,self.repo,settings=self.settings)
+        self.assertEqual(len(result.turns),6)
+        self.assertEqual([(t.agent_id,t.stage) for t in result.moderation],[('moderator','perspectives'),('moderator','assessment')])
+        self.assertEqual(calls[0][0],'moderator')
+        self.assertEqual(calls[-1][0],'moderator')
+        self.assertEqual(result.judge_assessment['id'],'judge-rubric')
+        self.assertIn(native.id,result.judge_request['evidence_ids'])
+        self.assertIn(native.id,{r.id for r in result.evidence})
     async def test_unknown_debate_target_is_rejected(self):
         position=draft()['position'];position['agent_id']='customer';position['claims'][0].update(kind='inference',text='BMW trim availability remains unverified in this evidence set.',evidence_ids=[])
         body=dict(agent_id='customer',stage='challenge',position=position,challenges=[dict(target_agent_id='competitor',target_claim_id='invented',question='Why?',evidence_ids=[])],answered_claim_ids=[])

@@ -328,6 +328,8 @@ class JudgeAssessment(Model):
     evidence_ids: list[str] = Field(default_factory=list)
     scoring_inputs: list[ScoringInput] = Field(default_factory=list)
     proposals: list[JudgeProposal] = Field(default_factory=list)
+    native_assessment: dict[str, Any] | None = None
+    native_request: dict[str, Any] | None = None
 
 
 class TopicBrief(Model):
@@ -407,11 +409,11 @@ class TopicOutcome(Model):
 
 
 class Limits(Model):
-    call_seconds: float = Field(default=45, gt=0, le=120)
-    topic_seconds: float = Field(default=300, gt=0, le=1800)
-    topic_tokens: int = Field(default=60000, ge=1, le=1000000)
-    session_tokens: int = Field(default=360000, ge=1, le=6000000)
-    session_seconds: float = Field(default=1800, gt=0, le=10800)
+    call_seconds: float = Field(default=600, gt=0, le=900)
+    topic_seconds: float = Field(default=1800, gt=0, le=3600)
+    topic_tokens: int = Field(default=320000, ge=1, le=1000000)
+    session_tokens: int = Field(default=1920000, ge=1, le=6000000)
+    session_seconds: float = Field(default=7200, gt=0, le=21600)
     reserve_fraction: float = Field(default=0.2, ge=0.2, le=0.5)
 
 
@@ -449,7 +451,7 @@ class Session(Model):
         "complete",
         "unavailable",
     ] = "awaiting_confirmation"
-    mode: Literal["deterministic", "http"]
+    mode: Literal["deterministic", "http", "ollama"]
     cursor: int = 0
     sequence: int = 0
     revision: int = 0
