@@ -1,0 +1,21 @@
+# Normalization of raw label values. Matching is case-insensitive.
+powertrain:
+  Combustion: [ICE, Combustion, Petrol, Diesel, Gasoline, MHEV]
+  Electric: [BEV, BEVE, Electric, EV]
+  Plug-in hybrid: [PHEV, Plug-in hybrid, Plug-in]
+
+# feedback type -> (polarity, subtype kept as the raw label)
+feedback_type:
+  Positive: [Likes, Like, Positive, Praise]
+  Complaint: [Difficult to Use, Defect, Complaint, Problem, Dislikes]
+  Request: [Wants, Want, Request, Wish, Suggestion]
+
+# Category labels that mean "not classified".
+unclassified_categories: ["", no_class_found, n/a, none]
+
+# Vehicle labels: free-text model names -> vehicle code (used by study sheets).
+vehicles:
+  F70: ["1 Series F70", "BMW 1 Series F70"]
+  G60: ["5 Series G60", "BMW 5 Series G60"]
+  G68: ["5 Series G68", "BMW 5 Series G68"]
+  G70: ["7 Series G70", "BMW 7 Series G70"]

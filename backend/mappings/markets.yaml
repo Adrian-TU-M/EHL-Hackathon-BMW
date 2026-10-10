@@ -1,0 +1,13 @@
+# Country / region code -> market. Extend freely; markets are plain strings.
+# Codes are quoted so YAML never reads NO (Norway) as a boolean.
+# Codes not listed here appear as "Unmapped:<code>" in coverage so they can be added.
+markets:
+  Europe: ["AT", "BE", "BG", "CH", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "UK", "GR", "HR", "HU", "IE", "IS", "IT", "LI", "LT", "LU", "LV", "MT", "NL", "NO", "PL", "PT", "RO", "SE", "SI", "SK", "EU"]
+  United States: ["US", "USA"]
+  China: ["CN", "CHN", "HK", "MO"]
+  Japan: ["JP"]
+  South Korea: ["KR"]
+  Canada: ["CA"]
+  Australia: ["AU"]
+  South Africa: ["ZA"]
+  Rest of World: ["RoW", "ROW"]

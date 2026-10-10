@@ -1,0 +1,123 @@
+# Category / study-attribute label -> customer theme.
+# Rules are checked in order; the first rule with a matching keyword, and no matching
+# `exclude` keyword, wins. Keywords match whole words/phrases, case-insensitive; a
+# trailing * matches any word ending ("charg*" = charge, charging, charger).
+# A label that matches nothing becomes its own theme under its raw label: never
+# dropped, never forced into a wrong group. Add keywords here for new datasets.
+# `topic` is the nearest frontend Topic (src/lib/types) or null when none fits.
+# `aliases` (optional) are everyday words used only to recognise the theme in free text,
+# e.g. a council question ("what about the screens?"); they never classify source data.
+
+themes:
+  - theme: Charging & range
+    topic: Charging
+    aliases: [charg*, battery, batteries, ev, evs, electric, kwh, kw]  # free-text only (open discussion)
+    keywords: [charg*, electric range, range, wallbox, high voltage battery, high-voltage,
+               recuperation, regeneration, preconditioning, energy efficiency, fuel economy,
+               electric mileage, mileage]
+    exclude: [wireless, mobile device, phone*]
+
+  - theme: Infotainment & connectivity
+    topic: Displays
+    aliases: [screen*, touchscreen*, button*, idrive, menu*, ui, interface, connectivity, music, maps]  # free-text only (open discussion)
+    keywords: [infotainment, information and entertainment, touch screen, screen interface,
+               navigation, carplay, android auto, app, apps, operating concept,
+               operating system, controller operation, head-up, instrument cluster,
+               instruments, displays, display*, radio, audio, sound system, speakers, bass,
+               voice*, personal assistant, esim, wifi, wi-fi, bluetooth, smartphone,
+               mobile device, phone*, usb, rear seat entertainment, connecteddrive,
+               connected services, software, gesture, touch command, telephone*,
+               driver profile, video, map update, rtti, traffic information, cd / dvd,
+               streaming, mirroring, portal, online, poi search, teleservices, hmi,
+               menu structure, interactive information, controls, customization,
+               mobile app, technical innovations]
+    exclude: [heat*, ac controls]
+
+  - theme: Driver assistance & parking
+    topic: Driving controls
+    aliases: [adas, autopilot, self-driving, autonomous, park*, sensors]  # free-text only (open discussion)
+    keywords: [assist*, cruise control, parking, park distance, camera*, surround view,
+               all-round view, lane, blind spot, blid spot, collision, speed limit, back-up,
+               backup, fatigue, cross traffic, automated driving, drive recorder,
+               traffic light, sign warning, side view, stability control, launch control,
+               intersection warning, night vision, driver assist*, safety monitoring,
+               adaptive driving, traffic jam]
+    exclude: [personal assistant, parking brake]
+
+  - theme: Seats & comfort
+    topic: Seats
+    aliases: [seat*, comfort*, massage, legroom, headroom]  # free-text only (open discussion)
+    keywords: [seat*, headrest*, lumbar, massage, comfort, armrest, wellbeing, roominess,
+               driving position]
+    exclude: [comfort access, seat belt*, riding comfort, entry]
+
+  - theme: Climate control
+    topic: Interior
+    aliases: [climate, air conditioning, a/c, heating, ventilation, temperature]  # free-text only (open discussion)
+    keywords: [climatization, climate control, air conditioning, air conditioner, blower,
+               heat*, ventilation, sun protection, panel heating]
+    exclude: [headlight*]
+
+  - theme: Trunk & cargo
+    topic: Trunk
+    aliases: [trunk, boot, cargo, luggage, storage]  # free-text only (open discussion)
+    keywords: [luggage, trunk, frunk, tailgate, liftgate, cargo, through-loading]
+
+  - theme: Access, keys & doors
+    topic: Exterior
+    aliases: [keys, keyless, door*, unlock*, locking]  # free-text only (open discussion)
+    keywords: [door*, key, keyless, lock, comfort access, access and exit, side window,
+               welcome light, garage, anti-theft, handle*, entry]
+    exclude: [grab handle*]
+
+  - theme: Interior design & quality
+    topic: Interior
+    aliases: [interior, cabin, materials, ambient]  # free-text only (open discussion)
+    keywords: [interior, ambient light, upholstery, trim, workmanship, acoustics,
+               panorama, spatial, center console, glove box, storage, cupholder*,
+               floor mat, instrument panel, grab handle*, body equipment, sun visor,
+               materials, light switch, versatility]
+
+  - theme: Exterior design
+    topic: Exterior
+    aliases: [exterior, styling, looks, grille, wheels, paint]  # free-text only (open discussion)
+    keywords: [exterior, styling, mirror*, wheels, tire*, tirefit, windshield, wiper,
+               fuel filler, fuel tank, ground clearance, grille, hood, roof, towing,
+               flashing, bumper*, fog light, running board, exhaust, trailer, rain sensor,
+               wash / wipe, convertible, headlight*, taillight*, size/ proportions,
+               proportions, sunroof, moonroof]
+
+  - theme: Driving experience & powertrain
+    topic: null
+    aliases: [driving, handling, ride, engine, performance, acceleration, steering, brakes, braking]  # free-text only (open discussion)
+    keywords: [drivetrain, driving dynamics, handling, riding, ride, transmission, steering,
+               braking, brake*, my modes, experience modes, engine, cushioning, suspension,
+               start-stop, shift paddle, pedals, selector lever, automatic-hold,
+               driving experience, driving performance, acceleration, roadholding,
+               manoeuvrability, maneuverability, sportiness, power and pickup,
+               passing capability, turning radius, 4wd, awd, off-road, quietness,
+               noise*, vibration, wind and road noise, vehicle sound]
+
+  - theme: Safety & visibility
+    topic: null
+    aliases: [safety, visibility, lights, headlights]  # free-text only (open discussion)
+    keywords: [safety, seat belt*, emergency, alarm, airbag*, horn*, visibility]
+
+  - theme: Quality & reliability
+    topic: null
+    aliases: [quality, reliability, reliable, defects, bugs, faults]  # free-text only (open discussion)
+    keywords: [reliability, durability, build quality, faults, squeaks, rattles,
+               electrical problems, solid vehicle construction]
+
+  - theme: Value & brand
+    topic: null
+    aliases: [price, value, brand, premium, cost*]  # free-text only (open discussion)
+    keywords: [value for money, price, resale, cost of ownership, affordable, economical,
+               prestige, reputation, brand image, vehicle image, level of equipment,
+               standard equipment, warranty, environm*, environmental]
+
+  - theme: Ownership & service
+    topic: null
+    aliases: [service, dealer*, warranty, maintenance, ownership]  # free-text only (open discussion)
+    keywords: [owner's manual, general enquiry, accessories, vehicle battery, upgrade*,
+               washer fluid, cooling, 12 v, service*, caring car]

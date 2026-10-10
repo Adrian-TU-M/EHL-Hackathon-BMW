@@ -114,16 +114,12 @@ test("specialist pages filter actual fixture records and disclose sources", asyn
   await page
     .getByRole("link", { name: "Customer intelligence", exact: true })
     .click();
-  await expect(page.locator(".evidence-card")).toHaveCount(21);
-  await page
-    .getByLabel("Feedback type", { exact: true })
-    .selectOption("Positive");
-  await expect(page.locator(".evidence-card")).toHaveCount(7);
-  await page.getByLabel("Search customer evidence").fill("quiet");
-  await expect(page.locator(".evidence-card")).toHaveCount(1);
-  await page.locator(".evidence-card").click();
-  await expect(page.getByRole("dialog")).toContainText("SYNTHETIC DEMO");
-  await page.getByRole("button", { name: "Close dialog" }).click();
+  // Works against the live Customer Agent backend or, when it is down, demo data.
+  await expect(page.getByTestId("ranking-red").getByTestId("rank-row").first()).toBeVisible();
+  await expect(page.getByTestId("ranking-green").getByTestId("rank-row").first()).toBeVisible();
+  await page.getByTestId("ranking-green").getByTestId("rank-row").first().click();
+  await expect(page.locator("dialog.ci-drawer")).toContainText("Limitations");
+  await page.getByRole("button", { name: "Close evidence drawer" }).click();
   await page.getByRole("link", { name: "Market trends", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Market trends." }),
@@ -171,6 +167,8 @@ test("specialist pages filter actual fixture records and disclose sources", asyn
 test("council pause, interruption, challenge, bounded stages and PM handoff", async ({
   page,
 }) => {
+  // The scripted council (Customer Agent backend unreachable); the live one is in council-live.spec.ts.
+  await page.route("**/customer-api/**", (route) => route.abort());
   await start(page);
   await page.getByRole("link", { name: "Agent council", exact: true }).click();
   await page.goto("/council?demo=1");
@@ -206,12 +204,13 @@ test("council pause, interruption, challenge, bounded stages and PM handoff", as
   });
   await page.getByRole("button", { name: "Resume discussion" }).click();
   for (let i = 0; i < 11; i++) await page.clock.runFor(4300);
+  // On completion the Judge hands the recommendation to the PM.
   await expect(
-    page.getByRole("button", { name: "Continue to PM review" }),
-  ).toBeEnabled();
+    page.getByRole("heading", { name: "Your council recommendation" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Expand debate" }).click();
   await expect(page.locator(".transcript-event")).toHaveCount(11);
-  await page.getByRole("button", { name: "Continue to PM review" }).click();
+  await page.getByRole("button", { name: "Review later" }).click();
   await expect(
     page.getByRole("heading", { name: "Shape the next generation." }),
   ).toBeVisible();

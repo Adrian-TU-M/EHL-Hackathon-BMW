@@ -137,6 +137,15 @@ export interface CouncilEvent {
   statement: string;
   evidenceIds: string[];
   assumption?: string;
+  /** Live agent turn still being generated; the council waits on it. */
+  pending?: boolean;
+  /** Produced by a live backend agent (e.g. "ollama:qwen3:8b"), not the scripted demo. */
+  model?: string;
+  /** Deterministic evidence summary for a live turn (records on the topic, of total; thin flag). */
+  evidenceBase?: string;
+  /** Live debate turn: whom it answers and the stance taken. */
+  respondingTo?: string;
+  stance?: "agree" | "partly_agree" | "disagree" | "outside_evidence" | "none";
 }
 export interface CouncilState {
   status: "idle" | "running" | "paused" | "interrupted" | "complete";
@@ -148,6 +157,8 @@ export interface CouncilState {
   handoff: "pending" | "approved" | "review_later" | "rejected";
   challenge?: string;
   run: number;
+  /** The customer turns come from the live Customer Agent backend. */
+  liveCustomer?: boolean;
 }
 export interface CouncilMessage {
   id: string;
