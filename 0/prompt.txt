@@ -1,0 +1,55 @@
+how do I see the branches and switch to them
+
+---
+
+show me the branches
+
+---
+
+an u switch to the competitors agent rn
+
+---
+
+ok also here 
+
+/Users/shaur/TUM/BMWHack
+
+is more data and stuff u can refer to okay? 
+
+now u know the whole project stuff I am in charge of making here the Competitors Agent and connecting it to the Competitiors page on the platform as well as making it work properly in coherence with the other agents in the debate stuff alright? it should work on Ollama Qwen again I am not sure how that works have never created an agent properly but basically this agent what it should do is essentially from any of the competitior data first check how the data is for the competitor stuff okay and give me a plan of how it would work and it should use that data and purely think from the competitor state of mind how to make BMW innovate more and recommend features based on the data in an agentic way first give me a planned workflow for this and how u would do it and how all of us would create our agents and link it all together on the agent council btw and also the singular respective sites for the displaying of stuff to show the effects and maybe possible effects from a selfish point of view for each agent like on the competitor site alongside the data it also shows like the positive and negative effects of BMW doing certain stuff adding x feature etc. idk yeah it should have an agentic workflow help me think it through also everyone each agent would need to for equality be run on the same Ollama Qwen model right how would this work and look like in the end properly yk bcs right now on the site its just dermo fake agents and fake stuff right?
+
+---
+
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"call_b9d32b339bee46078a3c0fd3616d3dc8\",0]","question":"For the demo, where do you expect Ollama to run? I’ll plan around one shared backend/model so everyone’s agents use the same setup.","answer":"One team laptop runs everything"}]
+</send_user_message_question_reply>
+
+---
+
+is it okay if my teammates have different branches and are somehow making their agents with Ollama Qwen there or smth how does it work give short reply pls
+
+---
+
+ok nice also so u r sure there is no competitor data like of Tesla BYD Mercedes and stuff they gave us?
+
+---
+
+u checked everything here?
+
+/Users/shaur/TUM/BMWHack
+
+---
+
+ok so there is some or what where? show me example
+
+---
+
+okok so quickly how should we plan my agent how would it work and obviously it needs more competitor data so from where? accurate as well and it should be agentic so tell me shortly the planned workflow for it
+
+---
+
+yeah but the council should only work if the PM asks for a debate i.e. clicks on it yeah futhermore the agent should be able to accurately debate against the other agents about their points and stuff yeah? ok so how do we start? how do we make this agent where what how and how quickly
+
+---
+
+ok make the stuff u said the backend section like the files first

@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4KA07SNYXZSN1T8ZVFM91X5",
+  "strategy": "manual-commit",
+  "branch": "Competitors_Agent",
+  "checkpoints_count": 11,
+  "files_touched": [
+    ".gitignore",
+    "backend/.env.example",
+    "backend/README.md",
+    "backend/__init__.py",
+    "backend/agents/__init__.py",
+    "backend/agents/base.py",
+    "backend/agents/competitor.py",
+    "backend/api/__init__.py",
+    "backend/api/competitor.py",
+    "backend/api/council.py",
+    "backend/config.py",
+    "backend/council/__init__.py",
+    "backend/council/coordinator.py",
+    "backend/llm/__init__.py",
+    "backend/llm/ollama.py",
+    "backend/main.py",
+    "backend/requirements.txt",
+    "backend/schemas/__init__.py",
+    "backend/schemas/agent.py",
+    "backend/schemas/common.py",
+    "backend/schemas/council.py",
+    "backend/schemas/evidence.py",
+    "backend/tools/__init__.py",
+    "backend/tools/evidence.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 89667,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 7374464,
+    "output_tokens": 19104,
+    "api_call_count": 47,
+    "subagent_tokens_complete": false
+  }
+}
