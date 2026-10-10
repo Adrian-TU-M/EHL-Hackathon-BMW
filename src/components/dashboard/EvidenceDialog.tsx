@@ -5,9 +5,11 @@ import { Badge, Button, Modal, EmptyState } from "../ui/Primitives";
 export function EvidenceDialog({
   ids,
   onClose,
+  extraEvidence,
 }: {
   ids: string[];
   onClose: () => void;
+  extraEvidence?: { id: string; source: string; location: string; passage: string; provenance: string; source_url?: string | null; published_at?: string }[];
 }) {
   const evidence = useAppStore((s) => s.evidence);
   const exclude = useAppStore((s) => s.excludeEvidence);
@@ -16,8 +18,16 @@ export function EvidenceDialog({
   const [excluding, setExcluding] = useState(false);
   const items = evidence.filter((e) => ids.includes(e.id)),
     item = items.find((e) => e.id === selected) ?? items[0];
+  const attached = extraEvidence?.filter(e => ids.includes(e.id) && !evidence.some(local => local.id === e.id)) ?? [];
   return (
     <Modal title="Evidence explorer" wide onClose={onClose}>
+      {attached.map(e => (
+        <article className="judge-feature" key={e.id}>
+          <Badge>{e.provenance.toUpperCase()}</Badge><h3>{e.id} · {e.source}</h3><p>{e.location} · {e.published_at ?? "Date not supplied"}</p>
+          {e.source_url && /^https?:\/\//.test(e.source_url) && <a href={e.source_url} target="_blank" rel="noreferrer">Open original source</a>}
+          <blockquote>{e.passage}</blockquote><p className="small">Attached by the moderator. Challenge this source through the PM council chat.</p>
+        </article>
+      ))}
       <div className="evidence-layout">
         <div className="evidence-index">
           {items.map((e) => (
@@ -43,11 +53,12 @@ export function EvidenceDialog({
         {item ? (
           <div className="evidence-detail">
             <div className="flex-between">
-              <Badge tone="amber">SYNTHETIC DEMO</Badge>
+              <Badge tone="amber">{item.provenance === "synthetic" ? "SYNTHETIC DEMO" : item.provenance.toUpperCase() + " SOURCE"}</Badge>
               <span className="muted small">{item.publishedAt}</span>
             </div>
             <h3>{item.source}</h3>
             <div className="source-location">{item.location}</div>
+            {item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noreferrer">Open original source</a>}
             <blockquote>“{item.passage}”</blockquote>
             <dl className="metadata-grid">
               <div>
@@ -68,19 +79,19 @@ export function EvidenceDialog({
               </div>
               <div>
                 <dt>Provenance</dt>
-                <dd>Hand-authored demonstration fixture</dd>
+                <dd>{item.provenance === "synthetic" ? "Hand-authored demonstration fixture" : "Supplied source passage; authenticity requires verification"}</dd>
               </div>
               <div>
                 <dt>Observation unit</dt>
                 <dd>
-                  {item.domain === "customer"
+                  {item.provenance !== "synthetic" ? "Supplied source passage" : item.domain === "customer"
                     ? "One synthetic feedback record"
                     : "One hypothetical scenario note"}
                 </dd>
               </div>
               <div>
                 <dt>Population / sample size</dt>
-                <dd>Unknown / no real respondents</dd>
+                <dd>{item.provenance === "synthetic" ? "Unknown / no real respondents" : "Not established by this passage"}</dd>
               </div>
             </dl>
             {item.quantitative && (
@@ -138,7 +149,7 @@ export function EvidenceDialog({
               </Button>
             )}
           </div>
-        ) : (
+        ) : attached.length ? null : (
           <EmptyState
             title="No evidence available"
             detail="No source references were attached to this item."

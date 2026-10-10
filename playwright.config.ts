@@ -7,7 +7,7 @@ export default defineConfig({
   expect: { timeout: 12000 },
   use: {
     baseURL: "http://127.0.0.1:5173",
-    channel: "chrome",
+    channel: process.env.PLAYWRIGHT_CHANNEL === "chromium" ? "chromium" : "chrome",
     viewport: { width: 1440, height: 1050 },
     launchOptions: { args: ["--enable-unsafe-swiftshader"] },
     trace: "retain-on-failure",
@@ -22,7 +22,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev -- --port 5173",
+    command: "npm run dev:frontend -- --port 5173",
     url: "http://127.0.0.1:5173",
     reuseExistingServer: true,
   },
