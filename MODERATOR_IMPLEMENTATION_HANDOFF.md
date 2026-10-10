@@ -1,6 +1,6 @@
 # Moderator implementation status
 
-Updated 10 October 2026 after the user resumed implementation. Changes are local and uncommitted. Nothing has been deployed, pushed, or sent to other people.
+Updated 10 October 2026 after the user resumed implementation. The implementation was committed and pushed to `Moderator_Agent` as `15da8dd`. The user subsequently explicitly requested committing and pushing all nine initial source documents as well. Nothing has been deployed or sent as a message to other people.
 
 ## Current scope
 
@@ -52,7 +52,7 @@ npm run dev
 
 Use one backend worker. For live mode set the five `*_AGENT_URL` values and optional matching bearer credentials, then run `npm run dev:moderator`. Set `MODERATOR_CONTROLLER_URL` if services need absolute evidence/packet URLs. Live evaluation starts a temporary evidence server on port 8002; remote services need a reachable `--controller-url`.
 
-`backend/requirements.lock` pins the tested Python environment. `backend/.venv/`, raw inputs, catalogs, SQLite and evaluation exports remain ignored. Private inputs are under `private-data/inputs/`; the annual report original is `/Users/jivitheshanagani/Downloads/BMW-Group-Report-2025-en.pdf`. Never publish customer passages or raw documents in fixtures/assets/Git.
+`backend/requirements.lock` pins the tested Python environment. The user explicitly authorized committing all nine initial documents under `private-data/inputs/`, including the annual report. `.gitignore` allows exactly those filenames; `backend/.venv/`, additional imports, extracted catalogs, SQLite and evaluation exports remain ignored. The annual report original is `/Users/jivitheshanagani/Downloads/BMW-Group-Report-2025-en.pdf`. Do not add further source documents or customer passages to fixtures/assets/Git without authorization.
 
 ## Honest limitations
 

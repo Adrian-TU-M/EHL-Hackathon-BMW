@@ -14,7 +14,7 @@ python3 -m venv backend/.venv
 backend/.venv/bin/python -m pip install -r backend/requirements.lock
 ```
 
-The source collection lives in ignored `private-data/inputs/`. Supply these exact filenames:
+The nine source documents below are included in `private-data/inputs/` with the user's explicit authorization. A fresh clone includes these inputs; generated extracts, databases, external imports and evaluation outputs remain ignored. The filenames are:
 
 ```text
 F70_feedback_hackathon.xlsx
@@ -36,7 +36,7 @@ npm run dev:moderator:demo
 npm run dev
 ```
 
-Vite normally serves http://127.0.0.1:5173 and proxies `/api/moderator` to localhost:8000. `MODERATOR_API_URL` overrides the development proxy. Run one backend worker. The default backend data directory is `private-data`; `MODERATOR_DATA_DIR` overrides it. Neither raw source text nor extracted catalogs should enter Git or public assets.
+Vite normally serves http://127.0.0.1:5173 and proxies `/api/moderator` to localhost:8000. `MODERATOR_API_URL` overrides the development proxy. Run one backend worker. The default backend data directory is `private-data`; `MODERATOR_DATA_DIR` overrides it. Only the nine explicitly authorized input documents are tracked. Keep additional raw sources, extracted catalogs and generated runtime data out of Git and public assets.
 
 `dev:moderator:demo` explicitly uses deterministic integration adapters: they quote sources and exercise workflow gates but do not generate final requirement scores. To use the team's live services, configure the five `*_AGENT_URL` variables in [backend/.env.example](backend/.env.example), then run `npm run dev:moderator`. Missing live configuration is shown as unavailable, with no silent scripted fallback. The specialist reasoning and final judge rubric are outside this implementation.
 

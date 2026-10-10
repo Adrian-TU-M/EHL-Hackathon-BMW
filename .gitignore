@@ -9,8 +9,20 @@ test-results/
 tmp/
 output/
 *.tsbuildinfo
-# Never commit raw confidential challenge datasets.
-private-data/
+# Only the nine source documents explicitly authorized by the user are tracked.
+# Keep generated catalogs, databases, imports and evaluation outputs local.
+private-data/*
+!private-data/inputs/
+private-data/inputs/*
+!private-data/inputs/F70_feedback_hackathon.xlsx
+!private-data/inputs/G60_feedback_hackathon.xlsx
+!private-data/inputs/G70_feedback_hackathon.xlsx
+!private-data/inputs/F70_G60_G68_G70_customer_studies.xlsx
+!private-data/inputs/sales_volumes.xlsx
+!private-data/inputs/F70_OptionList.PDF
+!private-data/inputs/G60_OptionList.PDF
+!private-data/inputs/G70_OptionList.PDF
+!private-data/inputs/BMW-Group-Report-2025-en.pdf
 backend/.venv/
 __pycache__/
 .pytest_cache/
