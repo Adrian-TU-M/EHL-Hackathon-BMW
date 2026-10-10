@@ -153,6 +153,10 @@ def create_app(engine: Engine | None = None):
     async def confirm(sid: str, body: ConfirmAgenda, request: Request):
         return await request.app.state.engine.confirm(sid, body)
 
+    @app.get("/api/moderator/sessions")
+    async def sessions(request: Request):
+        return {"sessions": request.app.state.engine.store.recent_sessions()}
+
     @app.get("/api/moderator/sessions/{sid}")
     async def session(sid: str, request: Request):
         return request.app.state.engine.get(sid)

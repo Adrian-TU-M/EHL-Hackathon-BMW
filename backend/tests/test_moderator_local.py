@@ -21,6 +21,55 @@ class FakeModel:
 
 
 @pytest.mark.asyncio
+async def test_recent_sessions_are_bounded_read_only_summaries(tmp_path):
+    import httpx
+    from backend.moderator.app import create_app
+    from backend.moderator.storage import Store
+    store = Store(tmp_path / "discovery.sqlite3")
+    try:
+        for index in range(25):
+            snapshot = {
+                "id": f"session-{index:02}", "status": "running" if index == 0 else "paused" if index == 1 else "complete",
+                "mode": "deterministic" if index == 24 else "ollama", "sequence": index,
+                "created_at": f"2026-10-{index+1:02}T00:00:00+00:00",
+                "agenda": {"scope": {"vehicle": "G60", "market": "Europe", "powertrain": "Electric", "horizon": 4,
+                            "prompt": "PRIVATE PROJECT OBJECTIVE"}, "selected_ids": ["topic-controls"],
+                            "topics": [{"id": "topic-controls", "label": "Controls", "evidence_ids": ["PRIVATE EVIDENCE"]}]},
+                "work": {"stage": "assessment", "brief": {"topic_id": "topic-controls"}},
+                "outcomes": [{"assessment_valid": True, "assessment": {"native_assessment": {"id": "judge-saved"}}
+                              if index == 23 else None}],
+                "secret": "NEVER DISCLOSE", "passage": "PRIVATE SOURCE PASSAGE",
+            }
+            store.db.execute("INSERT INTO sessions VALUES (?,?)", (snapshot["id"], json.dumps(snapshot)))
+        store.db.execute("INSERT INTO events VALUES (?,?,?)", ("session-02", 1,
+                         json.dumps({"timestamp": "2026-11-01T00:00:00+00:00", "statement": "PRIVATE TRANSCRIPT"})))
+        store.db.commit()
+        changes = store.db.total_changes
+        engine = SimpleNamespace(store=store)
+        app = create_app(engine)
+        app.state.engine = engine
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get("/api/moderator/sessions")
+        assert response.status_code == 200
+        items = response.json()["sessions"]
+        assert len(items) == 20
+        assert [item["id"] for item in items[:4]] == ["session-00", "session-01", "session-02", "session-23"]
+        assert all(item["mode"] != "deterministic" for item in items)
+        assert items[2]["updated_at"] == "2026-11-01T00:00:00+00:00"
+        assert items[2]["outcome_count"] == 1 and items[2]["native_assessment_count"] == 0
+        assert items[2]["has_native_assessment"] is False
+        assert items[3]["native_assessment_count"] == 1 and items[3]["has_native_assessment"] is True
+        assert items[0]["scope"] == {"vehicle": "G60", "market": "Europe", "powertrain": "Electric", "horizon": 4}
+        assert items[0]["selected_count"] == 1 and items[0]["topic_label"] == "Controls"
+        assert items[0]["stage"] == "assessment"
+        assert "PRIVATE" not in response.text and "NEVER DISCLOSE" not in response.text
+        assert store.db.total_changes == changes
+        assert store.db.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 25
+    finally:
+        store.close()
+
+
+@pytest.mark.asyncio
 async def test_local_adapter_reports_real_usage_and_shared_model():
     llm = FakeModel()
     adapter = OllamaAdapters(Settings.from_env(), llm=llm)

@@ -94,6 +94,53 @@ class Store:
             for r in self.db.execute("SELECT snapshot FROM sessions")
         ]
 
+    def recent_sessions(self):
+        """Small read-only discovery index, excluding objectives and evidence."""
+        rows = self.db.execute("""
+            SELECT s.id,
+                   json_extract(s.snapshot, '$.status') AS status,
+                   json_object(
+                       'vehicle', json_extract(s.snapshot, '$.agenda.scope.vehicle'),
+                       'market', json_extract(s.snapshot, '$.agenda.scope.market'),
+                       'powertrain', json_extract(s.snapshot, '$.agenda.scope.powertrain'),
+                       'horizon', json_extract(s.snapshot, '$.agenda.scope.horizon')
+                   ) AS scope,
+                   (SELECT json_extract(topic.value, '$.label')
+                    FROM json_each(s.snapshot, '$.agenda.topics') AS topic
+                    WHERE json_extract(topic.value, '$.id') = COALESCE(
+                        json_extract(s.snapshot, '$.work.brief.topic_id'),
+                        json_extract(s.snapshot, '$.agenda.selected_ids[0]'))
+                    LIMIT 1) AS topic_label,
+                   json_extract(s.snapshot, '$.sequence') AS sequence,
+                   json_array_length(s.snapshot, '$.outcomes') AS outcome_count,
+                   (SELECT COUNT(*) FROM json_each(s.snapshot, '$.outcomes') AS outcome
+                    WHERE json_extract(outcome.value, '$.assessment.native_assessment.id') IS NOT NULL
+                      AND json_extract(outcome.value, '$.assessment_valid') = 1
+                   ) AS native_assessment_count,
+                   json_array_length(s.snapshot, '$.agenda.selected_ids') AS selected_count,
+                   json_extract(s.snapshot, '$.work.stage') AS stage,
+                   json_extract(s.snapshot, '$.created_at') AS created_at,
+                   COALESCE(
+                       (SELECT json_extract(e.payload, '$.timestamp') FROM events AS e
+                        WHERE e.session_id = s.id ORDER BY e.sequence DESC LIMIT 1),
+                       json_extract(s.snapshot, '$.created_at')
+                   ) AS updated_at,
+                   json_extract(s.snapshot, '$.mode') AS mode
+            FROM sessions AS s
+            WHERE json_extract(s.snapshot, '$.mode') != 'deterministic'
+            ORDER BY CASE json_extract(s.snapshot, '$.status')
+                WHEN 'running' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END,
+                updated_at DESC, s.id
+            LIMIT 20
+        """).fetchall()
+        fields = ("id", "status", "scope", "topic_label", "sequence", "outcome_count",
+                  "native_assessment_count", "selected_count", "stage", "created_at", "updated_at", "mode")
+        result = [dict(zip(fields, row)) for row in rows]
+        for item in result:
+            item["scope"] = json.loads(item["scope"])
+            item["has_native_assessment"] = item["native_assessment_count"] > 0
+        return result
+
     def catalogs(self):
         return [
             Catalog.model_validate_json(r[0])

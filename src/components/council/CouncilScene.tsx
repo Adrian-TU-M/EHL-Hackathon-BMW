@@ -7,6 +7,13 @@ import {
   Line,
 } from "@react-three/drei";
 import { Vector3 } from "three";
+import {
+  UserRound,
+  ChartNoAxesCombined,
+  CarFront,
+  Mic,
+  Scale,
+} from "lucide-react";
 import type { RefObject } from "react";
 import { AgentSculpture, agentMeta } from "../agents/AgentSculpture";
 import { SceneBoundary } from "../ui/SceneBoundary";
@@ -20,6 +27,13 @@ const agents: AgentId[] = [
   "moderator",
   "judge",
 ];
+const fallbackIcons = {
+  customer: UserRound,
+  market: ChartNoAxesCombined,
+  competitor: CarFront,
+  moderator: Mic,
+  judge: Scale,
+};
 const positions: Record<AgentId, [number, number, number]> = {
   customer: [-2.35, 0.4, 0],
   market: [0, 0.65, -1],
@@ -50,14 +64,22 @@ function ProjectLabels({
 export default function CouncilScene({
   council,
   showcase,
+  agentStates,
 }: {
   council: CouncilState;
   showcase?: AgentState;
+  agentStates?: Partial<Record<AgentId, AgentState>>;
 }) {
   const { reduced, visible } = useMotion();
   const wrapper = useRef<HTMLDivElement>(null);
   const labels = useRef<Partial<Record<AgentId, HTMLDivElement>>>({});
   const [inView, setInView] = useState(true);
+  const stateFor = (agent: AgentId) =>
+    showcase ?? agentStates?.[agent] ?? avatarState(council, agent);
+  const highlighted = (agent: AgentId) =>
+    agentStates?.[agent] !== undefined
+      ? ["speaking", "challenging", "evaluating"].includes(stateFor(agent))
+      : council.events[council.cursor]?.actor === agent;
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) =>
       setInView(entry.isIntersecting),
@@ -67,17 +89,30 @@ export default function CouncilScene({
   }, []);
   const fallback = (
     <div className="agent-static-row">
-      {agents.map((a) => (
-        <div key={a} className={`agent-static ${a}`}>
-          <span />
-          {agentMeta[a].name}
-          <small>{showcase || avatarState(council, a)}</small>
-        </div>
-      ))}
+      {agents.map((a) => {
+        const Icon = fallbackIcons[a];
+        return (
+          <div key={a} className={`agent-static ${a}`}>
+            <Icon
+              size={52}
+              strokeWidth={1.3}
+              aria-hidden="true"
+              style={{ color: agentMeta[a].color, marginBottom: 12 }}
+            />
+            {agentMeta[a].name}
+            <small>{stateFor(a)}</small>
+          </div>
+        );
+      })}
     </div>
   );
   return (
-    <div className="council-scene" ref={wrapper}>
+    <div
+      className="council-scene"
+      ref={wrapper}
+      role="group"
+      aria-label="Agent council: customer feedback, market trends, rival cars, moderator microphone and judge scales"
+    >
       <div className="chamber-grid" />
       <SceneBoundary fallback={fallback}>
         <Canvas
@@ -111,7 +146,7 @@ export default function CouncilScene({
               <AgentSculpture
                 agent={a}
                 position={positions[a]}
-                state={showcase || avatarState(council, a)}
+                state={stateFor(a)}
                 scale={a === "moderator" ? 0.6 : a === "judge" ? 0.75 : 1}
                 reduced={reduced || !visible || !inView}
               />
@@ -159,11 +194,11 @@ export default function CouncilScene({
               if (el) labels.current[a] = el;
               else delete labels.current[a];
             }}
-            className={`scene-agent-label ${council.events[council.cursor]?.actor === a ? "is-speaking" : ""}`}
+            className={`scene-agent-label ${highlighted(a) ? "is-speaking" : ""}`}
           >
             <span style={{ background: agentMeta[a].color }} />
             {agentMeta[a].name}
-            <small>{showcase || avatarState(council, a)}</small>
+            <small>{stateFor(a)}</small>
           </div>
         ))}
       </div>

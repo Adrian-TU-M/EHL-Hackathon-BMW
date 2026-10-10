@@ -23,6 +23,7 @@ interface State {
   setError: (e?: string) => void;
   setConnected: (v: boolean) => void;
 }
+const transcriptReads = new Map<string, Promise<void>>();
 export const useModeratorStore = create<State>((set, get) => ({
   id: storedId(),
   events: [],
@@ -30,7 +31,8 @@ export const useModeratorStore = create<State>((set, get) => ({
   accept(session) {
     if (
       get().session?.id === session.id &&
-      get().session!.sequence > session.sequence
+      (get().session!.sequence > session.sequence ||
+        get().session!.revision > session.revision)
     )
       return;
     const changed = get().id !== session.id;
@@ -40,22 +42,38 @@ export const useModeratorStore = create<State>((set, get) => ({
       error: undefined,
       ...(changed ? { events: [] } : {}),
     });
+    // A fresh browser/deep link must show the already-published debate even if
+    // SSE replay is delayed. Also repair gaps after reconnecting, not just the
+    // final transcript. Export is a read of the canonical saved record.
     if (
-      session.status === "complete" &&
-      (get().events.at(-1)?.sequence || 0) < session.sequence
+      get().events.length < session.sequence &&
+      !transcriptReads.has(session.id)
     ) {
-      void moderatorApi
+      const pending = moderatorApi
         .export(session.id)
         .then((records) => {
-          if (
-            get().id === session.id &&
-            (get().events.at(-1)?.sequence || 0) <= records.session.sequence
-          )
-            set({ events: records.events });
+          if (get().id !== session.id || records.session.id !== session.id)
+            return;
+          // Preserve SSE turns that arrived after this export's snapshot.
+          const newer = get().events.filter(
+            (event) => event.sequence > records.session.sequence,
+          );
+          set({
+            events: [...records.events, ...newer].sort(
+              (a, b) => a.sequence - b.sequence,
+            ),
+          });
+          // Session refresh owns the current stage and PM revision. A delayed
+          // transcript snapshot must never rewind those controls.
         })
         .catch(() => {
-          /* SSE or a later refresh can replay the canonical record. */
+          /* The read-only refresh below retries; no model call is restarted. */
+        })
+        .finally(() => {
+          if (transcriptReads.get(session.id) === pending)
+            transcriptReads.delete(session.id);
         });
+      transcriptReads.set(session.id, pending);
     }
     try {
       localStorage.setItem("bmw-moderator-session", session.id);
@@ -110,17 +128,29 @@ export function connectModerator(id: string): () => void {
       if (!disposed) await store.getState().refresh();
     } while (queued && !disposed);
     refreshing = false;
-    if (store.getState().session?.status === "complete") {
+    if (
+      !disposed &&
+      store.getState().id === id &&
+      store.getState().session?.status === "complete"
+    ) {
       stream.close();
       store.getState().setConnected(false);
+      clearInterval(poll);
     }
   }
+  // SSE remains the immediate update path. Polling protects against a silent
+  // dropped stream and keeps stage/assessment changes visible after a reload.
+  const poll = setInterval(() => {
+    if (!disposed && store.getState().id === id) void refresh();
+  }, 5000);
   void refresh();
   stream.onopen = () => {
+    if (disposed || store.getState().id !== id) return;
     store.getState().setConnected(true);
     store.getState().setError(undefined);
   };
   stream.addEventListener("council", (e) => {
+    if (disposed || store.getState().id !== id) return;
     try {
       store.getState().event(JSON.parse((e as MessageEvent).data));
       void refresh();
@@ -133,11 +163,13 @@ export function connectModerator(id: string): () => void {
     }
   });
   stream.onerror = () => {
+    if (disposed || store.getState().id !== id) return;
     store.getState().setConnected(false);
     void refresh();
   };
   return () => {
     disposed = true;
+    clearInterval(poll);
     stream.close();
     store.getState().setConnected(false);
   };

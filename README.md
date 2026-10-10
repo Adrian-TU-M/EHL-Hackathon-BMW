@@ -16,6 +16,8 @@ Customer, Market Trends, Competitor, Moderator and Judge now share **Ollama `qwe
 
 Presentation generation is excluded. Decisions includes a persisted live-review inbox alongside the existing demo workspace; the demo PDF export remains separate. See [backend/README.md](backend/README.md) for routes and runtime details, and [backend/MARKET.md](backend/MARKET.md) for Market sources and limitations.
 
+Open `/council` to find active/recent debates from any browser connected to this backend, or prepare an agenda and explicitly start it. Published arguments and Judge review appear first; the confirmed agenda is collapsible. Reopening a session restores its saved transcript without starting inference. For a quick live demo, select one topic: the integrated Controls test took about **12.5 minutes** on this laptop while another council shared Qwen. Multi-topic agendas run sequentially, and competing requests or repairs add time.
+
 ## Run locally
 
 Each teammate needs their own checkout, Node.js 22.12+, Python 3.11+, and Ollama. The Moderator branch includes the authorized BMW inputs in `private-data/inputs`; set `BMW_DATA_DIR` only to use a different supplied folder. Generated indexes, model weights and credentials remain local.
@@ -65,7 +67,7 @@ The separate scripted demo initializes provisional requirements so all pages can
 src/
   components/
     vehicle/        BMW photography and on-demand series-specific Sketchfab viewers
-    agents/         Five procedural sculptures and typed animation states
+    agents/         Five animated 3D role icons and typed animation states
     council/        One scene containing all five entities
     dashboard/      Navigation and source explorer
     charts/         Risk/impact visualization
@@ -98,7 +100,7 @@ Suggested HTTP/SSE routes are documented in PROJECT_SPEC.md. Keep the backend te
 | Responsive routes, accessible dialogs and keyboard controls   | No authentication or server deployment                                                          |
 | Genuine BMW series imagery and distinct F70/G60/G70 3D embeds | Community model reference views; internet required; no validated engineering/driving simulation |
 | Integrated Customer, Market, Competitor, Moderator and Judge | Shared local Qwen3 8B; evidence checks and interpretations remain fallible |
-| Five animated procedural agent entities and Judge narration | ElevenLabs playback needs a backend API key; explicit scripted demo remains at `/council?demo=1` |
+| Five animated 3D role icons and Judge narration | ElevenLabs playback needs a backend API key; explicit scripted demo remains at `/council?demo=1` |
 | Live bounded council with pause/resume and audit              | A separate scripted demo is available explicitly at `/council?demo=1`                          |
 | Live feedback drilldowns, study snapshots and cited industry data | Feedback is self-selected; study sample sizes/mean scale are unspecified; no feature-success percentage is inferred |
 | Deterministic scoring and scenario comparison                 | Rubric ratings, impact, risk and effort need real validation; no ROI or sales uplift is claimed |
@@ -109,7 +111,7 @@ Evidence strength is separate from priority. Unknown scores remain unknown; know
 
 BMW photography is bundled locally. Google Fonts uses system fallbacks when offline; optional Sketchfab 3D embeds require internet access and use the provider's own navigation. Close the 3D viewer to return to the reference photograph. The council uses local lighting without an external HDR dependency. The production bundle lazy-loads 3D, analytics and PDF modules; Three.js remains the largest chunk (about 1.2 MB before gzip).
 
-The midnight studio redesign includes the genuine BMW roundel, cinematic series selection, a 21st.dev-listed Paper Mesh Gradient shader (Apache-2.0), five new procedural agent sculptures, numbered navigation in the brief's seven-page order, and next-step links on every stage. Motion honors the system's reduced-motion preference. Photography remains BMW copyrighted reference media; see ASSETS.md before any public commercial release.
+The midnight studio redesign includes the genuine BMW roundel, cinematic series selection, a 21st.dev-listed Paper Mesh Gradient shader (Apache-2.0), and five BMW-blue/silver 3D role icons: customer with feedback, trend chart, rival cars, moderator microphone and Judge scales. Navigation follows the brief's seven-page order. Motion honors the system's reduced-motion preference and pauses offscreen. Photography remains BMW copyrighted reference media; see ASSETS.md before any public commercial release.
 
 ## Verification
 

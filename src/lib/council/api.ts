@@ -7,6 +7,21 @@ import type {
   SourceRecord,
 } from "./contracts";
 const root = "/api/moderator";
+export interface ModeratorSessionSummary {
+  id: string;
+  status: ModeratorSession["status"];
+  scope: Pick<Scope, "vehicle" | "market" | "powertrain" | "horizon">;
+  topic_label: string | null;
+  stage: string | null;
+  sequence: number;
+  outcome_count: number;
+  selected_count: number;
+  mode: ModeratorSession["mode"];
+  native_assessment_count: number;
+  has_native_assessment: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+}
 export async function request<T>(
   path: string,
   body?: unknown,
@@ -33,6 +48,7 @@ export async function request<T>(
   return response.json();
 }
 export const moderatorApi = {
+  sessions: () => request<{ sessions: ModeratorSessionSummary[] }>("/sessions"),
   health: () =>
     request<{
       available: boolean;
