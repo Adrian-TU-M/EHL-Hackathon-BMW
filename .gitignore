@@ -11,3 +11,10 @@ output/
 *.tsbuildinfo
 # Never commit raw confidential challenge datasets.
 private-data/
+
+# Local agent runtime and private evidence
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+backend/data/

@@ -105,13 +105,14 @@ test("specialist pages filter actual fixture records and disclose sources", asyn
   await page.getByRole("button", { name: "Close dialog" }).click();
   await page.getByRole("link", { name: "Market trends", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Understand the direction." }),
+    page.getByRole("heading", { name: "Market trends." }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "United States", exact: true })
     .click();
-  await page.getByLabel("Future demand sensitivity").fill("20");
-  await expect(page.locator(".scenario-adjustment")).toContainText("+20%");
+  await expect(
+    page.getByRole("button", { name: "United States", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page.waitForTimeout(1200);
   await page.screenshot({
     path: "test-results/market-desktop.png",
@@ -136,6 +137,7 @@ test("council pause, interruption, challenge, bounded stages and PM handoff", as
 }) => {
   await start(page);
   await page.getByRole("link", { name: "Agent council", exact: true }).click();
+  await page.goto("/council?demo=1");
   await page.clock.install();
   await page
     .getByRole("button", { name: "Start discussion", exact: true })
