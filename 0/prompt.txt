@@ -1,0 +1,17 @@
+do my teammates need to clone the repo local copy themselves or connect existing project if I cloned on my laptop?
+
+---
+
+how do they pull? did we commit
+
+---
+
+ok so now every time someone commits we need to pull all right?
+
+---
+
+make the frontend significantly better okay it looks way too minimalistic with just all the white yeah there are no animations the agents also look quite bad and the subsites don't exactly follow the same order I had mentioned it needs to be cool and clean and very easy to use and understand okay so use real BMW logos real BMW styles from the internet and please make the car models mode options REAL BMW cars and REAL BMW car simultations please okay? also make the UI UX much better use shaders from 21st.dev make everything look much more premium bcs currently it looks like AI slop tbh yeah make SIGNIFICANT HUGE MASSIVE changes everywhere please okay? it needs to look WOW okay? really really premium and high end tech style
+
+---
+
+r u finished bro? where can I see what u did?

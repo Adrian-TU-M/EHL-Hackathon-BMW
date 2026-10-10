@@ -1,0 +1,109 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4K667KN3B7AJ81C0CDV74G3",
+  "session_id": "01a1261a-2a92-7960-ad84-d63846639755",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T15:16:37.038211Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 1,
+  "files_touched": [
+    "ASSETS.md",
+    "PROJECT_SPEC.md",
+    "README.md",
+    "index.html",
+    "public/models/concept-sedan.glb",
+    "src/components/agents/AgentSculpture.tsx",
+    "src/components/council/CouncilScene.tsx",
+    "src/components/dashboard/AppShell.tsx",
+    "src/components/vehicle/VehicleViewer.tsx",
+    "src/main.tsx",
+    "src/pages/Customer.tsx",
+    "src/pages/Home.tsx",
+    "src/pages/Overview.tsx",
+    "src/styles.css",
+    "tests/e2e/prototype.spec.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6-astra",
+  "turn_id": "809b2f86735c",
+  "checkpoint_transcript_start": 313,
+  "transcript_lines_at_start": 313,
+  "compact_transcript_start": 52,
+  "token_usage": {
+    "input_tokens": 526584,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 4212480,
+    "output_tokens": 31893,
+    "api_call_count": 46,
+    "subagent_tokens_complete": false
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T15:16:36.872694Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 29,
+    "human_removed": 986,
+    "total_committed": 12,
+    "total_lines_changed": 1015,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 4565,
+      "user_lines_removed": 1015,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "ASSETS.md": 50,
+        "PROJECT_SPEC.md": 45,
+        "README.md": 17,
+        "index.html": 1,
+        "public/images/bmw-logo.svg": 114,
+        "public/licenses/paper-shaders-LICENSE.txt": 201,
+        "public/licenses/paper-shaders-NOTICE.txt": 10,
+        "src/components/agents/AgentSculpture.tsx": 255,
+        "src/components/council/CouncilScene.tsx": 58,
+        "src/components/dashboard/AppShell.tsx": 44,
+        "src/components/ui/IntelligenceShader.tsx": 293,
+        "src/components/vehicle/VehicleViewer.tsx": 76,
+        "src/lib/vehicles.ts": 47,
+        "src/main.tsx": 1,
+        "src/pages/Customer.tsx": 1,
+        "src/pages/Home.tsx": 294,
+        "src/pages/Overview.tsx": 7,
+        "src/premium.css": 2667,
+        "src/styles.css": 347,
+        "tests/e2e/prototype.spec.ts": 37
+      },
+      "user_removed_per_file": {
+        "ASSETS.md": 23,
+        "PROJECT_SPEC.md": 23,
+        "README.md": 15,
+        "index.html": 1,
+        "src/components/agents/AgentSculpture.tsx": 146,
+        "src/components/council/CouncilScene.tsx": 25,
+        "src/components/dashboard/AppShell.tsx": 5,
+        "src/components/vehicle/VehicleViewer.tsx": 252,
+        "src/pages/Customer.tsx": 1,
+        "src/pages/Home.tsx": 152,
+        "src/pages/Overview.tsx": 6,
+        "src/styles.css": 347,
+        "tests/e2e/prototype.spec.ts": 19
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 4606,
+      "agent_lines_removed": 1006
+    }
+  ]
+}
