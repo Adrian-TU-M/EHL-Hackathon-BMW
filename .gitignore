@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+playwright-report/
+test-results/
+tmp/
+output/
+*.tsbuildinfo
+# Never commit raw confidential challenge datasets.
+private-data/

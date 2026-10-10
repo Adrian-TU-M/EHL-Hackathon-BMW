@@ -1,0 +1,150 @@
+import { useState } from "react";
+import { FileText, ShieldCheck, AlertCircle } from "lucide-react";
+import { useAppStore } from "../../store/useAppStore";
+import { Badge, Button, Modal, EmptyState } from "../ui/Primitives";
+export function EvidenceDialog({
+  ids,
+  onClose,
+}: {
+  ids: string[];
+  onClose: () => void;
+}) {
+  const evidence = useAppStore((s) => s.evidence);
+  const exclude = useAppStore((s) => s.excludeEvidence);
+  const [selected, setSelected] = useState(ids[0]);
+  const [reason, setReason] = useState("");
+  const [excluding, setExcluding] = useState(false);
+  const items = evidence.filter((e) => ids.includes(e.id)),
+    item = items.find((e) => e.id === selected) ?? items[0];
+  return (
+    <Modal title="Evidence explorer" wide onClose={onClose}>
+      <div className="evidence-layout">
+        <div className="evidence-index">
+          {items.map((e) => (
+            <button
+              key={e.id}
+              className={item?.id === e.id ? "selected" : ""}
+              onClick={() => {
+                setSelected(e.id);
+                setExcluding(false);
+                setReason("");
+              }}
+            >
+              <FileText size={16} />
+              <span>
+                <strong>{e.id}</strong>
+                <small>
+                  {e.domain} · {e.category}
+                </small>
+              </span>
+            </button>
+          ))}
+        </div>
+        {item ? (
+          <div className="evidence-detail">
+            <div className="flex-between">
+              <Badge tone="amber">SYNTHETIC DEMO</Badge>
+              <span className="muted small">{item.publishedAt}</span>
+            </div>
+            <h3>{item.source}</h3>
+            <div className="source-location">{item.location}</div>
+            <blockquote>“{item.passage}”</blockquote>
+            <dl className="metadata-grid">
+              <div>
+                <dt>Scope</dt>
+                <dd>
+                  {item.vehicle} · {item.market}
+                </dd>
+              </div>
+              <div>
+                <dt>Powertrain</dt>
+                <dd>{item.powertrain}</dd>
+              </div>
+              <div>
+                <dt>Classification</dt>
+                <dd>
+                  {item.type} / {item.category}
+                </dd>
+              </div>
+              <div>
+                <dt>Provenance</dt>
+                <dd>Hand-authored demonstration fixture</dd>
+              </div>
+              <div>
+                <dt>Observation unit</dt>
+                <dd>
+                  {item.domain === "customer"
+                    ? "One synthetic feedback record"
+                    : "One hypothetical scenario note"}
+                </dd>
+              </div>
+              <div>
+                <dt>Population / sample size</dt>
+                <dd>Unknown / no real respondents</dd>
+              </div>
+            </dl>
+            {item.quantitative && (
+              <p>
+                {item.quantitative.numerator} / {item.quantitative.denominator}{" "}
+                {item.quantitative.unit}. Method: {item.quantitative.method}.{" "}
+                {item.quantitative.limitations}
+              </p>
+            )}
+            <div className="notice">
+              <AlertCircle size={17} />
+              <p>
+                This is not a passage from a supplied BMW file or verified
+                external research. Fixture frequency does not measure customer
+                prevalence.
+              </p>
+            </div>
+            {item.exclusionReason ? (
+              <div className="notice amber">
+                <ShieldCheck size={17} />
+                <p>
+                  <strong>Excluded from active support.</strong>{" "}
+                  {item.exclusionReason}
+                </p>
+              </div>
+            ) : excluding ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  exclude(item.id, reason);
+                  setExcluding(false);
+                }}
+              >
+                <label className="field-label" htmlFor="exclusion-reason">
+                  Why should this evidence be excluded?
+                </label>
+                <textarea
+                  id="exclusion-reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Describe the relevance or quality concern…"
+                  required
+                />
+                <p className="small muted">
+                  Linked requirements will receive a new version and return to
+                  review.
+                </p>
+                <Button type="submit" disabled={!reason.trim()}>
+                  Exclude and record rationale
+                </Button>
+              </form>
+            ) : (
+              <Button variant="secondary" onClick={() => setExcluding(true)}>
+                Challenge / exclude this evidence
+              </Button>
+            )}
+          </div>
+        ) : (
+          <EmptyState
+            title="No evidence available"
+            detail="No source references were attached to this item."
+          />
+        )}
+      </div>
+    </Modal>
+  );
+}
