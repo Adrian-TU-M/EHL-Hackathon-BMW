@@ -11,3 +11,9 @@ output/
 *.tsbuildinfo
 # Never commit raw confidential challenge datasets.
 private-data/
+# Python backend
+backend/.venv/
+backend/.cache/
+__pycache__/
+*.egg-info/
+.pytest_cache/

@@ -1,0 +1,39 @@
+# Source manifest for the Customer Agent.
+# Every xlsx/csv in BMW_DATA_DIR is matched against these entries by file glob.
+# To add a new dataset (other vehicle, region, or column layout) add an entry here,
+# no code change needed. Columns map canonical field -> header in the file.
+# Only customer-domain kinds are allowed: feedback, study_means, study_distribution.
+
+sources:
+  - name: bmw-feedback
+    kind: feedback
+    glob: "*_feedback_*.xlsx"
+    columns:
+      id: ID
+      text: Customer Feedback
+      country: Country
+      vehicle: Derivate (e-code)
+      powertrain: Engine Type
+      feedback_type: Feedback Type
+      category_l2: Vfc level2 Name
+      category_l3: Vfc level3 Name
+      source: Source
+      # Not present in today's files; map them when a dataset provides them.
+      # customer_id: Customer ID
+      # date: Feedback Date
+
+  - name: bmw-study-means
+    kind: study_means
+    glob: "*customer_studies*.xlsx"
+    sheet: "*_*"            # sheets with a country header row and "Mean" rows
+    match_header: Mean
+    year_from_sheet: true   # e.g. CN_EU_2025 -> 2025
+
+  - name: bmw-study-distribution
+    kind: study_distribution
+    glob: "*customer_studies*.xlsx"
+    sheet: "*_*"
+    match_header: "% of column, sample base"
+    market_from_sheet: true # e.g. US_2025 -> US
+    year_from_sheet: true
+    positive_levels: ["Excellent", "Delightful", "I Love It"]   # top-3 box of the 7-point scale
