@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ArrowUpRight,
   FileText,
@@ -9,6 +9,7 @@ import {
   Info,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { ModeratorReview } from "../components/council/ModeratorReview";
 import {
   Badge,
   Button,
@@ -27,11 +28,9 @@ import {
   scoreRequirement,
 } from "../lib/scoring";
 import type { Criterion, Requirement, Weights } from "../lib/types";
-import { JudgePanel } from "../components/requirements/JudgePanel";
 export default function Decisions() {
   const { requirements, weights, setWeights, evidence } = useAppStore();
   const [draft, setDraft] = useState<Weights>(weights);
-  useEffect(() => setDraft(weights), [weights]);
   const [review, setReview] = useState<Requirement | null>(null);
   const [ids, setIds] = useState<string[] | null>(null);
   const [filter, setFilter] = useState("All statuses");
@@ -62,6 +61,7 @@ export default function Decisions() {
   }
   return (
     <>
+      <ModeratorReview />
       <PageHeader
         eyebrow="YOUR PERSPECTIVE / THE FINAL WORD"
         title="Shape the next generation."
@@ -75,7 +75,6 @@ export default function Decisions() {
           </Button>
         }
       />
-      <JudgePanel />
       <div className="strategy-bar">
         <div>
           <span className="eyebrow">YOUR STRATEGY</span>

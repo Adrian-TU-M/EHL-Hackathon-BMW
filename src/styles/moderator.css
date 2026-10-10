@@ -1,0 +1,117 @@
+.moderator-section {
+  margin-top: 28px;
+  padding: 28px;
+  background: #111e2c;
+  color: #e5edf7;
+  border: 1px solid #293548;
+  border-radius: 12px;
+}
+.moderator-section > p,
+.moderator-record p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #a5b7ce;
+}
+.moderator-notice {
+  padding: 16px 20px;
+  margin-bottom: 18px;
+  border: 1px solid #2f4c6b;
+  background: #112b47;
+  color: #d5e5f9;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.moderator-notice.error {
+  background: #351f23;
+  border-color: #834140;
+  color: #ffb4ab;
+}
+.moderator-record {
+  padding: 18px;
+  margin: 12px 0;
+  border: 1px solid #334359;
+  border-radius: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.moderator-record.selected {
+  border-left: 3px solid #67a3ff;
+}
+.moderator-record details {
+  margin: 12px 0;
+}
+.moderator-record summary {
+  cursor: pointer;
+  color: #8bbcff;
+  font-size: 13px;
+}
+.moderator-record pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font:
+    12px/1.65 ui-monospace,
+    monospace;
+  background: #0b1420;
+  color: #b1c6e1;
+  padding: 14px;
+  max-height: 400px;
+  overflow: auto;
+}
+.moderator-agenda {
+  max-height: 620px;
+  overflow: auto;
+}
+.moderator-record label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+}
+.moderator-record input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: #176bc1;
+}
+.moderator-page .council-stagebar {
+  overflow-x: auto;
+}
+.moderator-page .council-stagebar > div {
+  flex: 0 0 auto;
+}
+.moderator-actions,
+.moderator-order li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.moderator-order li {
+  margin: 12px 0;
+}
+.moderator-order span {
+  flex: 1;
+}
+.moderator-page .council-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.moderator-page .council-evidence {
+  overflow-wrap: anywhere;
+}
+.moderator-source-form input,
+.moderator-source-form select {
+  width: 100%;
+}
+@media (max-width: 700px) {
+  .moderator-section {
+    padding: 16px;
+  }
+  .moderator-record .flex-between {
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+}

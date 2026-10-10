@@ -1,0 +1,103 @@
+[
+  {
+    "id": "F70-EU-controls",
+    "scope": {
+      "vehicle": "F70",
+      "market": "Europe",
+      "powertrain": "Combustion"
+    },
+    "topic": "topic-controls",
+    "review_checklist": [
+      "Preserve positive feedback",
+      "Do not treat IDs as unique customers",
+      "Separate EU studies from geographic Europe"
+    ],
+    "pm_reviewed": false
+  },
+  {
+    "id": "F70-US-sparse",
+    "scope": {
+      "vehicle": "F70",
+      "market": "United States",
+      "powertrain": "Combustion"
+    },
+    "topic": null,
+    "review_checklist": [
+      "Zero sales do not establish unavailability",
+      "Disclose absent scoped feedback",
+      "Do not transfer European observations silently"
+    ],
+    "pm_reviewed": false
+  },
+  {
+    "id": "G60-US-app",
+    "scope": {
+      "vehicle": "G60",
+      "market": "United States",
+      "powertrain": "Electric"
+    },
+    "topic": "topic-app",
+    "review_checklist": [
+      "Retain mixed positive and negative observations",
+      "Differentiate app from connected services and keys",
+      "Preserve unclassified feedback"
+    ],
+    "pm_reviewed": false
+  },
+  {
+    "id": "G60-China-transfer",
+    "scope": { "vehicle": "G60", "market": "China", "powertrain": "Electric" },
+    "topic": null,
+    "review_checklist": [
+      "G68 study is not G60 evidence",
+      "G60/G68 sales aggregation retained",
+      "No invented China customer feedback"
+    ],
+    "pm_reviewed": false
+  },
+  {
+    "id": "G70-US-distribution",
+    "scope": {
+      "vehicle": "G70",
+      "market": "United States",
+      "powertrain": "Electric"
+    },
+    "topic": "topic-seats",
+    "review_checklist": [
+      "Normalized sample total one is not one respondent",
+      "Unknown sample counts stay unknown",
+      "Preserve opposing comfort and usability findings"
+    ],
+    "pm_reviewed": false
+  },
+  {
+    "id": "G70-China-assumptions",
+    "scope": {
+      "vehicle": "G70",
+      "market": "China",
+      "powertrain": "Combustion"
+    },
+    "topic": "topic-climate",
+    "review_checklist": [
+      "Undocumented mean scale stays unknown",
+      "Cross-powertrain transfer is conditional",
+      "No speculative competitor clarification"
+    ],
+    "pm_reviewed": false
+  },
+  {
+    "id": "G60-EU-equipment",
+    "scope": {
+      "vehicle": "G60",
+      "market": "Europe",
+      "powertrain": "Plug-in hybrid"
+    },
+    "topic": "topic-controls",
+    "review_checklist": [
+      "German equipment is a subset, not Europe-wide availability",
+      "Preserve derivative and package dependencies",
+      "2026 outlook is not a 2029–2031 forecast"
+    ],
+    "pm_reviewed": false
+  }
+]

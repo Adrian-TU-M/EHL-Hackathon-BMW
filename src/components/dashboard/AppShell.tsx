@@ -17,6 +17,11 @@ import {
   Check,
 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
+import {
+  connectModerator,
+  useModeratorStore,
+} from "../../store/useModeratorStore";
+import { moderatorApi } from "../../lib/council/api";
 import { vehicleNames } from "../../lib/mock-data";
 import { Badge, Button } from "../ui/Primitives";
 const navigation = [
@@ -31,8 +36,7 @@ const navigation = [
 export default function AppShell() {
   const started = useAppStore((s) => s.started);
   const scope = useAppStore((s) => s.scope);
-  const status = useAppStore((s) => s.council.status);
-  const tick = useAppStore((s) => s.tickCouncil);
+  const moderatorId = useModeratorStore((s) => s.id);
   const location = useLocation();
   const liveWorkspace =
     location.pathname === "/market" ||
@@ -47,10 +51,8 @@ export default function AppShell() {
   const [toast, setToast] = useState("");
   const [storageError, setStorageError] = useState(false);
   useEffect(() => {
-    if (status !== "running") return;
-    const timer = setInterval(tick, 4200);
-    return () => clearInterval(timer);
-  }, [status, tick]);
+    if (moderatorId) return connectModerator(moderatorId);
+  }, [moderatorId]);
   useEffect(() => {
     setOpen(false);
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -69,7 +71,10 @@ export default function AppShell() {
     setExporting(true);
     try {
       const { downloadReport } = await import("../../lib/export/report");
-      await downloadReport(useAppStore.getState());
+      const moderator = moderatorId
+        ? await moderatorApi.export(moderatorId)
+        : undefined;
+      await downloadReport({ ...useAppStore.getState(), moderator });
       setToast("Your product intelligence report has been downloaded.");
     } catch {
       setToast("The report could not be generated. Please try again.");
@@ -115,6 +120,7 @@ export default function AppShell() {
                   ? "Local Qwen · cited evidence"
                   : "Local session · synthetic data"}
               </span>
+
             </div>
           </div>
           <p>
@@ -155,6 +161,7 @@ export default function AppShell() {
           </div>
           <div>
             <Badge tone="blue">{liveWorkspace ? "AGENTS" : "DEMO"}</Badge>
+
             <Button
               variant="secondary"
               className="export-button"
@@ -225,6 +232,7 @@ export default function AppShell() {
               ? "Local evidence · Human review required"
               : "Synthetic demo · Human approval required"}
           </span>
+
         </footer>
       </div>
       {toast && (

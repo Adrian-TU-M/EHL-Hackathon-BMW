@@ -181,6 +181,7 @@ export interface DecisionInput {
   description?: string;
 }
 export interface AnalysisSnapshot {
+  moderator?: import("../council/contracts").ModeratorExport;
   scope: Scope;
   requirements: Requirement[];
   evidence: Evidence[];
