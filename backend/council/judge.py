@@ -80,9 +80,11 @@ def build_judge_request(context, sources, turns):
     })
 
 
-async def assess_request(request: JudgeRequest, settings=None, usage=None) -> JudgeAssessment:
+async def assess_request(request: JudgeRequest, settings=None, usage=None, *, validation_error: str | None = None) -> JudgeAssessment:
     """One shared local model; the provider takes the per-inference lock."""
     adapter = ModelAIAdapter(settings=settings or Settings.from_env())
+    if validation_error:
+        adapter.validation_error = validation_error[:700]
     result = await JudgeService(adapter).assess(request)
     if usage is not None:
         usage.update(adapter.last_usage)

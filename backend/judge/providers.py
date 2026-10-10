@@ -79,6 +79,43 @@ def assessment_schema(request: JudgeRequest | None = None):
         proposed_constraints = definitions["PriorityProposal"]["properties"]["constraints"]
         proposed_constraints["maxItems"] = 3
         proposed_constraints["items"]["maxLength"] = 200
+
+        def variant(definition):
+            base = definitions[definition]
+            return {"type": "object", "additionalProperties": False,
+                    "required": list(base["required"]),
+                    "properties": {name: {"$ref": f"#/$defs/{definition}/properties/{name}"}
+                                   for name in base["properties"]}}
+
+        # A global evidence enum cannot express which source belongs to which
+        # argument. Discriminated object alternatives bind those identities
+        # during generation, using ordinary anyOf/enum rather than conditionals
+        # or tuple-array keywords that inference backends may ignore.
+        argument_variants = []
+        for argument in request.arguments:
+            item = variant("ArgumentAssessment")
+            props = item["properties"]
+            props["argument_id"] = {"type": "string", "enum": [argument.id]}
+            owned_ids = list(dict.fromkeys(eid for eid in argument.evidence_ids if eid in evidence_ids))
+            citation = variant("Citation")
+            if owned_ids:
+                citation["properties"]["evidence_id"] = {"type": "string", "enum": owned_ids}
+            props["citations"] = {"type": "array", "items": citation, "maxItems": 1 if owned_ids else 0}
+            if not owned_ids:
+                props["support"] = {"type": "null"}
+                props["influence"] = {"type": "null"}
+                props["verdict"] = {"type": "string", "enum": ["unknown"]}
+            argument_variants.append(item)
+        if argument_variants:
+            schema["properties"]["arguments"]["items"] = {"anyOf": argument_variants}
+
+        feature_variants = []
+        for feature in request.features:
+            item = variant("FeatureAssessment")
+            item["properties"]["feature_id"] = {"type": "string", "enum": [feature.id]}
+            item["properties"]["feature_version"] = {"type": "integer", "enum": [feature.version]}
+            feature_variants.append(item)
+        schema["properties"]["features"]["items"] = {"anyOf": feature_variants}
     return schema
 
 
@@ -157,6 +194,9 @@ a fixture or a blanket 'not evaluated'. For positive support cite an EXACT quote
 from attached evidence. Each known criterion needs a supported argument linked
 to THAT feature. Give concrete benefits, drawbacks and alternatives with concise
 decision explanations. Leave influence/priority null and coverage 0 for Python.
+Each argument may cite only the evidence_ids attached to THAT argument in the
+input, never another argument's sources. With no eligible attached evidence use
+citations [], support null and verdict unknown. Keep each exact feature version.
 Keep each explanation and rationale to one concise sentence (at most 240
 characters). Use one short exact quotation per supported argument (at most thirty
 words and 240 characters); choose the smallest source substring that supports

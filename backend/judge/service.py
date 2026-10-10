@@ -60,7 +60,13 @@ class JudgeService:
             for citation in result.citations:
                 source = evidence.get(citation.evidence_id)
                 if not source or source.id not in original.evidence_ids:
-                    raise ValueError("Citation must reference evidence attached to its argument")
+                    allowed = [eid for eid in original.evidence_ids if eid in evidence and not evidence[eid].exclusion_reason]
+                    raise ValueError(
+                        "Citation must reference evidence attached to its argument: "
+                        f"argument_id={original.id[:180]!r}, evidence_id={citation.evidence_id[:180]!r}; "
+                        f"allowed evidence_ids={[eid[:180] for eid in allowed[:8]]!r}. "
+                        "Use only an allowed source with an exact quote, or no citations and support null."
+                    )
                 if source.exclusion_reason or citation.quote not in source.passage:
                     raise ValueError("Citation passage is invalid or excluded")
                 active.append(source)

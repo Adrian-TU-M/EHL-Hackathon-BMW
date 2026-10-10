@@ -97,6 +97,55 @@ def test_empty_argument_and_evidence_schema_does_not_emit_invalid_empty_enums():
     assert '"enum": []' not in json.dumps(schema)
 
 
+def test_schema_binds_each_argument_to_its_own_eligible_evidence():
+    body = request_data()
+    source = body["evidence"][0]
+    body["evidence"] += [source | {"id": "e2"}, source | {"id": "excluded", "exclusion_reason": "Wrong scope"}]
+    argument = body["arguments"][0]
+    body["arguments"] += [argument | {"id": "a2", "evidence_ids": ["e2", "missing", "excluded", "e2"]},
+                          argument | {"id": "hypothesis", "evidence_ids": []},
+                          argument | {"id": "unusable", "evidence_ids": ["excluded", "missing"]}]
+    schema = assessment_schema(JudgeRequest.model_validate(body))
+    variants = {item["properties"]["argument_id"]["enum"][0]: item
+                for item in schema["properties"]["arguments"]["items"]["anyOf"]}
+    assert set(variants) == {"a1", "a2", "hypothesis", "unusable"}
+    for aid, allowed in (("a1", ["e1"]), ("a2", ["e2"])):
+        item = variants[aid]
+        citations = item["properties"]["citations"]
+        assert citations["maxItems"] == 1
+        assert citations["items"]["properties"]["evidence_id"]["enum"] == allowed
+        assert item["additionalProperties"] is False
+        assert set(item["required"]) == set(item["properties"])
+    for aid in ("hypothesis", "unusable"):
+        props = variants[aid]["properties"]
+        assert props["citations"]["maxItems"] == 0
+        assert props["support"] == {"type": "null"}
+        assert props["verdict"]["enum"] == ["unknown"]
+    # Reused field references resolve to the actual bounded field definitions.
+    def visit(node):
+        if isinstance(node, dict):
+            if "$ref" in node:
+                target = schema
+                for part in node["$ref"][2:].split("/"):
+                    target = target[part]
+                assert isinstance(target, dict)
+            for child in node.values():
+                visit(child)
+        elif isinstance(node, list):
+            for child in node:
+                visit(child)
+    visit(schema)
+
+
+def test_schema_binds_feature_versions_to_their_actual_ids():
+    body = request_data()
+    body["features"].append(body["features"][0] | {"id": "f2", "version": 7})
+    schema = assessment_schema(JudgeRequest.model_validate(body))
+    variants = schema["properties"]["features"]["items"]["anyOf"]
+    assert [(item["properties"]["feature_id"]["enum"], item["properties"]["feature_version"]["enum"])
+            for item in variants] == [(["f1"], [1]), (["f2"], [7])]
+
+
 def test_local_chat_endpoint_does_not_receive_openai_secret(monkeypatch):
     monkeypatch.setenv("JUDGE_BASE_URL", "http://127.0.0.1:9000/v1")
     monkeypatch.setenv("JUDGE_MODEL", "local-qwen")

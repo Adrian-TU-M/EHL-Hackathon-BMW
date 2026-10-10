@@ -73,7 +73,8 @@ def judge_request(data) -> JudgeRequest:
 async def assess_packet(data, settings):
     request = judge_request(data)
     usage = {}
-    assessment = await assess_request(request, settings, usage=usage)
+    assessment = await assess_request(request, settings, usage=usage,
+                                      validation_error=data.get("validation_error"))
     claims = {c["id"]: c for c in data["packet"].get("claims", [])}
     if any((a.support or 0) > 0 and claims[a.argument_id].get("validation") != "supported"
            for a in assessment.arguments):

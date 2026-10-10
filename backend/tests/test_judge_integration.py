@@ -115,6 +115,28 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertIs(participant.assessment, self.assessment)
         self.assertEqual(turn.position.stance, "insufficient_evidence")
 
+    async def test_moderator_outer_repair_hint_reaches_provider_without_changing_request(self):
+        from backend.moderator.judge_bridge import assess_packet
+        from backend.judge.service import digest
+        hint = "Citation must reference evidence attached to its argument. " * 30
+        adapter = ModelAIAdapter(settings=self.settings)
+        original = self.request.model_dump(mode="json")
+        captured = {}
+        async def assess(request):
+            captured.update(hint=adapter.validation_error, request=request)
+            return self.assessment
+        with patch("backend.moderator.judge_bridge.judge_request", return_value=self.request), \
+             patch("backend.council.judge.ModelAIAdapter", return_value=adapter), \
+             patch("backend.council.judge.JudgeService") as service:
+            service.return_value.assess = AsyncMock(side_effect=assess)
+            reply = await assess_packet({"packet": {"claims": [
+                {"id": arg.id, "validation": "supported", "evidence_ids": arg.evidence_ids}
+                for arg in self.request.arguments]}, "validation_error": hint}, self.settings)
+        self.assertEqual(captured["hint"], hint[:700])
+        self.assertIs(captured["request"], self.request)
+        self.assertEqual(self.request.model_dump(mode="json"), original)
+        self.assertEqual(reply.data["native_assessment"]["input_digest"], digest(self.request))
+
     async def test_uncited_hypothesis_cannot_raise_support_or_priority(self):
         from backend.judge.models import DraftAssessment
         draft = self.assessment.model_dump(include={"arguments", "features", "clarification_requests", "proposed_priorities"})

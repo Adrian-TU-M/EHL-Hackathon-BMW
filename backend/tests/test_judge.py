@@ -79,6 +79,19 @@ def test_invalid_lineage_and_output_rejected(mutation):
     with pytest.raises(ValueError): evaluate(data, draft)
 
 
+def test_cross_argument_citation_error_identifies_the_repair_without_source_text():
+    data, draft = request_data(), draft_data()
+    data["evidence"].append(data["evidence"][0] | {"id": "e2", "passage": "Private unrelated passage"})
+    draft["arguments"][0]["citations"] = [{"evidence_id": "e2", "quote": "Private unrelated passage"}]
+    with pytest.raises(ValueError) as error:
+        evaluate(data, draft)
+    message = str(error.value)
+    assert "argument_id='a1'" in message
+    assert "evidence_id='e2'" in message
+    assert "allowed evidence_ids=['e1']" in message
+    assert "Private unrelated passage" not in message
+
+
 def test_synthetic_evidence_cannot_be_strong_or_approved_by_judge():
     data = request_data()
     data["evidence"][0]["provenance"] = "synthetic"
