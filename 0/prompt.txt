@@ -1,0 +1,34 @@
+ok so this agent is properly done correct?
+
+---
+
+ok now switch to the market trend branch and make a planned workflow
+
+---
+
+check the dataset to see if there is enough data for market trends or not from here
+/Users/shaur/TUM/BMWHack
+
+---
+
+alright so now make the Market Trend agent but also btw does market trends also include what is hot in the Auto Car industry rn or...? just asking? 
+
+also make the Market Trend Agent now and also ofc update its site properly cleanly not oveflow of random info clean organised please and visually stunning okay make big UI changes if u must but make it look incredible and animative and stuff really cool effects also make it work in the Agent Debate site of course too and accurately arguing capabilities in the debate
+
+---
+
+btw it looks wayyy too weirded out and simlpe and vibe coded AI slop the Market page btw u need to revolutionalize it and stop adding too many unecessary sections and make it clear on one subsite the Market one okay? please do so make it clear make it more chique fancy miniamlistic somehow but with super cool laser elements and glows or something no green pls only BMW styles and stuff
+
+but does the agent work properly everywhere it needs to?
+
+---
+
+r u sure these are REAL verified market trends? from the dataset and maybe from more sources online u can add more and scrape and improve the agent bcs isn't market trends also for trending features and stuff make it more rich and accurate and cooler more organised somehow also the UI and sections please
+
+---
+
+what is this is the agent not working or what is going on? quickly fix it make it work quickly ja
+
+---
+
+Okay, so now basically we have created all the agents on our respective branches. Now what I want you to do is to go to these branches, check out all the code, and your task is to essentially now merge all of these agents and branches into the main without disrupting any functionality, making it all work cleanly together, and all the respective sites that the branches have created for their agent should all be working nicely as intended and as created in the agent debate. A clean debate should be able to be run. The judge agent should work. The moderator agent should work. The customer feedback agent should work. The market research trends agent should work. All agents basically. I don't know if I've missed one, but all of them should work. Competitor agent, yeah, that was the one I missed. But anyway, all of these should be able to run, and the judge agent, the voice from 11 Labs, that part should also be able to work at the end of the debate. It should be able to work seamlessly and perfectly. Merge basically all branches except the branch that has the presentation generation part based on the final requirements that have been accepted by the project manager. That branch is still being worked on, so do not merge that presentation generation branch onto the main, and make sure that all the other agents are being hosted by Quen from Olama on my laptop here, and yes, make it go to merge, I believe, for the 11 Labs part, the voice agent for the jury to work. You will need an API key potentially. That part you can ask me later about, or you can go and create—I give you access to go and create one from 11 Labs and use it if you don't have it, or if the other person from my project has not implemented that part, that can be shared. Do that, make it work. Thank you.
