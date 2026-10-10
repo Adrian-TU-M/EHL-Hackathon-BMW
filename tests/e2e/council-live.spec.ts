@@ -84,7 +84,7 @@ test("council uses the live Customer Agent for customer turns and PM challenges"
   await expect(page.locator(".speaker-card>p")).toContainText("LIVE challenge turn 4");
 
   for (let i = 0; i < 12; i++) await page.clock.runFor(4300);
-  await expect(page.getByRole("button", { name: "Continue to PM review" })).toBeEnabled();
+  await expect(page.getByRole("heading", { name: "Your council recommendation" })).toBeVisible();
   await page.getByRole("button", { name: "Expand debate" }).click();
   await expect(page.locator(".transcript-event")).toHaveCount(12);
   await expect(page.locator(".transcript-event .council-live-tag")).toHaveCount(4);

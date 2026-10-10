@@ -391,14 +391,17 @@ Unresolved disagreements should remain visible.
 
 **Stage 7 — Human review**
 
-The PM can:
+After the council proposal, the Judge presents its recommendation to the PM. The PM can approve it immediately, leave it for later review, or discuss it with the Judge by text or voice. The Judge may explain its rationale, evidence, assumptions, uncertainty, and disagreement, and may suggest revised wording. A PM edit creates a new provisional requirement version; it is never applied or approved by the Judge.
 
-- Approve
-- Reject
+After discussion, the PM can approve, reject, revise, or leave the recommendation for later review. Approval or rejection is recorded immediately for the current version. A later edit or reopening creates a traceable new version.
+
+The PM retains these additional review actions:
+
 - Edit
 - Challenge
 - Defer
 - Request more evidence
+- Reopen
 
 The decision and its rationale must be recorded.
 
@@ -1125,7 +1128,7 @@ When the moderator changes the topic, the visual focus shifts accordingly.
 
 When the judge speaks, the scene subtly emphasizes the judge.
 
-No actual speech audio or lip synchronization is required for MVP.
+ElevenLabs voice is used for the post-proposal Judge-to-PM discussion. The specialist council remains scripted in the demo; agent sculptures do not require lip synchronization.
 
 These should be functional UI representations driven by agent state, not merely decorative characters.
 
@@ -1578,7 +1581,7 @@ Criteria are bounded 0–5 assessments: observed need, severity, competitive gap
 
 ## Council state machine
 
-States: idle → topic → perspectives → challenge → assessment → revision → proposal → review. Revision is the single optional clarification slot and explicitly records whether used. Pause and interruption retain the current stage. Resume continues from that stage. Review is terminal for one run; reopening creates a separately traceable run. A timer advances only while running; a maximum duration and fixed event list bound processing. User challenges pause processing and are logged with a rationale. Real inference later must obey the same controller and typed events.
+States: idle → topic → perspectives → challenge → assessment → revision → proposal → review. Revision is the single optional clarification slot and explicitly records whether used. Pause and interruption retain the current stage. Resume continues from that stage. Review is terminal for the council run; a PM handoff then offers immediate approval, later review, or a text/voice discussion with the Judge. The Judge can suggest revised wording, while only the PM can stage, approve, or reject a requirement version. Reopening creates a separately traceable run. A timer advances only while running; a maximum duration and fixed event list bound the council. User challenges pause processing and are logged with a rationale. Real inference later must obey the same controller and typed events.
 
 ## Persistence and security
 
@@ -1595,6 +1598,8 @@ Inspect 21st.dev for inspiration and document any adopted code with the exact li
 - Viewer supports orbit, zoom, reset, reduced motion and WebGL failure; labels do not claim exact model coordinates for a fallback.
 - All five agent sculptures respond to typed agent states; one active stage drives the council visualization and visible evidence.
 - Debate start/pause/resume/interrupt/challenge/review operate without unbounded loops or automatic PM approval.
+- The completed council hands its recommendation to the Judge; the PM can approve immediately, defer review, or discuss by text/voice, with transcript and outcomes in the audit trail.
+- Judge-suggested wording stays provisional until the PM applies it as a new version and explicitly approves or rejects it.
 - Evidence filters and search alter real fixture results, source drilldowns disclose denominator and limitations, and exclusions require a reason.
 - Decisions require a rationale, significant edits increment version and invalidate approval, reopening is logged, and unknown scores remain unknown.
 - Scenario sliders and presets update deterministic rankings, with a risk/impact chart and visible assumptions.

@@ -166,12 +166,13 @@ test("council pause, interruption, challenge, bounded stages and PM handoff", as
   });
   await page.getByRole("button", { name: "Resume discussion" }).click();
   for (let i = 0; i < 11; i++) await page.clock.runFor(4300);
+  // On completion the Judge hands the recommendation to the PM.
   await expect(
-    page.getByRole("button", { name: "Continue to PM review" }),
-  ).toBeEnabled();
+    page.getByRole("heading", { name: "Your council recommendation" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Expand debate" }).click();
   await expect(page.locator(".transcript-event")).toHaveCount(11);
-  await page.getByRole("button", { name: "Continue to PM review" }).click();
+  await page.getByRole("button", { name: "Review later" }).click();
   await expect(
     page.getByRole("heading", { name: "Shape the next generation." }),
   ).toBeVisible();

@@ -22,6 +22,8 @@ export const initialCouncil: CouncilState = {
   elapsedMs: 0,
   topic: "Displays",
   events: [],
+  discussion: [],
+  handoff: "pending",
   run: 0,
 };
 export function buildCouncilEvents(

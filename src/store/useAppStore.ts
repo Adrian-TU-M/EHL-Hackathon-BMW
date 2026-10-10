@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   AnalysisSnapshot,
+  CouncilMessage,
   CouncilEvent,
   CouncilState,
   DecisionInput,
@@ -42,6 +43,11 @@ interface AppStore extends AnalysisSnapshot {
     action: "pause" | "resume" | "interrupt" | "challenge",
     reason?: string,
   ) => void;
+  recordCouncilMessage: (message: Omit<CouncilMessage, "timestamp">) => void;
+  setCouncilHandoff: (
+    handoff: "pending" | "approved" | "review_later" | "rejected",
+  ) => void;
+  deferCouncilReview: () => void;
   tickCouncil: () => void;
   requestCustomerTurn: (run: number, eventId: string, req: CustomerPerspectiveRequest) => Promise<void>;
 }
@@ -191,6 +197,67 @@ export const useAppStore = create<AppStore>()(
           ],
         }));
       },
+      recordCouncilMessage(message) {
+        const requirement = get().requirements.find(
+          (r) => r.topic === get().council.topic,
+        );
+        const saved: CouncilMessage = {
+          ...message,
+          timestamp: new Date().toISOString(),
+        };
+        set((state) => {
+          if (state.council.discussion.some((item) => item.id === saved.id))
+            return state;
+          return {
+            council: {
+              ...state.council,
+              discussion: [...state.council.discussion, saved].slice(-40),
+            },
+            audit: [
+              ...state.audit,
+              auditEvent({
+                actor: saved.actor,
+                action:
+                  saved.actor === "PM"
+                    ? "PM discussed recommendation with Judge"
+                    : "Judge explained recommendation to PM",
+                category: "Council",
+                requirementId: requirement?.id,
+                version: requirement?.version,
+                evidenceIds: requirement?.evidenceIds ?? [],
+                rationale: saved.text,
+              }),
+            ],
+          };
+        });
+      },
+      setCouncilHandoff(handoff) {
+        set((state) => ({
+          council: { ...state.council, handoff },
+        }));
+      },
+      deferCouncilReview() {
+        const state = get();
+        const requirement = state.requirements.find(
+          (r) => r.topic === state.council.topic,
+        );
+        if (!requirement) return;
+        set((current) => ({
+          council: { ...current.council, handoff: "review_later" },
+          audit: [
+            ...current.audit,
+            auditEvent({
+              actor: "PM",
+              action: "PM deferred Judge recommendation for later review",
+              category: "Council",
+              requirementId: requirement.id,
+              version: requirement.version,
+              evidenceIds: requirement.evidenceIds,
+              rationale: "PM selected Review later at the Judge handoff.",
+            }),
+          ],
+        }));
+      },
       excludeEvidence(id, reason) {
         if (!reason.trim())
           throw new Error("An exclusion needs an explanation.");
@@ -272,6 +339,8 @@ export const useAppStore = create<AppStore>()(
           elapsedMs: 0,
           topic,
           events,
+          discussion: [],
+          handoff: "pending",
           run,
           liveCustomer: live,
         };
@@ -420,6 +489,8 @@ export const useAppStore = create<AppStore>()(
             events: p.council.events.map((e) =>
               e.pending ? { ...e, pending: false, statement: "This live Customer Agent turn was interrupted by a page reload.", assumption: "Start a new discussion to regenerate it." } : e,
             ),
+            discussion: p.council.discussion ?? [],
+            handoff: p.council.handoff ?? "pending",
             status:
               p.council.status === "running" ? "paused" : p.council.status,
           },
