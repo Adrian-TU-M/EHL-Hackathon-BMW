@@ -64,6 +64,33 @@ def test_schema_has_closed_fixed_objects_and_nullable_scores():
     assert {x.get("type") for x in schema["$defs"]["CriterionAssessment"]["properties"]["value"]["anyOf"]} == {"number", "null"}
 
 
+def test_generation_schema_is_bounded_to_the_frozen_request():
+    request = JudgeRequest.model_validate(request_data())
+    schema = assessment_schema(request)
+    for collection in ("arguments", "features"):
+        assert schema["properties"][collection]["minItems"] == len(getattr(request, collection))
+        assert schema["properties"][collection]["maxItems"] == len(getattr(request, collection))
+    definitions = schema["$defs"]
+    assert definitions["ArgumentAssessment"]["properties"]["argument_id"]["enum"] == [a.id for a in request.arguments]
+    assert definitions["FeatureAssessment"]["properties"]["feature_id"]["enum"] == [f.id for f in request.features]
+    assert definitions["CriterionAssessment"]["properties"]["argument_ids"]["items"]["enum"] == [a.id for a in request.arguments]
+    assert definitions["Citation"]["properties"]["evidence_id"]["enum"] == [e.id for e in request.evidence if not e.exclusion_reason]
+    assert definitions["ArgumentAssessment"]["properties"]["explanation"]["maxLength"] == 600
+    assert definitions["FeatureAssessment"]["properties"]["uncertainties"]["maxItems"] == 2
+    assert "maxItems" not in assessment_schema()["properties"]["arguments"]
+    # Generating a bounded output must not trim source passages or mutate inputs.
+    assert request.model_dump(mode="json") == JudgeRequest.model_validate(request_data()).model_dump(mode="json")
+
+
+def test_empty_argument_and_evidence_schema_does_not_emit_invalid_empty_enums():
+    request = JudgeRequest.model_validate(request_data() | {"arguments": [], "evidence": []})
+    schema = assessment_schema(request)
+    assert schema["properties"]["arguments"]["maxItems"] == 0
+    assert schema["$defs"]["CriterionAssessment"]["properties"]["argument_ids"]["maxItems"] == 0
+    assert schema["$defs"]["ArgumentAssessment"]["properties"]["citations"]["maxItems"] == 0
+    assert '"enum": []' not in json.dumps(schema)
+
+
 def test_local_chat_endpoint_does_not_receive_openai_secret(monkeypatch):
     monkeypatch.setenv("JUDGE_BASE_URL", "http://127.0.0.1:9000/v1")
     monkeypatch.setenv("JUDGE_MODEL", "local-qwen")
@@ -136,7 +163,7 @@ def test_default_is_local_qwen_with_actual_context_and_no_openai_key(monkeypatch
     context = json.loads(wire["messages"][1]["content"])
     assert context["background"] == body["background"] and context["pm_message"] == body["pm_message"]
     assert wire["stream"] is False and wire["think"] is False
-    assert wire["format"] == assessment_schema() and wire["options"]["temperature"] == 0
+    assert wire["format"] == assessment_schema(JudgeRequest.model_validate(body)) and wire["options"]["temperature"] == 0
     assert result.features[0].priority == 80
 
 

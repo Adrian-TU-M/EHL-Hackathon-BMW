@@ -1,5 +1,7 @@
 # Moderator implementation status
 
+Historical branch handoff: the unified integration now uses local Ollama adapters for all five agents. Use the current [backend quickstart](backend/README.md) for startup; the remote-service setup and unconnected-agent limitations below describe the original branch. `backend/requirements.lock` is now a compatibility redirect to the unified `requirements.txt`, not a frozen lock.
+
 Updated 10 October 2026 after the user resumed implementation. The implementation was committed and pushed to `Moderator_Agent` as `15da8dd`. The user subsequently explicitly requested committing and pushing all nine initial source documents as well. Nothing has been deployed or sent as a message to other people.
 
 ## Current scope
