@@ -6,6 +6,23 @@ Our project for the EHL x BMW hackathon.
 
 # BMW NEXT — AI Product Intelligence
 
+## Python Judge Agent integration
+
+The Judge now has a Python/FastAPI package with evidence-linked argument ratings,
+deterministic feature scoring, manual stage checkpoints, auto clarification,
+whole-council PM follow-ups, and version-specific review endpoints. Agent Council
+and Decisions & Scenarios include a Judge panel that connects through `/api`.
+
+See [backend/README.md](backend/README.md) for setup, adapter contracts, and testing.
+Your teammates supply the actual AI provider and moderator implementations.
+Explicit backend demo mode is available for local integration; live failures never
+fall back to scripts. Backend persistence currently uses single-process memory.
+The existing frontend evidence and scripted council remain synthetic demos.
+
+To run the two real FastAPI/browser integration scenarios, start the backend in
+explicit demo mode on port 8000, then run
+`JUDGE_E2E=1 npx playwright test tests/e2e/judge.spec.ts`.
+
 An unofficial BMW challenge prototype: choose a vehicle and market, inspect source-linked evidence, watch a bounded AI council discussion, compare priorities, record version-specific human decisions, and export a real PDF.
 
 Read [PROJECT_SPEC.md](PROJECT_SPEC.md) for the complete product specification, system architecture, user journey, team contracts and open questions. The original project introduction above is retained from the teammate's Entire README commit.

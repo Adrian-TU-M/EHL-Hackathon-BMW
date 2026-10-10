@@ -14,6 +14,8 @@ import { initialCouncil, advanceCouncil } from "../lib/council/machine";
 import { intelligenceService } from "../lib/api/service";
 import { scenarios } from "../lib/scoring";
 import { auditEvent } from "../lib/audit";
+import { judgeApi } from "../lib/api/judge";
+import type { JudgeCouncil } from "../lib/api/judge";
 interface AppStore extends AnalysisSnapshot {
   started: boolean;
   persistenceError?: string;
@@ -27,6 +29,7 @@ interface AppStore extends AnalysisSnapshot {
     reason?: string,
   ) => void;
   tickCouncil: () => void;
+  applyJudgeCouncil: (view: JudgeCouncil) => void;
 }
 const storage = createJSONStorage<AppStore>(() => ({
   getItem(name) {
@@ -65,6 +68,50 @@ export const useAppStore = create<AppStore>()(
       audit: [],
       weights: scenarios[0].weights,
       council: initialCouncil,
+      judgeCouncil: undefined,
+      applyJudgeCouncil(view) {
+        view = structuredClone(view);
+        set(state => {
+          if (view.analysis_id !== (state.scope.confirmedAt ?? "local"))
+            throw new Error("This Judge response belongs to an earlier analysis.");
+          if (state.judgeCouncil?.id === view.id && state.judgeCouncil.revision > view.revision) return state;
+          if (!state.judgeCouncil && Object.keys(state.weights).some(key => state.weights[key as keyof Weights] !== view.request.weights[key as keyof Weights]))
+            throw new Error("PM priorities changed during evaluation. Start a new Judge council.");
+          for (const feature of view.request.features) {
+            const current = state.requirements.find(r => r.id === feature.id);
+            if (!current || current.version !== feature.version || current.description !== feature.description)
+              throw new Error("Features changed during evaluation. Start a new Judge council with the latest versions.");
+          }
+          const previousEvents = new Set(state.judgeCouncil?.id === view.id ? state.judgeCouncil.events.map(e => e.id) : []);
+          const fresh = view.events.filter(e => !previousEvents.has(e.id));
+          const changedAssessment = !!view.assessment && state.judgeCouncil?.assessment?.id !== view.assessment.id;
+          return {
+            judgeCouncil: view,
+            weights: view.request.weights,
+            requirements: state.requirements.map(r => {
+              const assessment = view.assessment?.features.find(f => f.feature_id === r.id);
+              if (!assessment) return r;
+              const invalidate = changedAssessment && r.status === "Approved";
+              const decision = view.decisions?.filter(d => d.feature_id === r.id && d.version === r.version && d.assessment_id === view.assessment?.id).at(-1);
+              const recordedStatus = decision?.action === "approve" ? "Approved" as const : decision?.action === "reject" ? "Rejected" as const : decision?.action === "defer" ? "Deferred" as const : undefined;
+              return { ...r,
+                criteria: Object.fromEntries(Object.entries(assessment.criteria).map(([key, value]) => [key, value.value])) as typeof r.criteria,
+                rationale: assessment.rationale,
+                evidenceLevel: assessment.evidence_strength,
+                assumptions: assessment.assumptions, uncertainties: assessment.uncertainties,
+                status: recordedStatus ?? (invalidate ? "Pending review" as const : r.status),
+                approvedVersion: recordedStatus === "Approved" ? r.version : recordedStatus || invalidate ? undefined : r.approvedVersion,
+              };
+            }),
+            audit: [...state.audit, ...fresh.map(event => ({
+              ...auditEvent({ actor: event.actor as "PM", action: `Judge council · ${event.stage}`,
+                category: "Council", evidenceIds: event.evidence_ids, rationale: event.statement }),
+              timestamp: event.timestamp,
+            })), ...(changedAssessment ? [auditEvent({ actor: "judge", action: "Judge assessment recorded",
+              category: "Scoring", evidenceIds: [], rationale: JSON.stringify(view.assessment) })] : [])],
+          };
+        });
+      },
       async startAnalysis(scope) {
         const fixtures = await intelligenceService.createAnalysis(scope);
         const confirmed = { ...scope, confirmedAt: new Date().toISOString() };
@@ -74,6 +121,7 @@ export const useAppStore = create<AppStore>()(
           ...fixtures,
           weights: scenarios[0].weights,
           council: initialCouncil,
+          judgeCouncil: undefined,
           audit: [
             auditEvent({
               actor: "PM",
@@ -100,7 +148,17 @@ export const useAppStore = create<AppStore>()(
           );
         if (input.description !== undefined && !input.description.trim())
           throw new Error("The requirement description cannot be empty.");
-        await intelligenceService.saveDecision(input);
+        const live = get().judgeCouncil;
+        let updatedCouncil: JudgeCouncil | undefined;
+        if (live?.request.features.some(f => f.id === input.requirementId)) {
+          if (!live.assessment || live.status !== "complete")
+            throw new Error("Finish the Judge council and review its latest assessment before deciding.");
+          if (input.expectedAssessmentId !== live.assessment.id)
+            throw new Error("The Judge assessment changed. Close and reopen the review to inspect the latest assessment.");
+          updatedCouncil = await judgeApi.decide(live, input);
+          if (get().judgeCouncil?.id !== live.id)
+            throw new Error("Analysis inputs changed while recording the decision. Refresh the council before reviewing again.");
+        } else await intelligenceService.saveDecision(input);
         set((state) => {
           const original = state.requirements.find(
             (r) => r.id === input.requirementId,
@@ -152,10 +210,12 @@ export const useAppStore = create<AppStore>()(
             audit: [...state.audit, event],
           };
         });
+        if (updatedCouncil) get().applyJudgeCouncil(updatedCouncil);
       },
       setWeights(weights, reason) {
         set((state) => ({
           weights,
+          judgeCouncil: undefined,
           audit: [
             ...state.audit,
             auditEvent({
@@ -174,6 +234,7 @@ export const useAppStore = create<AppStore>()(
         if (!reason.trim())
           throw new Error("An exclusion needs an explanation.");
         set((state) => ({
+          judgeCouncil: undefined,
           evidence: state.evidence.map((e) =>
             e.id === id ? { ...e, exclusionReason: reason.trim() } : e,
           ),

@@ -167,7 +167,7 @@ test("council pause, interruption, challenge, bounded stages and PM handoff", as
     animations: "disabled",
   });
   await page.getByRole("button", { name: "Resume discussion" }).click();
-  for (let i = 0; i < 11; i++) await page.clock.runFor(4300);
+  for (let i = 0; i < 11; i++) await page.clock.fastForward(4300);
   await expect(
     page.getByRole("button", { name: "Continue to PM review" }),
   ).toBeEnabled();

@@ -5,9 +5,11 @@ import { Badge, Button, Modal, EmptyState } from "../ui/Primitives";
 export function EvidenceDialog({
   ids,
   onClose,
+  extraEvidence,
 }: {
   ids: string[];
   onClose: () => void;
+  extraEvidence?: { id: string; source: string; location: string; passage: string; provenance: string; source_url?: string | null; published_at?: string }[];
 }) {
   const evidence = useAppStore((s) => s.evidence);
   const exclude = useAppStore((s) => s.excludeEvidence);
@@ -16,8 +18,16 @@ export function EvidenceDialog({
   const [excluding, setExcluding] = useState(false);
   const items = evidence.filter((e) => ids.includes(e.id)),
     item = items.find((e) => e.id === selected) ?? items[0];
+  const attached = extraEvidence?.filter(e => ids.includes(e.id) && !evidence.some(local => local.id === e.id)) ?? [];
   return (
     <Modal title="Evidence explorer" wide onClose={onClose}>
+      {attached.map(e => (
+        <article className="judge-feature" key={e.id}>
+          <Badge>{e.provenance.toUpperCase()}</Badge><h3>{e.id} · {e.source}</h3><p>{e.location} · {e.published_at ?? "Date not supplied"}</p>
+          {e.source_url && /^https?:\/\//.test(e.source_url) && <a href={e.source_url} target="_blank" rel="noreferrer">Open original source</a>}
+          <blockquote>{e.passage}</blockquote><p className="small">Attached by the moderator. Challenge this source through the PM council chat.</p>
+        </article>
+      ))}
       <div className="evidence-layout">
         <div className="evidence-index">
           {items.map((e) => (
@@ -138,7 +148,7 @@ export function EvidenceDialog({
               </Button>
             )}
           </div>
-        ) : (
+        ) : attached.length ? null : (
           <EmptyState
             title="No evidence available"
             detail="No source references were attached to this item."

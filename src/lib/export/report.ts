@@ -260,6 +260,38 @@ export function createReport(snapshot: AnalysisSnapshot) {
     if (e.evidenceIds.length) text(`Sources: ${e.evidenceIds.join(", ")}`, 8);
     if (e.assumption) text(`Assumption: ${e.assumption}`, 9);
   }
+  if (snapshot.judgeCouncil) {
+    next("JUDGE ASSESSMENT & PM REVIEW");
+    const council = snapshot.judgeCouncil;
+    heading("Python Judge council");
+    text(`${council.execution.toUpperCase()} backend / ${council.mode} / ${council.status} / round ${council.round}`, 10);
+    if (council.checkpoint) text(`Checkpoint: ${council.checkpoint.reason}`);
+    const assessment = council.assessment;
+    for (const source of council.request.evidence.filter(e => !snapshot.evidence.some(local => local.id === e.id))) {
+      label(`${source.id} / ${source.provenance}`);
+      text(`${source.source} / ${source.location} / ${source.published_at ?? "Date unknown"}`, 9);
+      text(source.passage, 9);
+      if (source.source_url) text(source.source_url, 8);
+    }
+    if (assessment) {
+      text(`Assessment ${assessment.id}, ${assessment.created_at}. Priority is not a probability.`, 9);
+      for (const feature of assessment.features) {
+        heading(`${feature.feature_id} / v${feature.feature_version}: ${feature.recommendation}`);
+        text(`Priority ${feature.priority ?? "Unknown"}/100, coverage ${feature.coverage}%, evidence ${feature.evidence_strength}.`);
+        text(feature.rationale);
+        text(`Benefits: ${feature.benefits.join(" ")}. Drawbacks: ${feature.drawbacks.join(" ")}. Risks: ${feature.risks.join(" ")}.`, 9);
+        text(`Assumptions: ${feature.assumptions.join(" ")}. Uncertainties: ${feature.uncertainties.join(" ")}. Alternatives: ${feature.alternatives.join(" ")}.`, 9);
+      }
+      for (const argument of assessment.arguments) {
+        label(argument.argument_id);
+        text(`Support ${argument.support ?? "Unknown"}/5, relevance ${argument.relevance ?? "Unknown"}/5, influence ${argument.influence ?? "Unknown"}/5. ${argument.verdict}.`, 9);
+        text(argument.explanation, 9);
+        for (const citation of argument.citations) text(`${citation.evidence_id}: ${citation.quote}`, 9);
+        text(argument.assumptions.concat(argument.issues).join(" "), 9);
+      }
+    }
+    for (const event of council.events) { label(`${event.actor} / ${event.stage}`); text(event.statement, 9); }
+  }
   next("CHRONOLOGICAL AUDIT");
   heading("The decision record");
   text(
@@ -307,5 +339,6 @@ function snapshotData(s: AnalysisSnapshot): AnalysisSnapshot {
     audit: s.audit,
     weights: s.weights,
     council: s.council,
+    judgeCouncil: s.judgeCouncil,
   };
 }

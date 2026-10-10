@@ -1637,3 +1637,37 @@ The user's later request supersedes the original white/minimal visual direction.
 Agent identities are redesigned as five distinct animated metal sculptures with original GLSL surfaces and labels anchored to their 3D positions. The actual Paper Mesh Gradient shader indexed on 21st.dev is adapted under Apache-2.0, with license and notices retained. The initial unbranded sedan is removed. Real BMW series reference photography and community-created BMW model embeds replace it. A user can inspect the exterior, but validated driving physics, performance predictions and exact engineering geometry remain unimplemented rather than being implied by the word simulation.
 
 All data, decisions, scoring, review/version logic, council stage controls and PDF export remain the local demo described above. Real BMW reference imagery does not turn synthetic findings into real research. No new live AI or backend has been introduced by the visual redesign.
+
+## Python Judge integration — subsequent implementation
+
+The Judge integration extends the frontend prototype with a portable Python
+module and FastAPI endpoints under `backend/`. The three specialist agents,
+moderator, retrieval, AI provider, and shared durable backend remain teammate
+integration responsibilities. The Judge verifies moderator-attached passages and
+requests clarification through the moderator; it performs no independent retrieval.
+
+Argument evidence support and relevance are assessed separately on anchored 0–5
+scales. Influence is computed as support × relevance ÷ 5. The existing five
+feature criteria, balanced default weights and unknown-aware priority formula
+remain in use; evidence strength stays distinct. PM text can propose weights and
+constraints, which require confirmation. Priority confirmation changes scores,
+not factual argument support. Recommendations remain provisional.
+
+Manual verification pauses at debate-stage boundaries. Auto debate permits one
+targeted clarification and pauses for consequential unresolved uncertainty.
+Every PM chat message initiates a separately logged, bounded whole-council round.
+Final approve/reject/defer/edit actions are version-specific and require PM review.
+Edits invalidate the prior assessment and initiate a fresh assessment round.
+Published statements, citations, assessments, PM messages and decisions appear in
+the frontend and report; private model reasoning is never required.
+
+Server-side AI and moderator adapters can be injected or connected through team
+HTTP gateways. Explicit fixture mode is separate from live execution; an
+unconfigured live adapter fails rather than returning demo content. The initial
+FastAPI repository uses single-process memory and requires replacement with the
+team's authenticated transactional persistence for shared deployment. SSE provides
+incremental replay of committed events, not token streaming. Synthetic frontend
+evidence remains labelled as such even when an AI adapter is connected.
+
+Setup, complete contracts, tests and remaining integration limits are documented
+in `backend/README.md`.

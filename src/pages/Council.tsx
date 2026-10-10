@@ -19,6 +19,7 @@ import { EvidenceDialog } from "../components/dashboard/EvidenceDialog";
 import { agentMeta } from "../components/agents/AgentSculpture";
 import { stages } from "../lib/council/machine";
 import type { AgentState, Topic } from "../lib/types";
+import { JudgePanel } from "../components/requirements/JudgePanel";
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 export default function Council() {
   const {
@@ -47,6 +48,7 @@ export default function Council() {
   );
   return (
     <div className="council-page">
+      <JudgePanel />
       <div className="council-page-header">
         <div>
           <div className="eyebrow">

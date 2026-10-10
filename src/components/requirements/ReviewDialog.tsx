@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Badge, Button, Modal, StatusBadge } from "../ui/Primitives";
 import { useAppStore } from "../../store/useAppStore";
 import type { DecisionStatus, Requirement } from "../../lib/types";
@@ -6,23 +6,34 @@ import { scoreRequirement } from "../../lib/scoring";
 export function ReviewDialog({
   requirement,
   onClose,
+  proposedDescription,
 }: {
   requirement: Requirement;
   onClose: () => void;
+  proposedDescription?: string;
 }) {
   const decide = useAppStore((s) => s.decide);
   const weights = useAppStore((s) => s.weights);
-  const [description, setDescription] = useState(requirement.description);
+  const judgeCouncil = useAppStore((s) => s.judgeCouncil);
+  const judged = judgeCouncil?.request.features.some(f => f.id === requirement.id);
+  const reviewedAssessmentId = useRef(judgeCouncil?.assessment?.id);
+  const [description, setDescription] = useState(proposedDescription ?? requirement.description);
   const [status, setStatus] = useState<DecisionStatus>(requirement.status);
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const pendingDecision = useRef<{ fingerprint: string; id: string } | null>(null);
   const edited = description.trim() !== requirement.description;
   async function submit() {
     setSaving(true);
     setError("");
     try {
+      const fingerprint = JSON.stringify([requirement.id, requirement.version, status, reason, description]);
+      if (pendingDecision.current?.fingerprint !== fingerprint)
+        pendingDecision.current = { fingerprint, id: crypto.randomUUID() };
       await decide({
+        idempotencyKey: pendingDecision.current.id,
+        expectedAssessmentId: reviewedAssessmentId.current,
         requirementId: requirement.id,
         expectedVersion: requirement.version,
         status,
@@ -134,11 +145,12 @@ export function ReviewDialog({
             "Evidence requested",
           ] as DecisionStatus[]
         ).map((s) => (
-          <option key={s} value={s}>
-            {s === "Pending review" ? "Reopen / keep in review" : s}
+          <option key={s} value={s} disabled={judged && !["Approved", "Rejected", "Deferred"].includes(s)}>
+            {s === "Pending review" ? judged ? "Choose approve, reject, or defer" : "Reopen / keep in review" : s}
           </option>
         ))}
       </select>
+      {judged && <p className="small">Judge council decisions are recorded through FastAPI. Use the council chat to challenge an argument or request more evidence. Complete the council before approving, rejecting, deferring, or saving an edit.</p>}
       <label className="field-label" htmlFor="decision-reason">
         Decision rationale <span className="muted">(required)</span>
       </label>
