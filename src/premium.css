@@ -2694,3 +2694,434 @@ textarea::placeholder {
   max-width: none;
   text-align: left;
 }
+
+.judge-handoff {
+  margin-top: 1.5rem;
+  padding: clamp(1.1rem, 2vw, 1.7rem);
+  border: 1px solid rgba(129, 167, 205, 0.24);
+  border-radius: 18px;
+  background: linear-gradient(125deg, rgba(16, 34, 55, 0.96), rgba(8, 17, 30, 0.94));
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+.judge-handoff-heading,
+.judge-handoff-result,
+.judge-handoff-actions,
+.judge-conversation-controls,
+.judge-conversation-context,
+.judge-text-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.judge-handoff-heading {
+  align-items: flex-start;
+}
+.judge-handoff-heading h2 {
+  margin: 0.35rem 0;
+  color: #f1f6fb;
+  font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+}
+.judge-handoff-heading p,
+.judge-recommendation small,
+.judge-handoff-result span,
+.judge-conversation-context span {
+  color: #a9bbce;
+}
+.judge-handoff-heading p {
+  margin: 0;
+  max-width: 50rem;
+}
+.judge-recommendation {
+  margin: 1rem 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(122, 162, 202, 0.17);
+  border-radius: 12px;
+  background: rgba(3, 11, 21, 0.4);
+}
+.judge-recommendation .mono {
+  color: #88a7c6;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.judge-recommendation p {
+  margin: 0.5rem 0;
+  color: #edf4fb;
+  line-height: 1.6;
+}
+.judge-recommendation small {
+  display: block;
+  line-height: 1.5;
+}
+.judge-handoff-actions,
+.judge-handoff-result,
+.inline-actions {
+  flex-wrap: wrap;
+}
+.judge-handoff-result {
+  justify-content: flex-start;
+}
+.judge-handoff-result span {
+  flex: 1 1 16rem;
+}
+.judge-revision-editor {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(3, 11, 21, 0.38);
+}
+.judge-revision-editor textarea,
+.judge-text-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+.judge-dialog-footer {
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.judge-conversation {
+  display: grid;
+  gap: 1rem;
+}
+.judge-conversation-context {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(122, 162, 202, 0.17);
+  border-radius: 12px;
+  background: rgba(11, 27, 44, 0.7);
+}
+.judge-conversation-context strong {
+  color: #e8f1fa;
+}
+.judge-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 120px;
+  max-height: 340px;
+  overflow: auto;
+  padding: 0.25rem;
+}
+.judge-message-list.text-discussion {
+  min-height: 160px;
+  background: rgba(3, 11, 21, 0.18);
+  border: 1px solid rgba(122, 162, 202, 0.12);
+  border-radius: 12px;
+}
+.judge-orb-stage {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.8rem 0 0.6rem;
+  text-align: center;
+}
+.judge-orb-stage > strong {
+  color: #e8f1fa;
+  font-size: 0.86rem;
+}
+.judge-orb-stage > span {
+  color: #9fb2c7;
+  font-size: 0.75rem;
+}
+.judge-orb {
+  position: relative;
+  isolation: isolate;
+  width: clamp(132px, 24vw, 184px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 24%, rgba(255, 255, 255, 0.94), transparent 10%),
+    radial-gradient(circle at 35% 31%, #ff87ce 0%, #c570ff 29%, #547cf4 58%, #17234d 82%);
+  box-shadow:
+    0 0 28px rgba(117, 105, 255, 0.35),
+    inset -12px -15px 28px rgba(6, 12, 42, 0.55),
+    inset 8px 8px 25px rgba(255, 255, 255, 0.22);
+  transition: transform 120ms linear, box-shadow 180ms ease;
+}
+.judge-orb::before,
+.judge-orb::after,
+.judge-orb-core,
+.judge-orb-cloud,
+.judge-orb-glint {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+}
+.judge-orb::before {
+  content: "";
+  inset: 0;
+  z-index: 5;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3), transparent 35% 68%, rgba(255,255,255,0.06));
+  pointer-events: none;
+}
+.judge-orb::after {
+  content: "";
+  inset: 1px;
+  z-index: 6;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  pointer-events: none;
+}
+.judge-orb-core {
+  inset: 10%;
+  z-index: 1;
+  background: radial-gradient(ellipse at 35% 30%, #fff6ff 0%, #ff9dda 15%, #9e77ff 42%, #3c62d8 70%, #131c46 100%);
+  filter: blur(1px);
+}
+.judge-orb-cloud {
+  z-index: 2;
+  width: 75%;
+  height: 48%;
+  filter: blur(14px);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  animation-play-state: paused;
+}
+.judge-orb-cloud.cloud-one {
+  top: 8%;
+  left: -12%;
+  background: radial-gradient(ellipse, #ffb8ec 0%, #f25abf 38%, transparent 73%);
+  transform: rotate(-28deg);
+}
+.judge-orb-cloud.cloud-two {
+  right: -18%;
+  bottom: 4%;
+  background: radial-gradient(ellipse, #8af7ff 0%, #38bdf8 39%, transparent 74%);
+  transform: rotate(34deg);
+}
+.judge-orb-cloud.cloud-three {
+  top: 28%;
+  right: -12%;
+  width: 63%;
+  height: 58%;
+  background: radial-gradient(ellipse, #ffe788 0%, #ff8e6e 32%, transparent 72%);
+  transform: rotate(-35deg);
+}
+.judge-orb-glint {
+  top: 16%;
+  left: 22%;
+  z-index: 4;
+  width: 27%;
+  height: 10%;
+  background: rgba(255, 255, 255, 0.74);
+  filter: blur(7px);
+  transform: rotate(-42deg);
+}
+.judge-orb.is-speaking {
+  animation: judge-orb-pulse 1.2s ease-in-out infinite alternate;
+  box-shadow:
+    0 0 54px rgba(117, 105, 255, 0.58),
+    0 0 70px rgba(255, 102, 203, 0.22),
+    inset -12px -15px 28px rgba(6, 12, 42, 0.45),
+    inset 8px 8px 25px rgba(255, 255, 255, 0.28);
+}
+.judge-orb.is-speaking .judge-orb-core {
+  animation: judge-orb-breathe 1.45s ease-in-out infinite alternate;
+}
+.judge-orb.is-speaking .judge-orb-cloud {
+  animation-play-state: running;
+}
+.judge-orb.is-speaking .cloud-one {
+  animation: judge-orb-flow-one 3.2s ease-in-out infinite alternate;
+}
+.judge-orb.is-speaking .cloud-two {
+  animation: judge-orb-flow-two 2.7s ease-in-out infinite alternate;
+}
+.judge-orb.is-speaking .cloud-three {
+  animation: judge-orb-flow-three 3.8s ease-in-out infinite alternate;
+}
+.judge-orb.user-is-speaking:not(.is-speaking) .judge-orb-core {
+  filter: hue-rotate(35deg) blur(1px);
+}
+@keyframes judge-orb-breathe {
+  from { transform: scale(0.96); }
+  to { transform: scale(1.07); }
+}
+@keyframes judge-orb-pulse {
+  from { transform: scale(0.98); }
+  to { transform: scale(1.08); }
+}
+@keyframes judge-orb-flow-one {
+  from { transform: translate(-3%, 2%) rotate(-28deg) scale(0.9); }
+  to { transform: translate(18%, 20%) rotate(22deg) scale(1.2); }
+}
+@keyframes judge-orb-flow-two {
+  from { transform: translate(5%, 0) rotate(34deg) scale(0.9); }
+  to { transform: translate(-20%, -19%) rotate(-18deg) scale(1.22); }
+}
+@keyframes judge-orb-flow-three {
+  from { transform: translate(4%, -5%) rotate(-35deg) scale(1); }
+  to { transform: translate(-22%, 13%) rotate(28deg) scale(1.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .judge-orb.is-speaking,
+  .judge-orb.is-speaking .judge-orb-core,
+  .judge-orb.is-speaking .judge-orb-cloud {
+    animation-duration: 8s;
+  }
+}
+.judge-message {
+  max-width: 88%;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(122, 162, 202, 0.16);
+  border-radius: 12px;
+  background: rgba(13, 29, 46, 0.88);
+}
+.judge-message.from-pm {
+  align-self: flex-end;
+  border-color: rgba(67, 143, 218, 0.38);
+  background: rgba(27, 69, 110, 0.45);
+}
+.judge-message strong {
+  color: #9fc6ed;
+  font-size: 0.75rem;
+}
+.judge-message p {
+  margin: 0.35rem 0 0;
+  color: #e5edf5;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.judge-conversation-controls {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  min-height: 46px;
+}
+.judge-channel-select {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid rgba(132, 163, 194, 0.24);
+  border-radius: 10px;
+  background: rgba(3, 11, 21, 0.55);
+}
+.judge-channel-select button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #9fb2c7;
+  cursor: pointer;
+}
+.judge-channel-select button.selected {
+  background: rgba(62, 128, 190, 0.24);
+  color: #edf5fc;
+}
+.judge-connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #c1d2e3;
+}
+.judge-voice-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(122, 162, 202, 0.2);
+  border-radius: 12px;
+  background: rgba(11, 27, 44, 0.72);
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+.judge-voice-status.user-speaking {
+  border-color: rgba(80, 190, 145, 0.68);
+  background: rgba(23, 83, 69, 0.32);
+  box-shadow: 0 0 0 2px rgba(80, 190, 145, 0.08);
+}
+.judge-voice-status.judge-speaking {
+  border-color: rgba(91, 162, 235, 0.72);
+  background: rgba(25, 67, 109, 0.38);
+}
+.judge-voice-indicator {
+  display: grid;
+  place-items: center;
+  flex: 0 0 2.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: #a9c8e8;
+  background: rgba(111, 156, 201, 0.14);
+}
+.judge-voice-status.user-speaking .judge-voice-indicator,
+.judge-voice-status.judge-speaking .judge-voice-indicator {
+  animation: judge-voice-pulse 800ms ease-in-out infinite alternate;
+}
+.judge-voice-status.user-speaking .judge-voice-indicator {
+  color: #8be0bb;
+  background: rgba(80, 190, 145, 0.17);
+}
+.judge-voice-status.judge-speaking .judge-voice-indicator {
+  color: #a6d2ff;
+  background: rgba(91, 162, 235, 0.2);
+}
+.judge-voice-status-copy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.judge-voice-status-copy strong {
+  color: #e5edf5;
+  font-size: 0.87rem;
+}
+.judge-voice-status-copy span {
+  color: #9fb2c7;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+.judge-audio-meter {
+  overflow: hidden;
+  flex: 0 0 3.25rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: rgba(159, 178, 199, 0.15);
+}
+.judge-audio-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #68d5a6;
+  transition: width 100ms linear;
+}
+@keyframes judge-voice-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+.judge-text-form {
+  align-items: flex-end;
+  flex: 1 1 100%;
+}
+.judge-text-form textarea {
+  flex: 1 1 auto;
+  min-width: 12rem;
+}
+@media (max-width: 700px) {
+  .judge-handoff-heading,
+  .judge-conversation-controls,
+  .judge-text-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .judge-handoff-heading .badge {
+    align-self: flex-start;
+  }
+  .judge-handoff-actions > .button,
+  .judge-handoff-result > .button,
+  .judge-text-form > .button {
+    width: 100%;
+    justify-content: center;
+  }
+  .judge-message {
+    max-width: 100%;
+  }
+}

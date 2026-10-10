@@ -19,6 +19,7 @@ import { EvidenceDialog } from "../components/dashboard/EvidenceDialog";
 import { agentMeta } from "../components/agents/AgentSculpture";
 import { stages } from "../lib/council/machine";
 import type { AgentState, Topic } from "../lib/types";
+import { JudgeHandoff } from "../components/council/JudgeHandoff";
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 export default function Council() {
   const {
@@ -304,23 +305,23 @@ export default function Council() {
           ))}
         </section>
       )}
-      <div className="council-review-footer">
-        <div>
-          <strong>
-            {complete
-              ? "The next move is yours."
-              : "An open discussion. A deliberate decision."}
-          </strong>
-          <span>
-            {complete
-              ? "Review the proposal, compare alternatives, and record your rationale."
-              : "The council never approves a requirement on your behalf."}
-          </span>
+      {complete && requirements.find((r) => r.topic === council.topic) ? (
+        <JudgeHandoff
+          requirementId={
+            requirements.find((r) => r.topic === council.topic)!.id
+          }
+        />
+      ) : (
+        <div className="council-review-footer">
+          <div>
+            <strong>An open discussion. A deliberate decision.</strong>
+            <span>The council never approves a requirement on your behalf.</span>
+          </div>
+          <Button disabled onClick={() => navigate("/decisions")}>
+            Continue to PM review <ArrowRight size={16} />
+          </Button>
         </div>
-        <Button disabled={!complete} onClick={() => navigate("/decisions")}>
-          Continue to PM review <ArrowRight size={16} />
-        </Button>
-      </div>
+      )}
       {ids && <EvidenceDialog ids={ids} onClose={() => setIds(null)} />}{" "}
       {challenge && (
         <Modal

@@ -144,8 +144,16 @@ export interface CouncilState {
   elapsedMs: number;
   topic: Topic;
   events: CouncilEvent[];
+  discussion: CouncilMessage[];
+  handoff: "pending" | "approved" | "review_later" | "rejected";
   challenge?: string;
   run: number;
+}
+export interface CouncilMessage {
+  id: string;
+  actor: "PM" | "judge";
+  text: string;
+  timestamp: string;
 }
 export interface Scenario {
   id: string;

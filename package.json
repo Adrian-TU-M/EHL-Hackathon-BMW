@@ -12,6 +12,7 @@
     "format": "prettier --write src tests *.ts *.json README.md ASSETS.md"
   },
   "dependencies": {
+    "@elevenlabs/react": "^1.17.0",
     "@react-three/drei": "^10.7.0",
     "@react-three/fiber": "^9.4.0",
     "jspdf": "^4.2.1",
