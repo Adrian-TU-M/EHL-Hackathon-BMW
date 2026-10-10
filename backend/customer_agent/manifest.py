@@ -101,13 +101,19 @@ def _sheet_matches(path: Path, sheet: str, marker: str) -> bool:
     return frame.astype(str).isin([marker]).any().any()
 
 
+def _is_temp(path: Path) -> bool:
+    """Office lock files ("~$Book.xlsx", created while a file is open in Excel) and hidden/
+    resource-fork files (".x", "._x") are not data."""
+    return path.name.startswith(("~$", "."))
+
+
 def discover(data_dir: Path, specs: list[SourceSpec]) -> Discovery:
     files: list[DiscoveredFile] = []
     unmatched: list[str] = []
     problems: list[str] = []
     if not data_dir.is_dir():
         return Discovery([], [], [f"Data directory not found: {data_dir}"])
-    for path in sorted(p for p in data_dir.iterdir() if p.suffix.lower() in DATA_SUFFIXES):
+    for path in sorted(p for p in data_dir.iterdir() if p.suffix.lower() in DATA_SUFFIXES and not _is_temp(p)):
         matched = [s for s in specs if fnmatch.fnmatch(path.name, s.glob)]
         if not matched:
             # No manifest entry: accept as feedback only if headers are unambiguous.

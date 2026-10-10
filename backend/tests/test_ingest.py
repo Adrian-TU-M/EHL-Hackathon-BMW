@@ -51,6 +51,16 @@ def test_only_customer_sources_are_loaded(data_dir, load):
     assert all(s["file"] != "sales_volumes.xlsx" for s in data.sources)
 
 
+def test_excel_lock_and_hidden_files_are_ignored(data_dir, load):
+    # Excel creates "~$<name>.xlsx" while a workbook is open; it matches "*_feedback*.xlsx" globs.
+    (data_dir / "~$X10_feedback_hackathon.xlsx").write_bytes(b"\x00" * 165)
+    (data_dir / "._X10_feedback_hackathon.xlsx").write_bytes(b"\x00" * 165)
+    data = load(data_dir)
+    names = [s["file"] for s in data.sources] + data.discovery.unmatched
+    assert not any(n.startswith(("~$", ".")) for n in names)
+    assert not any("~$" in w or "._" in w for w in data.discovery.problems + data.warnings)
+
+
 def test_manifest_rejects_non_customer_kinds(tmp_path: Path):
     path = tmp_path / "m.yaml"
     path.write_text(yaml.safe_dump({"sources": [{"name": "s", "kind": "sales", "glob": "*.xlsx"}]}))
