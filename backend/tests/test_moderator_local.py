@@ -213,3 +213,42 @@ async def test_snapshot_behind_event_log_recovers_without_overwriting_history(en
     assert recovered.get(session.id).sequence==previous[-1].sequence+1
     assert recovered.store.events(session.id)[0]==previous[0]
     assert recovered.store.events(session.id)[-1].stage=='recovery'
+
+
+@pytest.mark.asyncio
+async def test_judge_unavailable_preserves_safe_actionable_message(engine, scope):
+    from moderator.adapters import DeterministicAdapters
+    from backend.judge.adapters import Unavailable
+    from .test_workflow import confirmed, control
+    class UnavailableJudge(DeterministicAdapters):
+        async def call(self, actor, operation, data, *args):
+            if actor == 'judge':
+                raise Unavailable('Model inference timed out. Try fewer features or increase JUDGE_MODEL_TIMEOUT_SECONDS for local Qwen.')
+            return await super().call(actor, operation, data, *args)
+    engine.adapters = UnavailableJudge()
+    session = await confirmed(engine, scope)
+    await control(engine, session)
+    await engine.tasks[session.id]
+    assert session.outcomes[0].assessment is None
+    assert any('JUDGE_MODEL_TIMEOUT_SECONDS' in issue for issue in session.outcomes[0].packet.unresolved_issues)
+
+
+@pytest.mark.asyncio
+async def test_controller_source_quotes_pass_but_paraphrases_and_wrong_scope_do_not(engine, scope):
+    from moderator.agenda import brief
+    from moderator.models import AgentPosition, Work
+    session = await engine.create(scope)
+    session.work = Work(brief=brief(session.agenda, 'topic-controls', engine.catalog))
+    engine.adapters.mode = 'ollama'
+    fact = source_facts('customer', engine.payload(session, 'customer'))['f1']
+    foreign = engine.index(session)['foreign'].model_dump()
+    wrong = source_facts('customer', {'evidence':[foreign], 'brief':{}})['foreign']
+    position = AgentPosition(actor='customer', summary='Test control usability.', claims=[
+        fact, {**fact, 'id':'overclaim', 'statement':fact['statement'] + ' This proves a safety benefit for all BMW drivers.'},
+        {**wrong, 'id':'wrong-scope'},
+    ])
+    engine.accept_position(session, 'customer', position)
+    exact, overclaim, wrong_scope = session.work.claims
+    assert exact.validation == 'supported' and exact.semantic_check == 'exact_source_quote'
+    assert overclaim.validation == 'unverified' and overclaim.semantic_check == 'pending'
+    assert wrong_scope.validation == 'unsupported'

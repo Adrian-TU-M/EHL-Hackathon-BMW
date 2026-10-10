@@ -83,6 +83,23 @@ def source_facts(actor, data):
     return facts
 
 
+def is_exact_source_claim(claim, evidence, brief):
+    """Recognize only the controller's source-qualified literal facts.
+
+    This establishes that the source says those words. It never establishes
+    BMW fitment, broad prevalence, causal benefit or decision relevance.
+    Scope/arithmetic validation must already have passed in the controller.
+    """
+    if len(claim.evidence_ids) != 1 or claim.assumption_ids or claim.calculation:
+        return False
+    record = evidence.get(claim.evidence_ids[0])
+    if record is None:
+        return False
+    raw = record.model_dump() if hasattr(record, "model_dump") else record
+    expected = source_facts(claim.actor, {"brief": brief, "evidence": [raw]}).get(raw["id"])
+    return bool(expected and claim.statement == expected["statement"] and claim.kind == expected["kind"])
+
+
 class OpeningDraft(BaseModel):
     summary: str = Field(max_length=360, pattern=r"^(Investigate|Consider|Test|Preserve|Insufficient evidence)")
     selected_evidence_ids: list[str] = Field(max_length=2)

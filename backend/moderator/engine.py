@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 
 from pydantic import ValidationError
+from backend.judge.adapters import Unavailable as JudgeUnavailable
 
 from .agenda import brief, prepare, rank, refine
 from .external import extend_catalog
@@ -679,6 +680,12 @@ class Engine:
                     "repair": "Previous output failed the provided schema. Return a corrected object; no new evidence or stage.",
                     "validation_error": str(error)[:1200],
                 }
+            except JudgeUnavailable as error:
+                # This exception is already sanitized by the Judge provider;
+                # retain its actionable timeout/connection/authentication message.
+                # Arbitrary provider exceptions remain redacted below.
+                w.errors.append(f"{actor}/{operation}: {str(error)[:600]}")
+                return None
             except (TimeoutError, RuntimeError, OSError) as error:
                 w.errors.append(
                     f"{actor}/{operation}: {type(error).__name__}; no completed response"
@@ -905,6 +912,11 @@ class Engine:
                 allowed_ids,
                 {a.id for a in s.assumptions},
             )
+            if self.adapters.mode == "ollama" and c.validation == "unverified":
+                from .local import is_exact_source_claim
+                if is_exact_source_claim(c, self.index(s), w.brief.model_dump()):
+                    c.validation = "supported"
+                    c.semantic_check = "exact_source_quote"
         for a in position.alternatives:
             a.id = prefix + a.id
             a.assumption_ids = [aids.get(i, i) for i in a.assumption_ids]
