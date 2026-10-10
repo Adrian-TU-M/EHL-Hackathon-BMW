@@ -1,0 +1,10 @@
+Powered by Paper Shaders:
+https://shaders.paper.design
+
+BMW NEXT adaptation: src/components/ui/IntelligenceShader.tsx
+Discovery: https://21st.dev/@paper-design/components/mesh-gradient
+Source: https://github.com/paper-design/shaders/blob/43cd68db79fa0b1759f72ffc941b3238e2a3954c/packages/shaders/src/shaders/mesh-gradient.ts
+Accessed: 2026-10-10. License: Apache-2.0 (see accompanying LICENSE).
+Changes: four-color BMW-inspired blue palette; standalone React WebGL2 renderer;
+fixed shader parameters; responsive pixel budget; visibility/reduced-motion lifecycle.
+This adaptation is part of an independent prototype, not a BMW endorsement.

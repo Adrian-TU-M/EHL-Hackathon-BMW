@@ -34,6 +34,10 @@ export default function AppShell() {
   const status = useAppStore((s) => s.council.status);
   const tick = useAppStore((s) => s.tickCouncil);
   const location = useLocation();
+  const activeIndex = navigation.findIndex(
+    (item) => item.to === location.pathname,
+  );
+  const nextPage = navigation[activeIndex + 1];
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState("");
@@ -45,7 +49,7 @@ export default function AppShell() {
   }, [status, tick]);
   useEffect(() => {
     setOpen(false);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [location.pathname]);
   useEffect(() => {
     const fn = () => setStorageError(true);
@@ -76,16 +80,19 @@ export default function AppShell() {
     >
       <aside className={`sidebar ${open ? "open" : ""}`}>
         <NavLink to="/" className="brand">
-          <span className="brand-word">BMW</span>
+          <img src="/images/bmw-logo.svg" className="bmw-roundel" alt="BMW" />
           <span className="brand-divider" />
           <span className="brand-next">
             NEXT<span className="brand-dot">.</span>
           </span>
         </NavLink>
-        <div className="workspace-label">INTELLIGENCE WORKSPACE</div>
+        <div className="workspace-label">YOUR DECISION JOURNEY</div>
         <nav aria-label="Main navigation">
           {navigation.map(({ to, label, icon: Icon }, i) => (
-            <NavLink key={to} to={to}>
+            <NavLink key={to} to={to} aria-label={label}>
+              <small className="nav-step">
+                {String(i + 1).padStart(2, "0")}
+              </small>
               <Icon size={18} />
               <span>{label}</span>
               {i === 4 && <span className="nav-dot" />}
@@ -158,8 +165,40 @@ export default function AppShell() {
             in memory until this tab closes.
           </div>
         )}
-        <main className="page-content">
+        <div
+          className="journey-progress"
+          aria-label={`Step ${activeIndex + 1} of 7: ${navigation[activeIndex]?.label}`}
+        >
+          <span>INTELLIGENCE / {String(activeIndex + 1).padStart(2, "0")}</span>
+          <div>
+            {navigation.map((item, i) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                title={item.label}
+                aria-label={`Go to step ${i + 1}: ${item.label}`}
+                className={i <= activeIndex ? "visited" : ""}
+              >
+                <span />
+              </NavLink>
+            ))}
+          </div>
+          <strong>{navigation[activeIndex]?.label}</strong>
+        </div>
+        <main className="page-content" key={location.pathname}>
           <Outlet />
+          {nextPage && (
+            <NavLink className="journey-next" to={nextPage.to}>
+              <div>
+                <span>
+                  CONTINUE YOUR ANALYSIS /{" "}
+                  {String(activeIndex + 2).padStart(2, "0")}
+                </span>
+                <strong>{nextPage.label}</strong>
+              </div>
+              <ArrowUpRight size={25} />
+            </NavLink>
+          )}
         </main>
         <footer className="workspace-footer">
           <span>

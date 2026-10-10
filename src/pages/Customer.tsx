@@ -185,7 +185,7 @@ export default function Customer() {
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip cursor={{ fill: "#f4f7fb" }} />
+                <Tooltip cursor={{ fill: "#243c59" }} />
                 <Bar
                   dataKey="count"
                   name="Synthetic records"

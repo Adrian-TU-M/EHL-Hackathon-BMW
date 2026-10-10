@@ -4,14 +4,21 @@ import {
   ArrowRight,
   ArrowUpRight,
   Sparkles,
-  Globe2,
   ShieldCheck,
+  ChevronDown,
+  Activity,
+  Layers3,
+  ScanLine,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { vehicleNames } from "../lib/mock-data";
+import { vehicles } from "../lib/vehicles";
 import type { Market, Powertrain, Scope, Vehicle } from "../lib/types";
 import { Badge, Button, Loading, Modal } from "../components/ui/Primitives";
 const VehicleViewer = lazy(() => import("../components/vehicle/VehicleViewer"));
+const IntelligenceShader = lazy(
+  () => import("../components/ui/IntelligenceShader"),
+);
 const prompts = [
   "Explore customer priorities for the next BMW 5 Series in Europe.",
   "Prioritize electric driving experience and charging convenience.",
@@ -30,8 +37,7 @@ export default function Home() {
   function update<K extends keyof Scope>(key: K, value: Scope[K]) {
     setScope((s) => {
       const next = { ...s, [key]: value };
-      if (next.vehicle === "F70" && next.powertrain !== "Combustion")
-        next.powertrain = "Combustion";
+      if (next.vehicle === "F70") next.powertrain = "Combustion";
       return next;
     });
   }
@@ -45,171 +51,306 @@ export default function Home() {
       setBusy(false);
     }
   }
+  const selected = vehicles[scope.vehicle];
   return (
-    <div className="home">
+    <div className="home premium-home">
       <header className="home-nav">
-        <a href="/" className="brand">
-          <span className="brand-word">BMW</span>
+        <a href="/" className="brand" aria-label="BMW NEXT home">
+          <img src="/images/bmw-logo.svg" alt="BMW" className="bmw-roundel" />
           <span className="brand-divider" />
           <span className="brand-next">
             NEXT<span className="brand-dot">.</span>
+            <small>PRODUCT INTELLIGENCE</small>
           </span>
         </a>
-        <div className="home-nav-center">PRODUCT INTELLIGENCE</div>
-        <div className="home-nav-right">
-          <Badge>HACKATHON CONCEPT</Badge>
-          <button
-            className="profile"
-            aria-label="About this prototype"
-            onClick={() => setAbout(true)}
-          >
-            PM
-          </button>
-        </div>
+        <nav className="home-links" aria-label="Homepage navigation">
+          <a href="#model-selection">The vehicles</a>
+          <a href="#intelligence">The intelligence</a>
+          <a href="#analysis-setup">
+            Your next move <ArrowUpRight size={14} />
+          </a>
+        </nav>
+        <button className="concept-tag" onClick={() => setAbout(true)}>
+          <span /> HACKATHON CONCEPT
+        </button>
       </header>
       <main className="home-main">
-        <div className="hero-copy">
-          <div className="eyebrow">
-            <span className="blue-line" /> ENGINEERING THE NEXT CHAPTER
-          </div>
-          <h1>
-            The next generation.
-            <br />
-            <span>Informed by intelligence.</span>
-          </h1>
-          <p>From customer voices to confident product decisions.</p>
-        </div>
-        <section className="hero-stage" aria-label="Vehicle studio">
-          <span className="hero-watermark" aria-hidden="true">
-            THE{" "}
-            {scope.vehicle === "F70"
-              ? "1"
-              : scope.vehicle === "G70"
-                ? "7"
-                : "5"}
-          </span>
-          <div className="studio-caption">
-            <span>YOUR STARTING POINT</span>
-            <strong>BMW {vehicleNames[scope.vehicle]}</strong>
-            <small>{scope.vehicle} · Next-generation planning</small>
-          </div>
+        <section className="showroom-hero" aria-label="Vehicle studio">
           <Suspense fallback={<Loading label="Opening the vehicle studio…" />}>
-            <VehicleViewer />
+            <VehicleViewer vehicle={scope.vehicle} />
           </Suspense>
-          <div className="studio-index">
-            <span>01 — 03</span>
-            <div />
-            <span>DRIVEN BY EVIDENCE</span>
+          <div className="hero-editorial">
+            <div className="eyebrow">
+              <span className="blue-line" /> THE FUTURE IS A DECISION.
+            </div>
+            <h1>
+              Make the
+              <br />
+              next move<span>matter.</span>
+            </h1>
+            <p>
+              Customer insight. Collective intelligence.
+              <br />
+              The next chapter of BMW, shaped by you.
+            </p>
+            <a href="#analysis-setup" className="button primary">
+              Define what’s next <ArrowRight size={18} />
+            </a>
+          </div>
+          <div className="hero-series" aria-hidden="true">
+            THE <strong key={scope.vehicle}>{selected.series}</strong>
+          </div>
+          <div className="hero-bottom-line">
+            <div>
+              <span>{scope.vehicle} / DESIGN REFERENCE</span>
+              <h2>{selected.name}</h2>
+              <p>{selected.line}</p>
+            </div>
+            <a href="#model-selection">
+              DISCOVER YOUR STARTING POINT <ChevronDown size={16} />
+            </a>
           </div>
         </section>
-        <div className="configuration">
-          <div className="config-row">
-            <label>
-              <span>01 / SERIES</span>
-              <select
-                aria-label="Series"
-                value={scope.vehicle}
-                onChange={(e) => update("vehicle", e.target.value as Vehicle)}
-              >
-                {Object.entries(vehicleNames).map(([id, name]) => (
-                  <option key={id} value={id}>
-                    BMW {name} · {id}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>02 / TARGET MARKET</span>
-              <select
-                aria-label="Market"
-                value={scope.market}
-                onChange={(e) => update("market", e.target.value as Market)}
-              >
-                {["Europe", "United States", "China"].map((m) => (
-                  <option key={m}>{m}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>03 / POWERTRAIN</span>
-              <select
-                aria-label="Powertrain"
-                value={scope.powertrain}
-                onChange={(e) =>
-                  update("powertrain", e.target.value as Powertrain)
-                }
-              >
-                {(scope.vehicle === "F70"
-                  ? ["Combustion"]
-                  : ["Electric", "Plug-in hybrid", "Combustion"]
-                ).map((p) => (
-                  <option key={p}>{p}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>04 / PLANNING HORIZON</span>
-              <select
-                aria-label="Planning horizon"
-                value={scope.horizon}
-                onChange={(e) => update("horizon", Number(e.target.value))}
-              >
-                {[3, 4, 5].map((y) => (
-                  <option value={y} key={y}>
-                    {y} years · {2026 + y}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <section id="model-selection" className="model-selection">
+          <div className="section-intro">
+            <div>
+              <div className="eyebrow">01 / CHOOSE YOUR STARTING POINT</div>
+              <h2>
+                Different characters. <span>One ambition.</span>
+              </h2>
+            </div>
+            <p>Choose a BMW series to frame your next-generation analysis.</p>
           </div>
-          <form
-            className="prompt-row"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setConfirm(true);
-            }}
+          <div
+            className="model-cards"
+            role="group"
+            aria-label="Select a BMW series"
           >
-            <Sparkles size={21} />
-            <input
-              aria-label="Analysis goals"
-              placeholder="What should BMW’s next generation prioritize?"
-              value={scope.prompt}
-              onChange={(e) => update("prompt", e.target.value)}
-            />
-            <Button type="submit">
-              Start Product Analysis <ArrowRight size={18} />
-            </Button>
-          </form>
-          <div className="prompt-suggestions">
-            <span>TRY A DIRECTION</span>
-            {[
-              "Customer priorities",
-              "Electric experience",
-              "High impact, lower effort",
-            ].map((label, i) => (
-              <button key={label} onClick={() => update("prompt", prompts[i])}>
-                {label}
-                <ArrowUpRight size={12} />
+            {(Object.keys(vehicles) as Vehicle[]).map((id) => {
+              const car = vehicles[id];
+              return (
+                <button
+                  key={id}
+                  aria-pressed={scope.vehicle === id}
+                  onClick={() => update("vehicle", id)}
+                  className={`model-card ${scope.vehicle === id ? "selected" : ""}`}
+                >
+                  <div className="model-card-photo">
+                    <img
+                      src={car.image}
+                      alt={`${car.name} ${id}`}
+                      loading="lazy"
+                    />
+                    <span className="model-number">{car.series}</span>
+                    <span className="model-check">
+                      {scope.vehicle === id ? "SELECTED" : "EXPLORE"}
+                    </span>
+                  </div>
+                  <div className="model-card-info">
+                    <div>
+                      <span>
+                        {id} · {car.body}
+                      </span>
+                      <h3>{car.name}</h3>
+                    </div>
+                    <ArrowUpRight size={21} />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+        <section id="analysis-setup" className="analysis-setup">
+          <div className="setup-intro">
+            <div className="eyebrow">02 / SET THE DIRECTION</div>
+            <h2>
+              Big questions.
+              <br />
+              <span>Clearer answers.</span>
+            </h2>
+            <p>
+              Define your market and priorities. Your council connects the
+              signals and brings the trade-offs into focus.
+            </p>
+            <div className="setup-assurance">
+              <ShieldCheck size={18} />
+              <span>
+                AI analyzes and challenges.
+                <br />
+                <strong>You make the decision.</strong>
+              </span>
+            </div>
+          </div>
+          <div className="configuration">
+            <div className="config-heading">
+              <span className="live-dot" /> ANALYSIS BRIEF{" "}
+              <Badge tone="blue">SYNTHETIC DEMO</Badge>
+            </div>
+            <div className="config-row">
+              <label>
+                <span>BMW SERIES</span>
+                <select
+                  aria-label="Series"
+                  value={scope.vehicle}
+                  onChange={(e) => update("vehicle", e.target.value as Vehicle)}
+                >
+                  {Object.entries(vehicleNames).map(([id, name]) => (
+                    <option key={id} value={id}>
+                      BMW {name} · {id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>TARGET MARKET</span>
+                <select
+                  aria-label="Market"
+                  value={scope.market}
+                  onChange={(e) => update("market", e.target.value as Market)}
+                >
+                  {["Europe", "United States", "China"].map((m) => (
+                    <option key={m}>{m}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>POWERTRAIN</span>
+                <select
+                  aria-label="Powertrain"
+                  value={scope.powertrain}
+                  onChange={(e) =>
+                    update("powertrain", e.target.value as Powertrain)
+                  }
+                >
+                  {(scope.vehicle === "F70"
+                    ? ["Combustion"]
+                    : ["Electric", "Plug-in hybrid", "Combustion"]
+                  ).map((p) => (
+                    <option key={p}>{p}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>PLANNING HORIZON</span>
+                <select
+                  aria-label="Planning horizon"
+                  value={scope.horizon}
+                  onChange={(e) => update("horizon", Number(e.target.value))}
+                >
+                  {[3, 4, 5].map((y) => (
+                    <option value={y} key={y}>
+                      {y} years · {2026 + y}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <form
+              className="prompt-row"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setConfirm(true);
+              }}
+            >
+              <label htmlFor="analysis-goals">
+                <Sparkles size={17} /> What should the next generation
+                prioritize?
+              </label>
+              <textarea
+                id="analysis-goals"
+                aria-label="Analysis goals"
+                placeholder="A more intuitive cockpit. A better charging experience. What comes next?"
+                value={scope.prompt}
+                onChange={(e) => update("prompt", e.target.value)}
+              />
+              <div className="prompt-suggestions">
+                {[
+                  "Customer priorities",
+                  "Electric experience",
+                  "High impact, lower effort",
+                ].map((label, i) => (
+                  <button
+                    type="button"
+                    key={label}
+                    onClick={() => update("prompt", prompts[i])}
+                  >
+                    {label}
+                    <ArrowUpRight size={12} />
+                  </button>
+                ))}
+              </div>
+              <Button type="submit">
+                Start Product Analysis <ArrowRight size={18} />
+              </Button>
+            </form>
+            {started && (
+              <button
+                className="text-link resume-workspace"
+                onClick={() => navigate("/overview")}
+              >
+                Resume your existing workspace <ArrowRight size={14} />
               </button>
+            )}
+          </div>
+        </section>
+        <section id="intelligence" className="intelligence-section">
+          <Suspense fallback={null}>
+            <IntelligenceShader />
+          </Suspense>
+          <div className="intelligence-copy">
+            <div className="eyebrow">03 / INTELLIGENCE WITH PERSPECTIVE</div>
+            <h2>
+              More than an answer.
+              <br />
+              <span>A considered direction.</span>
+            </h2>
+            <p>
+              Three independent perspectives. A moderator to connect them. A
+              judge to test the evidence. And you, in control of what happens
+              next.
+            </p>
+          </div>
+          <div className="intelligence-points">
+            {[
+              {
+                icon: Activity,
+                title: "Listen to the signals",
+                text: "Customer voices, market direction and competitive context — together in one place.",
+              },
+              {
+                icon: Layers3,
+                title: "Challenge the obvious",
+                text: "Watch the council compare perspectives, expose uncertainty and refine proposals.",
+              },
+              {
+                icon: ScanLine,
+                title: "Decide with confidence",
+                text: "Compare scenarios, trace every source and approve the direction with a clear rationale.",
+              },
+            ].map(({ icon: Icon, title, text }, i) => (
+              <div key={title}>
+                <span className="intelligence-point-number">0{i + 1}</span>
+                <Icon size={24} />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
             ))}
           </div>
-        </div>
-        <div className="home-bottom">
-          <p>
-            <ShieldCheck size={14} /> AI analyzes. AI challenges.{" "}
-            <strong>Humans decide.</strong>
-          </p>
-          {started ? (
-            <button className="text-link" onClick={() => navigate("/overview")}>
-              Resume your workspace <ArrowRight size={14} />
-            </button>
-          ) : (
-            <span>
-              <Globe2 size={14} /> Munich, 2026{" "}
-              <span className="separator">/</span> Synthetic demo data
-            </span>
-          )}
-        </div>
+        </section>
+        <footer className="home-footer">
+          <a href="/" className="brand">
+            <img src="/images/bmw-logo.svg" alt="BMW" className="bmw-roundel" />
+            <span className="brand-next">NEXT.</span>
+          </a>
+          <span>
+            An independent hackathon concept.
+            <br />
+            Real vehicle references. Synthetic product intelligence.
+          </span>
+          <button className="text-link" onClick={() => setAbout(true)}>
+            About this experience <ArrowUpRight size={14} />
+          </button>
+        </footer>
       </main>
       {confirm && (
         <Modal title="Set the direction" onClose={() => setConfirm(false)}>
@@ -271,9 +412,10 @@ export default function Home() {
             login, or confidential dataset is connected.
           </p>
           <p>
-            The rotatable sedan is a CC0 concept asset from Innerscene, not an
-            accurate BMW vehicle. BMW text is used to identify the challenge; no
-            licensed BMW roundel was supplied.
+            BMW reference photographs and the BMW roundel identify the
+            challenge. The optional 3D viewers show independently created BMW
+            models on Sketchfab. They are visual references, not engineering
+            simulations. This concept is not an official BMW product.
           </p>
         </Modal>
       )}

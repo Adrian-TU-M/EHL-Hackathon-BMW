@@ -23,6 +23,7 @@ import { EvidenceDialog } from "../components/dashboard/EvidenceDialog";
 import { ranked, scoreRequirement } from "../lib/scoring";
 import { vehicleNames } from "../lib/mock-data";
 import type { Topic } from "../lib/types";
+const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 const VehicleViewer = lazy(() => import("../components/vehicle/VehicleViewer"));
 export default function Overview() {
   const { scope, evidence, requirements, weights, council, audit } =
@@ -119,8 +120,8 @@ export default function Overview() {
               </div>
             ))}
             <small className="area-disclaimer">
-              Category navigation · concept geometry does not represent exact
-              BMW locations.
+              Reference vehicle · categories connect to evidence, not exact
+              physical locations.
             </small>
           </div>
         </section>
@@ -129,10 +130,10 @@ export default function Overview() {
             <div className="eyebrow">
               <span className="live-dot" /> INTELLIGENCE, IN DIALOGUE
             </div>
-            <div className="orb-art">
-              <span />
-              <span />
-              <span />
+            <div className="council-preview">
+              <Suspense fallback={<Loading label="Preparing the council…" />}>
+                <CouncilScene council={council} />
+              </Suspense>
             </div>
             <h2>
               Better decisions begin

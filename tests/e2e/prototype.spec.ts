@@ -17,37 +17,51 @@ async function assertFits(page: Page) {
     ),
   ).toBe(true);
 }
-test("3D studio loads, orbits, zooms and resets; setup enters the scoped workspace", async ({
+test("BMW vehicle selection, real model embed and scoped analysis", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
-  await expect(page.locator("canvas")).toBeVisible();
-  await expect(page.locator(".vehicle-viewer > .vehicle-fallback")).toHaveCount(
-    0,
-  );
-  await expect(page.getByText("Preparing the studio…")).toBeHidden();
-  await page.waitForTimeout(1500);
+  await expect(page.locator(".showroom-hero .vehicle-photo")).toBeVisible();
+  expect(
+    await page
+      .locator(".showroom-hero .vehicle-photo")
+      .evaluate(
+        (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+      ),
+  ).toBe(true);
   await page.screenshot({
     path: "test-results/home-desktop.png",
     fullPage: true,
     animations: "disabled",
   });
-  await page.getByRole("button", { name: "Zoom in", exact: true }).click();
-  await page.getByRole("button", { name: "Zoom out", exact: true }).click();
+  await page.getByRole("button", { name: /F70.*Sport hatchback/ }).click();
+  await expect(page.getByLabel("Series", { exact: true })).toHaveValue("F70");
+  await expect(page.getByLabel("Powertrain", { exact: true })).toHaveValue(
+    "Combustion",
+  );
+  await expect(page.locator(".showroom-hero .vehicle-photo")).toHaveAttribute(
+    "src",
+    "/images/bmw-f70.webp",
+  );
   await page
-    .getByRole("button", { name: "Reset vehicle view", exact: true })
+    .getByRole("button", { name: "Explore in 3D", exact: true })
     .click();
-  const box = await page.locator("canvas").boundingBox();
-  if (box) {
-    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5);
-    await page.mouse.down();
-    await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.55, {
-      steps: 12,
-    });
-    await page.mouse.up();
-  }
+  await expect(page.locator(".model-embed iframe")).toHaveAttribute(
+    "src",
+    /5e5371e856ef4496b0185704b325704a/,
+  );
+  await page
+    .getByRole("button", { name: "Close 3D view", exact: true })
+    .click();
+  await page.getByRole("button", { name: /G70.*Luxury saloon/ }).click();
+  await expect(page.locator(".showroom-hero .vehicle-photo")).toHaveAttribute(
+    "src",
+    "/images/bmw-g70.webp",
+  );
+  await page.getByRole("button", { name: /G60.*Executive saloon/ }).click();
+  await page.getByLabel("Powertrain", { exact: true }).selectOption("Electric");
   await page.getByLabel("Market", { exact: true }).selectOption("China");
   await page
     .getByRole("button", { name: "High impact, lower effort", exact: true })
@@ -61,6 +75,9 @@ test("3D studio loads, orbits, zooms and resets; setup enters the scoped workspa
     page.getByRole("heading", { name: "A clearer view of what’s next." }),
   ).toBeVisible();
   await expect(page.locator(".context-label")).toContainText("China");
+  await expect(page.locator(".vehicle-panel .vehicle-photo")).toBeVisible();
+  await expect(page.locator(".council-preview canvas")).toBeVisible();
+  await page.waitForTimeout(1200);
   await page.screenshot({
     path: "test-results/overview-desktop.png",
     fullPage: true,
@@ -95,6 +112,7 @@ test("specialist pages filter actual fixture records and disclose sources", asyn
     .click();
   await page.getByLabel("Future demand sensitivity").fill("20");
   await expect(page.locator(".scenario-adjustment")).toContainText("+20%");
+  await page.waitForTimeout(1200);
   await page.screenshot({
     path: "test-results/market-desktop.png",
     fullPage: true,

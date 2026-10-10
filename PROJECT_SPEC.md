@@ -722,6 +722,7 @@ The project must be modular so teammates can work in parallel.
 Recommended ownership areas:
 
 **Frontend / 3D UX**
+
 - Application shell
 - Hero vehicle
 - Agent avatars
@@ -729,6 +730,7 @@ Recommended ownership areas:
 - Charts and dashboards
 
 **Data Engineering / Retrieval**
+
 - Data ingestion
 - Cleaning and deduplication
 - Source tracking
@@ -736,6 +738,7 @@ Recommended ownership areas:
 - Indexing
 
 **AI Agents / Orchestration**
+
 - Three specialist agents
 - Moderator
 - Judge
@@ -743,6 +746,7 @@ Recommended ownership areas:
 - Evidence validation
 
 **Product Logic / Backend**
+
 - Requirement records
 - Scoring
 - Scenarios
@@ -1018,12 +1022,14 @@ Visual inspiration:
 A flowing blue holographic figure or sculpture with soft light waves, organic movement, and subtle voice-like pulses.
 
 Appearance:
+
 - BMW blue
 - Soft luminous elements
 - Organic shapes
 - Refined glass-like materials
 
 Animation:
+
 - Gentle breathing/pulsing
 - Wave-like motion when speaking
 - Subtle energy increase when presenting evidence
@@ -1035,12 +1041,14 @@ Visual inspiration:
 A futuristic abstract entity composed of orbiting arcs, fluid ribbons, or shifting geometric structures.
 
 Appearance:
+
 - Midnight blue
 - Cyan-blue highlights
 - Metallic or glass surfaces
 - Dynamic orbital elements
 
 Animation:
+
 - Rotating rings
 - Shifting data-like patterns
 - Faster controlled movement while speaking
@@ -1052,12 +1060,14 @@ Visual inspiration:
 A sleek reflective geometric sculpture, crystalline prism, or angular chrome-like AI entity.
 
 Appearance:
+
 - Silver
 - Graphite
 - Steel-blue accents
 - Sharp, precise geometry
 
 Animation:
+
 - Rotating geometric components
 - Controlled reflective pulses
 - Precise movements during challenges
@@ -1067,11 +1077,13 @@ Animation:
 A smaller, elegant, neutral holographic or geometric figure positioned centrally.
 
 Appearance:
+
 - White/silver
 - Restrained BMW blue accents
 - Clean circular/ring structure
 
 Animation:
+
 - Activates when introducing stages
 - Directs attention between agents
 - Uses subtle visual transitions between debate rounds
@@ -1081,11 +1093,13 @@ Animation:
 A visually distinguished, elegant abstract entity.
 
 Appearance:
+
 - Dark metallic graphite
 - Blue-white luminous core
 - Symmetrical, balanced geometry
 
 Animation:
+
 - Quiet and stable while evaluating
 - Controlled transformation when presenting assessments
 - Subtle illumination changes when flagging assumptions or conflicts
@@ -1161,6 +1175,7 @@ Topic → Perspectives → Challenge → Assessment → Revision → Proposal �
 Animate the relevant stage.
 
 When an agent is speaking:
+
 - Highlight its avatar.
 - Show a concise text statement.
 - Display its evidence.
@@ -1453,7 +1468,6 @@ Detailed evidence, transcripts, and model explanations should be expandable.
 
 ---
 
-
 ---
 
 # Implementation Design and Team Interfaces
@@ -1512,20 +1526,20 @@ flowchart LR
 
 The initial application uses a local-first Vite React TypeScript SPA. This is an intentional lightweight alternative to the recommended Next.js stack because the prototype needs no server rendering. React Three Fiber, Three.js and Drei provide the vehicle viewer and agent sculptures. Recharts handles interactive charts, Zustand owns serializable state, and jsPDF generates an actual downloadable PDF. CSS design tokens and a small reusable UI layer keep the visual system consistent without importing a large component catalog. Routes use React Router; static hosting must rewrite non-asset URLs to index.html.
 
-The application uses one visible 3D canvas at a time, capped device pixel ratio, suspended animation when hidden, reduced-motion support, and a 2D fallback. Approved GLB assets can replace a clearly identified conceptual procedural vehicle. No generated shape is represented as an accurate BMW. A BMW roundel is omitted until a legitimate supplied or appropriately licensed asset is available; text branding identifies the concept.
+The revised application uses genuine BMW photography and series-specific public Sketchfab 3D embeds for vehicle reference views. Meshes have not been extracted from non-downloadable models. The council uses one React Three Fiber canvas, capped pixel ratio, offscreen/hidden pause and reduced-motion support. The real BMW 2020 roundel is sourced through Wikimedia Commons. Product images are BMW copyrighted reference media, not commercially cleared assets. No visual is represented as verified CAD or a driving/engineering simulation. Full sources and restrictions are recorded in ASSETS.md.
 
 ## Entity contracts
 
-| Entity | Key fields and invariants |
-|---|---|
-| AnalysisScope | vehicle, market, powertrain, planningHorizon, prompt, confirmedAt; a session freezes its scope |
-| Evidence | id, domain, source title, source location, publication date, vehicle/market/powertrain, passage, category, type, provenance, quantitative metadata, exclusion reason |
-| Finding | id, statement, topic, evidenceIds, uncertainty; identifies distinct records and observations |
-| Requirement | id, scope, topic, description, findingIds, evidenceIds, criterion values, priority rationale, evidence strength, assumptions, uncertainty, impact, risk, effort, alternatives, status, version, history |
-| CouncilEvent | event ID, sequence, stage, actor, visible statement, evidenceIds, assumptions, timestamp; never hidden model reasoning |
-| Decision | requirementId, expectedVersion, action, rationale, actor, timestamp; approval is specific to a version |
-| AuditEvent | id, ISO timestamp, actor, action, requirementId/version, before, after, evidenceIds, rationale |
-| Scenario | id, label, weights, assumptions; deterministic sensitivity exercise, not a sales forecast |
+| Entity        | Key fields and invariants                                                                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AnalysisScope | vehicle, market, powertrain, planningHorizon, prompt, confirmedAt; a session freezes its scope                                                                                                          |
+| Evidence      | id, domain, source title, source location, publication date, vehicle/market/powertrain, passage, category, type, provenance, quantitative metadata, exclusion reason                                    |
+| Finding       | id, statement, topic, evidenceIds, uncertainty; identifies distinct records and observations                                                                                                            |
+| Requirement   | id, scope, topic, description, findingIds, evidenceIds, criterion values, priority rationale, evidence strength, assumptions, uncertainty, impact, risk, effort, alternatives, status, version, history |
+| CouncilEvent  | event ID, sequence, stage, actor, visible statement, evidenceIds, assumptions, timestamp; never hidden model reasoning                                                                                  |
+| Decision      | requirementId, expectedVersion, action, rationale, actor, timestamp; approval is specific to a version                                                                                                  |
+| AuditEvent    | id, ISO timestamp, actor, action, requirementId/version, before, after, evidenceIds, rationale                                                                                                          |
+| Scenario      | id, label, weights, assumptions; deterministic sensitivity exercise, not a sales forecast                                                                                                               |
 
 Example evidence envelope:
 
@@ -1533,7 +1547,7 @@ Example evidence envelope:
 interface QuantitativeClaim {
   numerator: number;
   denominator: number;
-  unit: 'unique-records' | 'unique-customers' | 'study-responses' | 'vehicles';
+  unit: "unique-records" | "unique-customers" | "study-responses" | "vehicles";
   sourceId: string;
   filters: Record<string, string>;
   market: string;
@@ -1545,16 +1559,16 @@ interface QuantitativeClaim {
 
 ## Integration responsibilities
 
-| Team module | Integration point | Production responsibility |
-|---|---|---|
-| Data engineering | lib/types, lib/api | Ingest provided XLSX/PDF privately; deduplicate classification rows using source IDs; retain lineage and permissions |
-| Customer RAG | IntelligenceService.listEvidence | Enforce customer-domain retrieval with backend credentials and authorization |
-| Market RAG | IntelligenceService.listEvidence | Distinguish 2024/2025 observations from supplied 2030 future figures; retain dates and units |
-| Competitor RAG | IntelligenceService.listEvidence | Verify model, trim, market, availability, date and source URL; no unsupported cross-market comparisons |
-| Agent orchestration | IntelligenceService.streamCouncil | Emit ordered typed events; enforce one challenge round, optional single clarification, duration/token limits, cancellation |
-| Product backend | requirement read/write and decision methods | Optimistic concurrency, immutable version approval, transactional audit writes and idempotency |
-| Frontend | components, pages, store | Rendering, navigation, filters, evidence drilldowns, deliberate human review, accessible 3D controls |
-| Reporting | lib/export | Render one consistent snapshot with current scope, scores, evidence exclusions, scenarios and audit |
+| Team module         | Integration point                           | Production responsibility                                                                                                  |
+| ------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Data engineering    | lib/types, lib/api                          | Ingest provided XLSX/PDF privately; deduplicate classification rows using source IDs; retain lineage and permissions       |
+| Customer RAG        | IntelligenceService.listEvidence            | Enforce customer-domain retrieval with backend credentials and authorization                                               |
+| Market RAG          | IntelligenceService.listEvidence            | Distinguish 2024/2025 observations from supplied 2030 future figures; retain dates and units                               |
+| Competitor RAG      | IntelligenceService.listEvidence            | Verify model, trim, market, availability, date and source URL; no unsupported cross-market comparisons                     |
+| Agent orchestration | IntelligenceService.streamCouncil           | Emit ordered typed events; enforce one challenge round, optional single clarification, duration/token limits, cancellation |
+| Product backend     | requirement read/write and decision methods | Optimistic concurrency, immutable version approval, transactional audit writes and idempotency                             |
+| Frontend            | components, pages, store                    | Rendering, navigation, filters, evidence drilldowns, deliberate human review, accessible 3D controls                       |
+| Reporting           | lib/export                                  | Render one consistent snapshot with current scope, scores, evidence exclusions, scenarios and audit                        |
 
 Suggested HTTP mapping: GET /analyses/:id/evidence; GET /analyses/:id/requirements; POST /analyses/:id/councils; GET /councils/:id/events (SSE); POST /councils/:id/control; PATCH /requirements/:id with expectedVersion; POST /requirements/:id/decisions; POST /evidence/:id/exclusions; GET /analyses/:id/audit. Backend errors must distinguish unavailable data, access denied, version conflict, timeout and validation errors. A disconnect must not silently repeat a decision or council stage.
 
@@ -1615,3 +1629,11 @@ Inspect 21st.dev for inspiration and document any adopted code with the exact li
 ## Collaboration and completion criteria
 
 Use an understandable modular folder structure, typed contracts and a setup README. Keep presentation, fixtures, API adapters, scoring, orchestration, auditing and persistence separate. Do not commit or push unless explicitly instructed. MVP deliverables are this specification, the premium local frontend, the five agent entities, bounded council workflow, all major pages, a real PDF exporter, and honest limitations. No real AI inference, verified market forecast, production security, or accurate BMW model is implied by completing the mock-driven prototype.
+
+## October 2026 visual revision requested by the user
+
+The user's later request supersedes the original white/minimal visual direction. The implemented direction is a dark BMW-inspired automotive studio with authentic series imagery, a substantial editorial hero, responsive series cards and a focused analysis brief. All seven workspace routes share the same midnight-blue system and retain the exact journey order: Overview → Customer Intelligence → Market Trends → Competitor Intelligence → Agent Council → Decisions & Scenarios → Audit Trail. Numbered navigation, progress segments and next-step links make that order visible.
+
+Agent identities are redesigned as five distinct animated metal sculptures with original GLSL surfaces and labels anchored to their 3D positions. The actual Paper Mesh Gradient shader indexed on 21st.dev is adapted under Apache-2.0, with license and notices retained. The initial unbranded sedan is removed. Real BMW series reference photography and community-created BMW model embeds replace it. A user can inspect the exterior, but validated driving physics, performance predictions and exact engineering geometry remain unimplemented rather than being implied by the word simulation.
+
+All data, decisions, scoring, review/version logic, council stage controls and PDF export remain the local demo described above. Real BMW reference imagery does not turn synthetic findings into real research. No new live AI or backend has been introduced by the visual redesign.

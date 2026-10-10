@@ -36,7 +36,7 @@ For static hosting, serve `dist/` and rewrite non-file routes to `index.html`. N
 ## Demo walkthrough
 
 1. Select F70 / G60 / G70, market, available demo powertrain, a 3–5-year horizon and an optional goal. Confirm the scope. F70 currently offers combustion in the demo; other derivative/market availability is an integration question.
-2. Use Overview's category controls to explore requirements and their sources. The concept sedan supports mouse/touch orbit, zoom, auto-rotation and reset. With viewer focus, arrow keys orbit and +/- zoom.
+2. Explore genuine BMW reference photography for each series. Choose “Explore in 3D” to open its corresponding community-created BMW model on Sketchfab, with drag-to-orbit and scroll-to-zoom. Close the viewer to return to photography. Use Overview's category controls to connect requirements with sources. These visual references are not engineering or driving simulations.
 3. Explore customer feedback search and filters, synthetic satisfaction samples, market sensitivity controls and hypothetical competitor comparisons. Click sources for passages, dates, source location, calculation inputs and limitations.
 4. Start the council. Its fixed sequence has three perspectives, one challenge round, one clarification, an assessment, proposal and PM review. Pause, resume, interrupt, challenge or expand the discussion. The Avatars studio previews the shared visual states.
 5. Compare scenario presets and adjust weights. Review a requirement with a rationale: approve, reject, edit, challenge, defer, request evidence or reopen. Editing creates a new version and clears prior approval. Excluding evidence reopens linked requirements.
@@ -49,7 +49,7 @@ The demo initializes provisional requirements so all pages can be explored immed
 ```text
 src/
   components/
-    vehicle/        GLB viewer, studio lighting, controls and static fallback
+    vehicle/        BMW photography and on-demand series-specific Sketchfab viewers
     agents/         Five procedural sculptures and typed animation states
     council/        One scene containing all five entities
     dashboard/      Navigation and source explorer
@@ -72,26 +72,28 @@ src/
 - **Agent teammates:** implement the `IntelligenceService` streaming contract. `CouncilEvent` represents publishable discussion output, not private chain-of-thought. Backend orchestration must enforce the stage sequence, limits, cancellation and retrieval-domain authorization. The mock currently buffers its finite event list before timed playback; production SSE must be consumed incrementally with reconnect/idempotency handling.
 - **Backend teammates:** implement authenticated analysis/requirement/evidence persistence with optimistic version checks and transactional append-only audit writes. The extended production service contract documents the required operations. Do not rely on client-side role filters to restrict agent retrieval.
 - **Frontend teammates:** use `useAppStore` selectors and the shared domain types. Keep calculations in `lib/scoring`, workflow transitions in `lib/council`, and components focused on rendering/interactions.
-- **3D teammates:** supply approved model assets to `VehicleViewer.modelUrl`, set the correct orientation and scale, then add spatial hotspots in verified coordinates. Asset and design provenance is in [ASSETS.md](ASSETS.md).
+- **3D teammates:** `lib/vehicles.ts` maps each series to its reference photograph and public Sketchfab model. Replace the embed with approved local GLBs when exact model assets are available. Accurate spatial hotspots and engineering simulation require separately validated geometry and models. Asset provenance and rights limits are in [ASSETS.md](ASSETS.md).
 
 Suggested HTTP/SSE routes are documented in PROJECT_SPEC.md. Keep the backend technology interchangeable; FastAPI, a relational store and domain-specific retrieval are planned interfaces, not installed services.
 
 ## What is real and what is simulated
 
-| Working now                                                      | Current limit / next integration                                                                                     |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Responsive routes, accessible dialogs and keyboard controls      | No authentication or server deployment                                                                               |
-| PBR GLB studio with orbit/zoom/reset and reduced-motion behavior | CC0 unbranded concept sedan; **not an accurate BMW**. Selection changes analysis scope, not the placeholder geometry |
-| Five animated procedural agent entities                          | No voice or live model inference; hidden/offscreen vehicle animation is paused                                       |
-| Deterministic bounded council with pause/resume and audit        | Scripted statements; challenges are retained but do not produce dynamic responses                                    |
-| Feedback drilldowns and explicit study sample calculations       | All passages, study ratings, market curves and competitor patterns are synthetic                                     |
-| Deterministic scoring and scenario comparison                    | Rubric ratings, impact, risk and effort need real validation; no ROI or sales uplift is claimed                      |
-| Human decisions, requirement versions and local audit            | Versioned browser localStorage only; not shared or tamper-proof backend persistence                                  |
-| Actual downloadable PDF with pagination                          | Uses built-in Helvetica; extended writing systems need an embedded Unicode font in production                        |
+| Working now                                                   | Current limit / next integration                                                                |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Responsive routes, accessible dialogs and keyboard controls   | No authentication or server deployment                                                          |
+| Genuine BMW series imagery and distinct F70/G60/G70 3D embeds | Community model reference views; internet required; no validated engineering/driving simulation |
+| Five animated procedural agent entities                       | No voice or live model inference; hidden/offscreen council animation is paused                  |
+| Deterministic bounded council with pause/resume and audit     | Scripted statements; challenges are retained but do not produce dynamic responses               |
+| Feedback drilldowns and explicit study sample calculations    | All passages, study ratings, market curves and competitor patterns are synthetic                |
+| Deterministic scoring and scenario comparison                 | Rubric ratings, impact, risk and effort need real validation; no ROI or sales uplift is claimed |
+| Human decisions, requirement versions and local audit         | Versioned browser localStorage only; not shared or tamper-proof backend persistence             |
+| Actual downloadable PDF with pagination                       | Uses built-in Helvetica; extended writing systems need an embedded Unicode font in production   |
 
 Evidence strength is separate from priority. Unknown scores remain unknown; known-input weight coverage is visible. Approval is attached to one version. Browser reload pauses any active council for deliberate resumption. Starting a new analysis replaces the previous locally saved demo; export first if you want its report.
 
-Google Fonts is the only optional remote display dependency; system fonts are used if unavailable. Vehicle textures are embedded in the locally bundled GLB, and the lighting has no external HDR dependency. Unsupported WebGL or an asset loading error produces a labelled static fallback. The production bundle lazy-loads 3D, analytics and PDF modules; Three.js remains the largest chunk (about 1.3 MB before gzip), as expected for this interactive prototype.
+BMW photography is bundled locally. Google Fonts uses system fallbacks when offline; optional Sketchfab 3D embeds require internet access and use the provider's own navigation. Close the 3D viewer to return to the reference photograph. The council uses local lighting without an external HDR dependency. The production bundle lazy-loads 3D, analytics and PDF modules; Three.js remains the largest chunk (about 1.2 MB before gzip).
+
+The midnight studio redesign includes the genuine BMW roundel, cinematic series selection, a 21st.dev-listed Paper Mesh Gradient shader (Apache-2.0), five new procedural agent sculptures, numbered navigation in the brief's seven-page order, and next-step links on every stage. Motion honors the system's reduced-motion preference. Photography remains BMW copyrighted reference media; see ASSETS.md before any public commercial release.
 
 ## Verification
 
@@ -102,7 +104,7 @@ The automated suite covers:
 - Bounded stage order, duration cap and pause/interruption behavior.
 - Required rationales, stale-version rejection, edit invalidation and evidence exclusions.
 - A valid multi-page PDF generated from the same application snapshot.
-- Browser orbit/zoom/reset, scope confirmation, source filters, specialist routes, all council controls, review/version/exclusion, scenario weights, reload persistence, audit, PDF download, mobile navigation and deep links.
+- BMW series selection and embed switching, scope confirmation, source filters, specialist routes, all council controls, review/version/exclusion, scenario weights, reload persistence, audit, PDF download, mobile navigation and deep links.
 
 The exported PDF is additionally rendered for visual inspection. Dependency installation after the security updates reports zero known advisories. `npm run build` reports a large Three.js chunk warning; it is documented rather than hidden. There are no configured live AI/backend environment variables to verify.
 

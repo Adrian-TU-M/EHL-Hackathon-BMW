@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import AppShell from "./components/dashboard/AppShell";
 import { Loading } from "./components/ui/Primitives";
 import "./styles.css";
+import "./premium.css";
 const Overview = lazy(() => import("./pages/Overview"));
 const Customer = lazy(() => import("./pages/Customer"));
 const Market = lazy(() => import("./pages/Market"));
