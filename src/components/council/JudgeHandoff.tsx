@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import {
   ConversationProvider,
   useConversation,
@@ -354,7 +354,11 @@ function JudgeConversationSession({
   const [error, setError] = useState("");
   const [inputLevel, setInputLevel] = useState(0);
   const [outputLevel, setOutputLevel] = useState(0);
+  const [voicePaused, setVoicePaused] = useState(false);
+  const voicePausedRef = useRef(false);
   const messages = useAppStore((s) => s.council.discussion);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
   const recordCouncilMessage = useAppStore((s) => s.recordCouncilMessage);
   const {
     status,
@@ -376,6 +380,11 @@ function JudgeConversationSession({
     onMessage: ({ message, role, event_id }) => {
       const text = message.trim();
       if (!text) return;
+      if (channel === "voice" && voicePausedRef.current) return;
+      // Text input is recorded optimistically in sendText so it appears in
+      // the transcript immediately and remains visible even if the SDK does
+      // not echo the user's message through onMessage.
+      if (channel === "text" && role === "user") return;
       recordCouncilMessage({
         id: `el-${run}-${event_id}-${role}`,
         actor: role === "user" ? "PM" : "judge",
@@ -408,8 +417,11 @@ function JudgeConversationSession({
 
   useEffect(() => {
     if (status !== "connected") return;
+    const previousDiscussion = messagesRef.current
+      .map((message) => `${message.actor === "PM" ? "PM" : "Judge"}: ${message.text}`)
+      .join("\n");
     sendContextualUpdate(
-      `The PM has chosen to discuss this council recommendation. Use the following application context. Respond only to a new PM message, once per turn. After answering, stop speaking and wait for the PM; do not ask a follow-up question, check whether they are still there, or speak again just because time has passed. If asked to revise, suggest exact wording in your reply and tell the PM they can apply it with the app's Revise wording action. Never approve or reject anything for the PM. In text mode, reply only in text; do not narrate or read your response aloud.\n\n${context}`,
+      `The PM has chosen to discuss this council recommendation. Use the following application context. Respond only to a new PM message, once per turn. After answering, stop speaking and wait for the PM; do not ask a follow-up question, check whether they are still there, or speak again just because time has passed. If asked to revise, suggest exact wording in your reply and tell the PM they can apply it with the app's Revise wording action. Never approve or reject anything for the PM. In text mode, reply only in text; do not narrate or read your response aloud. Any prior discussion below is historical context only; do not respond to it as a new message.\n\n${context}\n\nPrior PM-Judge discussion:\n${previousDiscussion || "None"}`,
       { contextId: `bmw-next-council-${run}` },
     );
   }, [status, context, run, sendContextualUpdate]);
@@ -423,11 +435,27 @@ function JudgeConversationSession({
 
   function connect() {
     setError("");
+    voicePausedRef.current = false;
+    setVoicePaused(false);
     startSession({
       agentId,
       textOnly: channel === "text",
       connectionType: channel === "text" ? "websocket" : "webrtc",
     });
+  }
+
+  function pauseVoiceConversation() {
+    voicePausedRef.current = true;
+    setVoicePaused(true);
+    setMuted(true);
+    setInputLevel(0);
+    setOutputLevel(0);
+    void endSession();
+  }
+
+  function finishPausedConversation() {
+    voicePausedRef.current = false;
+    setVoicePaused(false);
   }
 
   function sendText(event: FormEvent<HTMLFormElement>) {
@@ -436,6 +464,11 @@ function JudgeConversationSession({
     if (!text || status !== "connected") return;
     sendUserActivity();
     sendUserMessage(text);
+    recordCouncilMessage({
+      id: `pm-text-${run}-${crypto.randomUUID()}`,
+      actor: "PM",
+      text,
+    });
     setInput("");
   }
 
@@ -496,7 +529,21 @@ function JudgeConversationSession({
       </div>
 
       <div className="judge-conversation-controls">
-        {status === "disconnected" ? (
+        {channel === "voice" && voicePaused ? (
+          <>
+            <div className="judge-connection-status">
+              <PauseCircle size={16} /> Voice discussion paused. The Judge will not listen or reply until you resume.
+            </div>
+            <div className="inline-actions">
+              <Button onClick={connect}>
+                <Mic size={14} /> Resume conversation
+              </Button>
+              <Button variant="secondary" onClick={finishPausedConversation}>
+                End session
+              </Button>
+            </div>
+          </>
+        ) : status === "disconnected" ? (
           <>
             <div className="judge-channel-select" role="group" aria-label="Discussion mode">
               <button
@@ -556,9 +603,8 @@ function JudgeConversationSession({
                   </div>
                 </div>
                 <div className="inline-actions">
-                  <Button variant="secondary" onClick={() => setMuted(!isMuted)}>
-                    {isMuted ? <Mic size={14} /> : <MicOff size={14} />}
-                    {isMuted ? "Unmute" : "Mute"}
+                  <Button variant="secondary" onClick={pauseVoiceConversation}>
+                    <PauseCircle size={14} /> Pause conversation
                   </Button>
                   <Button variant="secondary" onClick={() => void endSession()}>
                     End session

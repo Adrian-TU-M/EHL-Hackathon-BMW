@@ -2759,6 +2759,14 @@ textarea::placeholder {
 .inline-actions {
   flex-wrap: wrap;
 }
+.inline-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.8rem;
+}
+.inline-actions > .button {
+  min-height: 46px;
+}
 .judge-handoff-result {
   justify-content: flex-start;
 }
