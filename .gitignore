@@ -11,3 +11,9 @@ output/
 *.tsbuildinfo
 # Never commit raw confidential challenge datasets.
 private-data/
+# Python backend local environments, caches and private generated indexes.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+backend/data/
