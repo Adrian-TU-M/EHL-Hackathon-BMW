@@ -1,5 +1,1 @@
-ok now just push all our work till now and also tell me quickly does this entire work just as git do we need to pull every time or what before we commit our work? how to do? give quick guide
-
----
-
 do my teammates need to clone the repo local copy themselves or connect existing project if I cloned on my laptop?
