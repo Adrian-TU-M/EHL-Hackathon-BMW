@@ -104,6 +104,7 @@ class DemoAIAdapter:
 
 
 class DemoModeratorAdapter:
+    input_mode = "demo"
     async def respond(self, stage: Stage, request: JudgeRequest) -> StageResult:
         from .models import Argument
         if stage not in ("perspectives", "challenge", "revision"):
@@ -119,3 +120,19 @@ class DemoModeratorAdapter:
         ) for agent in agents]
         summary = "One scripted clarification received." if stage == "revision" else "Three scripted perspectives received."
         return StageResult(summary=summary, statements=statements)
+
+
+class ContextModeratorAdapter:
+    """Reviews supplied inputs without impersonating teammate debate agents."""
+    input_mode = "context"
+
+    async def respond(self, stage: Stage, request: JudgeRequest) -> StageResult:
+        if stage == "topic":
+            summary = f"Context review for {request.scope.vehicle} in {request.scope.market}: {request.scope.prompt or 'evaluate current features'}."
+        elif stage == "perspectives":
+            summary = f"Prepared {len(request.arguments)} supplied evidence statements across customer, market and competitor inputs. Teammate debate agents are not connected."
+        elif stage == "revision":
+            summary = "No additional retrieved evidence is available. The Judge will identify remaining gaps for the PM."
+        else:
+            summary = "Review current sources, exclusions, assumptions and PM instructions before evaluating feature trade-offs."
+        return StageResult(summary=summary)

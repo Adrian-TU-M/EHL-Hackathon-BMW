@@ -21,7 +21,7 @@ class JudgeService:
         self.ai = ai
 
     async def assess(self, request: JudgeRequest) -> JudgeAssessment:
-        draft = await asyncio.wait_for(self.ai.evaluate(request), timeout=65)
+        draft = await asyncio.wait_for(self.ai.evaluate(request), timeout=getattr(self.ai, "call_timeout_seconds", 65))
         args = {a.id: a for a in request.arguments}
         evidence = {e.id: e for e in request.evidence}
         features = {f.id: f for f in request.features}
@@ -99,4 +99,5 @@ class JudgeService:
             ranked_feature_ids=[f.feature_id for f in sorted(draft.features,
                 key=lambda f: (-(f.priority if f.priority is not None else -1), f.feature_id))],
             next_action=action, execution=self.ai.execution, input_digest=digest(request),
+            model=getattr(self.ai, "model", None), provider=getattr(self.ai, "provider", None),
         )

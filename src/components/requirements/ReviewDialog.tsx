@@ -7,10 +7,12 @@ export function ReviewDialog({
   requirement,
   onClose,
   proposedDescription,
+  initialStatus,
 }: {
   requirement: Requirement;
   onClose: () => void;
   proposedDescription?: string;
+  initialStatus?: DecisionStatus;
 }) {
   const decide = useAppStore((s) => s.decide);
   const weights = useAppStore((s) => s.weights);
@@ -18,7 +20,7 @@ export function ReviewDialog({
   const judged = judgeCouncil?.request.features.some(f => f.id === requirement.id);
   const reviewedAssessmentId = useRef(judgeCouncil?.assessment?.id);
   const [description, setDescription] = useState(proposedDescription ?? requirement.description);
-  const [status, setStatus] = useState<DecisionStatus>(requirement.status);
+  const [status, setStatus] = useState<DecisionStatus>(initialStatus ?? requirement.status);
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);

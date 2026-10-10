@@ -39,6 +39,8 @@ export interface FeatureAssessment {
   consequential_uncertainty: boolean;
 }
 export interface JudgeAssessment {
+  model?: string | null;
+  provider?: string | null;
   id: string;
   created_at: string;
   arguments: ArgumentAssessment[];
@@ -57,6 +59,7 @@ export interface JudgeAssessment {
   } | null;
 }
 export interface JudgeCouncil {
+  input_mode?: "team" | "context" | "demo";
   id: string;
   analysis_id: string;
   mode: "manual" | "auto";
@@ -76,6 +79,7 @@ export interface JudgeCouncil {
     timestamp: string;
   }[];
   request: {
+    background?: string;
     scope: {
       vehicle: string;
       market: string;
@@ -152,6 +156,7 @@ export function judgeRequest(snapshot: AnalysisSnapshot) {
   const { vehicle, market, powertrain, horizon, prompt } = snapshot.scope;
   return {
     scope: { vehicle, market, powertrain, horizon, prompt },
+    background: snapshot.judgeBackground ?? "",
     features: snapshot.requirements.map(
       ({ id, version, title, description, topic }) => ({
         id,
@@ -161,7 +166,16 @@ export function judgeRequest(snapshot: AnalysisSnapshot) {
         topic,
       }),
     ),
-    arguments: [],
+    arguments: snapshot.requirements.flatMap(feature =>
+      (["customer", "market", "competitor"] as const).flatMap(domain => {
+        const sources = snapshot.evidence.filter(e => feature.evidenceIds.includes(e.id) && e.domain === domain && !e.exclusionReason);
+        return sources.length ? [{
+          id: `input-${feature.id}-v${feature.version}-${domain}`,
+          agent: domain, feature_ids: [feature.id],
+          statement: `Supplied ${domain} evidence for ${feature.title}:\n` + sources.map(e => `${e.source}: ${e.passage}`).join("\n"),
+          evidence_ids: sources.map(e => e.id), assumptions: [],
+        }] : [];
+      })),
     evidence: snapshot.evidence.map((e) => ({
       id: e.id,
       domain: e.domain,
@@ -170,6 +184,7 @@ export function judgeRequest(snapshot: AnalysisSnapshot) {
       published_at: e.publishedAt,
       passage: e.passage,
       provenance: e.provenance,
+      source_url: e.sourceUrl ?? null,
       exclusion_reason: e.exclusionReason ?? null,
       quantitative: e.quantitative ?? null,
     })),
@@ -182,10 +197,11 @@ export const judgeApi = {
     snapshot: AnalysisSnapshot,
     mode: "manual" | "auto",
     signal?: AbortSignal,
+    externalProcessingApproved = false,
   ) =>
     request<JudgeCouncil>(
       `/analyses/${encodeURIComponent(snapshot.scope.confirmedAt ?? "local")}/councils`,
-      { request: judgeRequest(snapshot), mode },
+      { request: { ...judgeRequest(snapshot), external_processing_approved: externalProcessingApproved }, mode },
       signal,
     ),
   control: (

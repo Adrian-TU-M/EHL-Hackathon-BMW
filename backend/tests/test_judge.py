@@ -124,6 +124,9 @@ def test_api_validates_inputs_and_reports_invalid_model():
 def test_unconfigured_adapter_fails_without_demo_fallback(monkeypatch):
     monkeypatch.delenv("JUDGE_DEMO_MODE", raising=False)
     monkeypatch.delenv("JUDGE_MODEL_URL", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("JUDGE_API_KEY", raising=False)
+    monkeypatch.setenv("JUDGE_BASE_URL", "https://api.openai.com/v1")
     client = TestClient(create_app())
     response = client.post("/analyses/test/judge-assessments", json=request_data())
     assert response.status_code == 503

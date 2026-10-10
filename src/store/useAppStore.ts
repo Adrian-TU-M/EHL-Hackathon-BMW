@@ -8,6 +8,7 @@ import type {
   Scope,
   Topic,
   Weights,
+  Evidence,
 } from "../lib/types";
 import { defaultScope } from "../lib/mock-data";
 import { initialCouncil, advanceCouncil } from "../lib/council/machine";
@@ -30,6 +31,8 @@ interface AppStore extends AnalysisSnapshot {
   ) => void;
   tickCouncil: () => void;
   applyJudgeCouncil: (view: JudgeCouncil) => void;
+  setJudgeBackground: (background: string) => void;
+  attachProvidedEvidence: (featureId: string, input: Pick<Evidence, "domain" | "source" | "location" | "publishedAt" | "passage" | "sourceUrl">) => void;
 }
 const storage = createJSONStorage<AppStore>(() => ({
   getItem(name) {
@@ -69,11 +72,39 @@ export const useAppStore = create<AppStore>()(
       weights: scenarios[0].weights,
       council: initialCouncil,
       judgeCouncil: undefined,
+      judgeBackground: "",
+      setJudgeBackground(background) {
+        if (background.length > 20000) throw new Error("Project background must be at most 20,000 characters.");
+        set(state => ({ judgeBackground: background, judgeCouncil: undefined,
+          requirements: state.requirements.map(r => ({ ...r, status: "Pending review", approvedVersion: undefined })),
+          audit: [...state.audit, auditEvent({ actor: "PM", action: "Judge background updated", category: "Evidence", evidenceIds: [], rationale: "A fresh Judge assessment is required for the changed project context." })],
+        }));
+      },
+      attachProvidedEvidence(featureId, input) {
+        const feature = get().requirements.find(r => r.id === featureId);
+        if (!feature) throw new Error("Select a current feature.");
+        for (const field of ["source", "location", "publishedAt", "passage"] as const)
+          if (!input[field].trim()) throw new Error("Source, location, date and passage are required.");
+        if (input.passage.length > 20000) throw new Error("Evidence passages must be at most 20,000 characters.");
+        if (input.sourceUrl && !/^https?:\/\//.test(input.sourceUrl)) throw new Error("Use an HTTP or HTTPS source URL.");
+        const id = `provided-${crypto.randomUUID()}`;
+        const evidence: Evidence = { ...input, id, provenance: "provided", vehicle: feature.vehicle,
+          market: feature.market, powertrain: feature.powertrain, category: feature.topic, type: "Signal" };
+        set(state => ({ judgeCouncil: undefined, evidence: [...state.evidence, evidence],
+          requirements: state.requirements.map(r => r.id !== featureId ? r : { ...r,
+            evidenceIds: [...r.evidenceIds, id], version: r.version + 1, status: "Pending review", approvedVersion: undefined,
+            history: [...r.history, { version: r.version, description: r.description, status: r.status, at: new Date().toISOString(), rationale: "Supporting evidence updated." }],
+          }),
+          audit: [...state.audit, auditEvent({ actor: "PM", action: "Provided evidence attached; feature reopened", category: "Evidence", requirementId: featureId, version: feature.version + 1, evidenceIds: [id], rationale: `Attached ${input.source}; source authenticity still requires verification.` })],
+        }));
+      },
       applyJudgeCouncil(view) {
         view = structuredClone(view);
         set(state => {
           if (view.analysis_id !== (state.scope.confirmedAt ?? "local"))
             throw new Error("This Judge response belongs to an earlier analysis.");
+          if ((view.request.background ?? "") !== (state.judgeBackground ?? ""))
+            throw new Error("Project background changed during evaluation. Start a fresh Judge council.");
           if (state.judgeCouncil?.id === view.id && state.judgeCouncil.revision > view.revision) return state;
           if (!state.judgeCouncil && Object.keys(state.weights).some(key => state.weights[key as keyof Weights] !== view.request.weights[key as keyof Weights]))
             throw new Error("PM priorities changed during evaluation. Start a new Judge council.");

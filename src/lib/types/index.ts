@@ -51,7 +51,8 @@ export interface Evidence {
   source: string;
   location: string;
   publishedAt: string;
-  provenance: "synthetic";
+  provenance: "synthetic" | "provided" | "external";
+  sourceUrl?: string;
   vehicle: Vehicle;
   market: Market;
   powertrain: Powertrain;
@@ -165,6 +166,7 @@ export interface DecisionInput {
   description?: string;
 }
 export interface AnalysisSnapshot {
+  judgeBackground?: string;
   judgeCouncil?: JudgeCouncil;
   scope: Scope;
   requirements: Requirement[];

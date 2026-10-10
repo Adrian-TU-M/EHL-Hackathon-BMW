@@ -4,7 +4,8 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import ValidationError
 import httpx
-from .adapters import HttpAIAdapter, HttpModeratorAdapter, DemoAIAdapter, DemoModeratorAdapter, Unavailable
+from .adapters import HttpAIAdapter, HttpModeratorAdapter, DemoAIAdapter, DemoModeratorAdapter, ContextModeratorAdapter, Unavailable
+from .providers import ModelAIAdapter, ExternalProcessingRequired
 from .models import (JudgeRequest, JudgeAssessment, CouncilCreate, CouncilView,
                      CouncilControl, PMMessage, DecisionInput, ConfirmPriorities)
 from .service import JudgeService
@@ -13,12 +14,18 @@ from .workflow import CouncilService, CouncilRepository, Conflict
 
 def create_app(ai=None, moderator=None, repository=None):
     demo = os.getenv("JUDGE_DEMO_MODE") == "1"
-    judge = JudgeService(ai or (DemoAIAdapter() if demo else HttpAIAdapter()))
-    councils = CouncilService(judge, moderator or (DemoModeratorAdapter() if demo else HttpModeratorAdapter()),
+    selected_ai = DemoAIAdapter() if demo else HttpAIAdapter() if os.getenv("JUDGE_MODEL_URL") else ModelAIAdapter()
+    selected_moderator = DemoModeratorAdapter() if demo else ContextModeratorAdapter() if os.getenv("JUDGE_INPUT_MODE") == "context" else HttpModeratorAdapter()
+    judge = JudgeService(ai or selected_ai)
+    councils = CouncilService(judge, moderator or selected_moderator,
                               repository or CouncilRepository())
     app = FastAPI(title="BMW NEXT Judge", version="0.1.0")
     app.state.judge = judge
     app.state.councils = councils
+
+    @app.exception_handler(ExternalProcessingRequired)
+    async def processing_approval(request, exc):
+        return JSONResponse(status_code=403, content={"detail": str(exc)})
 
     @app.exception_handler(Conflict)
     async def conflict_handler(request, exc):
@@ -47,7 +54,13 @@ def create_app(ai=None, moderator=None, repository=None):
 
     @app.get("/health")
     async def health():
-        return {"execution": judge.ai.execution, "storage": "in-memory, single-process"}
+        readiness = await judge.ai.readiness() if isinstance(judge.ai, ModelAIAdapter) else {}
+        return {"execution": judge.ai.execution, "storage": "in-memory, single-process",
+                **readiness,
+                "model": getattr(judge.ai, "model", None), "provider": getattr(judge.ai, "provider", None),
+                "external_approval_required": isinstance(judge.ai, ModelAIAdapter) and not judge.ai.local,
+                "destination": getattr(judge.ai, "destination", None),
+                "input_mode": getattr(councils.moderator, "input_mode", "team")}
 
     @app.post("/analyses/{analysis_id}/judge-assessments", response_model=JudgeAssessment)
     async def assess(analysis_id: str, body: JudgeRequest):
@@ -55,6 +68,9 @@ def create_app(ai=None, moderator=None, repository=None):
 
     @app.post("/analyses/{analysis_id}/councils", response_model=CouncilView)
     async def create(analysis_id: str, body: CouncilCreate):
+        if isinstance(judge.ai, ModelAIAdapter):
+            judge.ai.check_access(body.request)
+            await judge.ai.ensure_ready()
         return await councils.create(analysis_id, body)
 
     @app.get("/councils/{cid}", response_model=CouncilView)

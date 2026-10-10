@@ -22,7 +22,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev -- --port 5173",
+    command: "npm run dev:frontend -- --port 5173",
     url: "http://127.0.0.1:5173",
     reuseExistingServer: true,
   },

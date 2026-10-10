@@ -14,7 +14,7 @@ whole-council PM follow-ups, and version-specific review endpoints. Agent Counci
 and Decisions & Scenarios include a Judge panel that connects through `/api`.
 
 See [backend/README.md](backend/README.md) for setup, adapter contracts, and testing.
-Your teammates supply the actual AI provider and moderator implementations.
+The Judge defaults to local Qwen through Ollama and supports configurable model servers. Your teammates supply the moderator and retrieval implementations.
 Explicit backend demo mode is available for local integration; live failures never
 fall back to scripts. Backend persistence currently uses single-process memory.
 The existing frontend evidence and scripted council remain synthetic demos.
@@ -31,12 +31,15 @@ Read [PROJECT_SPEC.md](PROJECT_SPEC.md) for the complete product specification, 
 
 Use Node.js 22.12+ (tested with Node 25.7) and npm.
 
+Install [Ollama](https://ollama.com/download), then open its app or run `ollama serve` in another terminal.
+
 ```bash
+ollama pull qwen3:4b-instruct
 npm ci
 npm run dev
 ```
 
-Open the Local URL printed by Vite (normally http://127.0.0.1:5173). No API keys, paid services, database, login, or confidential dataset is needed. The dev server binds to loopback. To share a demo across devices, deliberately configure an appropriate host and access policy.
+Open http://127.0.0.1:5173. The Judge uses local `qwen3:4b-instruct` at `http://127.0.0.1:11434`; no OpenAI key is needed. Change the model/URL in ignored `backend/.env` (see `backend/.env.example`). `dev` sets up Python dependencies in `backend/.venv`, then starts FastAPI and Vite; Ctrl+C stops both. Ollama runs separately. The Judge panel reports if its server or model is missing. Use `dev:demo` only for explicit fixtures. The Judge reads current linked evidence, priorities and project background; PM-supplied passages retain their provenance. Remote model processing requires approval for each new council; loopback Qwen runs locally. Use `dev:full` with your team's AI/moderator gateway environment variables for live execution, or `dev:frontend` for a separately running backend. Python 3.11+ is required. No API keys, paid services, database, login, or confidential dataset is needed for demo mode. The dev server binds to loopback. To share a demo across devices, deliberately configure an appropriate host and access policy.
 
 ```bash
 npm run build       # TypeScript checks and production bundle in dist/

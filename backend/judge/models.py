@@ -64,6 +64,8 @@ class Argument(Model):
 
 class JudgeRequest(Model):
     scope: Scope
+    background: Annotated[str, Field(max_length=20000)] = ""
+    external_processing_approved: bool = False
     features: Annotated[list[Feature], Field(min_length=1, max_length=100)]
     arguments: Annotated[list[Argument], Field(max_length=500)]
     evidence: Annotated[list[Evidence], Field(max_length=1000)]
@@ -150,6 +152,8 @@ class JudgeAssessment(DraftAssessment):
     next_action: Literal["continue", "request_clarification", "pause_for_pm"]
     execution: Literal["live", "demo"]
     input_digest: str
+    model: str | None = None
+    provider: str | None = None
 
 
 class CouncilEvent(Model):
@@ -205,6 +209,7 @@ class CouncilView(Model):
     assessment: JudgeAssessment | None
     events: list[CouncilEvent]
     execution: Literal["live", "demo"]
+    input_mode: Literal["team", "context", "demo"] = "team"
     decisions: list[dict] = Field(default_factory=list)
     processing_seconds: float = 0
 

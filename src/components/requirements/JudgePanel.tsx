@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppStore } from "../../store/useAppStore";
 import { judgeApi, replayJudgeCouncil } from "../../lib/api/judge";
 import type { JudgeCouncil } from "../../lib/api/judge";
 import { Badge, Button } from "../ui/Primitives";
 import { EvidenceDialog } from "../dashboard/EvidenceDialog";
 import { ReviewDialog } from "./ReviewDialog";
+import { JudgeContextForm } from "./JudgeContextForm";
 import { criterionLabels } from "../../lib/scoring";
 import type { Criterion } from "../../lib/types";
 
@@ -16,10 +17,14 @@ export function JudgePanel() {
   const [rationale, setRationale] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [externalApproved, setExternalApproved] = useState(false);
+  const [health, setHealth] = useState<{ execution: string; model?: string; provider?: string; destination?: string; input_mode?: string; model_ready?: boolean | null; model_error?: string | null; external_approval_required?: boolean } | null>(null);
+  useEffect(() => { const controller = new AbortController(); fetch("/api/health", { signal: controller.signal }).then(r => r.ok ? r.json() : null).then(setHealth).catch(() => {}); return () => controller.abort(); }, []);
   const [ids, setIds] = useState<string[] | null>(null);
   const [proposedEdit, setProposedEdit] = useState<{
     id: string;
     description: string;
+    initialStatus?: "Approved" | "Rejected";
   } | null>(null);
   const abort = useRef<AbortController | null>(null);
   const pendingMessage = useRef<{ content: string; id: string } | null>(null);
@@ -51,7 +56,7 @@ export function JudgePanel() {
           <h2>Review the arguments. Choose the features.</h2>
         </div>
         <Badge>
-          {view
+          {health ? health.model_ready === false ? "MODEL NOT READY" : `${health.execution.toUpperCase()} MODEL` : view
             ? `${view.execution.toUpperCase()} BACKEND`
             : "PYTHON / FASTAPI"}
         </Badge>
@@ -60,6 +65,10 @@ export function JudgePanel() {
         The moderator supplies evidence and coordinates the three specialists.
         The Judge assesses their arguments; you approve the final features.
       </p>
+      {health && <p className="small">{health.execution === "live" ? `Configured model: ${health.model ?? "team gateway"}` : "Explicit fixture mode"} · {health.input_mode === "context" ? "Current context review; teammate debate agents are not connected." : "Council inputs"}</p>}
+      {health?.model_error && <p role="status">{health.model_error}</p>}
+      <JudgeContextForm disabled={busy} />
+      {health?.external_approval_required && <label className="field-label judge-external-approval"><input type="checkbox" checked={externalApproved} disabled={busy} onChange={e => setExternalApproved(e.target.checked)} /> <span>Allow the next council's selected context, evidence and PM messages to be sent to {health.provider === "openai" ? "OpenAI" : "the configured model"}{health.destination ? ` (${health.destination})` : ""}.</span></label>}
       <div className="judge-actions">
         <label>
           Next council mode{" "}
@@ -75,11 +84,11 @@ export function JudgePanel() {
         </label>
         <Button
           disabled={busy}
-          onClick={() =>
-            run((signal) =>
-              judgeApi.create(useAppStore.getState(), mode, signal),
-            )
-          }
+          onClick={() => {
+            const approved = externalApproved;
+            setExternalApproved(false);
+            run((signal) => judgeApi.create(useAppStore.getState(), mode, signal, approved));
+          }}
         >
           {view ? "Start new Judge council" : "Start Judge council"}
         </Button>
@@ -109,13 +118,14 @@ export function JudgePanel() {
       </div>
       {!view && (
         <p className="small muted">
-          Requires the FastAPI service and configured team adapters. Backend
-          demo mode is labelled explicitly; failed live requests never fall back
-          to scripted responses.
+          The real Judge evaluates current inputs through the configured model.
+          Use explicit demo mode only when testing fixtures. Failed live requests never fall back to scripts.
         </p>
       )}
       {view && (
         <>
+          {health?.execution === "live" && view.execution === "demo" && <p className="notice amber">This saved council used fixtures. Start a new Judge council for real model analysis.</p>}
+          {assessment?.model && health?.model && assessment.model !== health.model && <p className="notice amber">This assessment used {assessment.model}. Start a new Judge council to evaluate with {health.model}.</p>}
           <p>
             <strong>
               {view.status} · {view.stage} · round {view.round}
@@ -189,6 +199,7 @@ export function JudgePanel() {
           </details>
           {assessment && (
             <>
+              <p className="small">{view.execution.toUpperCase()} ASSESSMENT · {assessment.provider} {assessment.model} · {view.input_mode === "context" ? "Supplied context and evidence" : "Debate assessment"}</p>
               <p className="small">
                 Provisional assessment ·{" "}
                 {new Date(assessment.created_at).toLocaleString()} · evidence
@@ -224,6 +235,11 @@ export function JudgePanel() {
                       {feature.feature_version}
                     </p>
                     <p>{feature.rationale}</p>
+                    <p><strong>PM decision:</strong> {view.decisions?.filter(d => d.feature_id === id && d.version === feature.feature_version && d.assessment_id === assessment.id).at(-1)?.action ?? "Pending review"}</p>
+                    <div className="judge-actions">
+                      <Button disabled={busy || view.status !== "complete"} onClick={() => setProposedEdit({ id, description: original?.description ?? "", initialStatus: "Approved" })}>Approve feature</Button>
+                      <Button variant="secondary" disabled={busy || view.status !== "complete"} onClick={() => setProposedEdit({ id, description: original?.description ?? "", initialStatus: "Rejected" })}>Reject feature</Button>
+                    </div>
                     <details>
                       <summary>
                         Benefits, drawbacks, scoring and alternatives
@@ -432,6 +448,7 @@ export function JudgePanel() {
               (r) => r.id === proposedEdit.id,
             )!}
             proposedDescription={proposedEdit.description}
+            initialStatus={proposedEdit.initialStatus}
             onClose={() => setProposedEdit(null)}
           />
         )}

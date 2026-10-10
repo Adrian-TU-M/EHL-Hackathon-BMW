@@ -82,6 +82,28 @@ describe("Python Judge frontend boundary", () => {
       expectedVersion: 1, expectedAssessmentId: "older-assessment", status: "Approved", rationale: "Reviewed" }))
       .rejects.toThrow("assessment changed");
   });
+  it("synchronizes provided sources and invalidates approvals and old feature snapshots", () => {
+    const view = council();
+    useAppStore.getState().applyJudgeCouncil(view);
+    const feature = useAppStore.getState().requirements[0];
+    useAppStore.setState(state => ({ requirements: state.requirements.map(r => r.id === feature.id ? { ...r, status: "Approved", approvedVersion: r.version } : r) }));
+    useAppStore.getState().attachProvidedEvidence(feature.id, { domain: "customer", source: "Actual study", location: "p. 4", publishedAt: "2026-10-10", passage: "Seven participants could not locate the charging control.", sourceUrl: "https://example.org/study" });
+    const state = useAppStore.getState();
+    expect(state.judgeCouncil).toBeUndefined();
+    expect(state.requirements[0].approvedVersion).toBeUndefined();
+    expect(state.requirements[0].version).toBe(feature.version + 1);
+    const request = judgeRequest(state);
+    const provided = request.evidence.find(e => e.provenance === "provided")!;
+    expect(provided.source_url).toBe("https://example.org/study");
+    expect(request.arguments.find(a => a.feature_ids.includes(feature.id) && a.evidence_ids.includes(provided.id))?.statement).toContain(provided.passage);
+    expect(() => state.applyJudgeCouncil(view)).toThrow("Features changed");
+  });
+  it("rejects an assessment after the project background changes", () => {
+    const view = council();
+    useAppStore.getState().setJudgeBackground("Our product must prioritize one-handed use.");
+    expect(judgeRequest(useAppStore.getState()).background).toContain("one-handed");
+    expect(() => useAppStore.getState().applyJudgeCouncil(view)).toThrow("background changed");
+  });
   it("rejects a stale feature snapshot and an earlier analysis", () => {
     const view = council();
     view.request.features[0].version = 99;

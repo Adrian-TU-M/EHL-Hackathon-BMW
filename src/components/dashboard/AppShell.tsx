@@ -33,6 +33,9 @@ export default function AppShell() {
   const scope = useAppStore((s) => s.scope);
   const status = useAppStore((s) => s.council.status);
   const tick = useAppStore((s) => s.tickCouncil);
+  const hasProvidedSources = useAppStore((s) => s.evidence.some(e => e.provenance !== "synthetic"));
+  const hasSampleSources = useAppStore((s) => s.evidence.some(e => e.provenance === "synthetic"));
+  const sourceLabel = hasProvidedSources ? hasSampleSources ? "Mixed sources" : "Provided sources" : "Sample data";
   const location = useLocation();
   const activeIndex = navigation.findIndex(
     (item) => item.to === location.pathname,
@@ -103,8 +106,8 @@ export default function AppShell() {
           <div className="session-card">
             <span className="session-dot" />
             <div>
-              <strong>Demo environment</strong>
-              <span>Local session · synthetic data</span>
+              <strong>Local workspace</strong>
+              <span>{sourceLabel}</span>
             </div>
           </div>
           <p>
@@ -144,7 +147,7 @@ export default function AppShell() {
             </span>
           </div>
           <div>
-            <Badge tone="blue">DEMO</Badge>
+            <Badge tone="blue">{sourceLabel.toUpperCase()}</Badge>
             <Button
               variant="secondary"
               className="export-button"

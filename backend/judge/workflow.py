@@ -78,7 +78,7 @@ class CouncilService:
 
     async def moderate(self, view):
         response = await self.moderator.respond(view.stage, view.request)
-        if view.stage == "perspectives" and {a.agent for a in response.statements} != {"customer", "market", "competitor"}:
+        if view.stage == "perspectives" and getattr(self.moderator, "input_mode", "team") != "context" and {a.agent for a in response.statements} != {"customer", "market", "competitor"}:
             raise ValueError("Moderator must return all three specialist perspectives")
         if view.stage == "revision" and len(response.statements) > 1:
             raise ValueError("Clarification allows only one targeted specialist response")
@@ -129,7 +129,7 @@ class CouncilService:
             initial = False
             if view.stage == "revision" and (not view.assessment or view.assessment.next_action != "request_clarification"):
                 continue
-            remaining = 120 - view.processing_seconds - (monotonic() - start)
+            remaining = getattr(self.judge.ai, "round_timeout_seconds", 120) - view.processing_seconds - (monotonic() - start)
             if remaining <= 0:
                 raise TimeoutError("Round duration exceeded")
             await asyncio.wait_for(self.perform(view), timeout=remaining)
@@ -155,6 +155,7 @@ class CouncilService:
             id=cid, analysis_id=analysis_id, mode=body.mode, status="running", stage="topic",
             revision=1, round=1, checkpoint=None, request=body.request,
             assessment=None, events=[], execution=self.judge.ai.execution,
+            input_mode=getattr(self.moderator, "input_mode", "team"),
         )
         await self.advance(view, initial=True)
         self.repository.locks[cid] = asyncio.Lock()

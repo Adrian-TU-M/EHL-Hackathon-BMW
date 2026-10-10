@@ -115,7 +115,7 @@ export function createReport(snapshot: AnalysisSnapshot) {
   const ordered = ranked(snapshot.requirements, snapshot.weights);
   const approved = ordered.filter((r) => r.status === "Approved");
   text(
-    `${ordered.length} provisional requirements; ${approved.length} approved demo decisions; ${ordered.filter((r) => r.status === "Pending review").length} awaiting review. ${snapshot.evidence.filter((e) => !e.exclusionReason).length} active synthetic evidence records.`,
+    `${ordered.length} provisional requirements; ${approved.length} approved decisions; ${ordered.filter((r) => r.status === "Pending review").length} awaiting review. ${snapshot.evidence.filter((e) => !e.exclusionReason).length} active evidence records.`,
   );
   text(
     `Leading priorities: ${ordered
@@ -204,7 +204,7 @@ export function createReport(snapshot: AnalysisSnapshot) {
   next("EVIDENCE & SOURCE LINEAGE");
   heading("Evidence register");
   text(
-    "Every passage below is a hand-authored synthetic fixture. IDs identify the demo record, not a real BMW customer. One customer fixture is one distinct record; there are no observed customers, study respondents, or population denominators.",
+    "Each source retains its provenance. Synthetic records are examples, not observed customers. Provided passages were attached by the PM; source authenticity and population denominators still require verification.",
     10,
   );
   for (const e of snapshot.evidence) {
@@ -212,7 +212,7 @@ export function createReport(snapshot: AnalysisSnapshot) {
     label(`${e.id} / ${e.domain} / ${e.category}`);
     text(e.passage, 10);
     text(
-      `Source: ${e.source}. Location: ${e.location}. Fixture date: ${e.publishedAt}. Scope: ${e.vehicle}, ${e.market}, ${e.powertrain}. Provenance: SYNTHETIC.`,
+      `Source: ${e.source}. Location: ${e.location}. Date: ${e.publishedAt}. Scope: ${e.vehicle}, ${e.market}, ${e.powertrain}. Provenance: ${e.provenance.toUpperCase()}.${e.sourceUrl ? " URL: " + e.sourceUrl : ""}`,
       8,
     );
     if (e.exclusionReason)

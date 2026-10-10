@@ -53,11 +53,12 @@ export function EvidenceDialog({
         {item ? (
           <div className="evidence-detail">
             <div className="flex-between">
-              <Badge tone="amber">SYNTHETIC DEMO</Badge>
+              <Badge tone="amber">{item.provenance === "synthetic" ? "SYNTHETIC DEMO" : item.provenance.toUpperCase() + " SOURCE"}</Badge>
               <span className="muted small">{item.publishedAt}</span>
             </div>
             <h3>{item.source}</h3>
             <div className="source-location">{item.location}</div>
+            {item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noreferrer">Open original source</a>}
             <blockquote>“{item.passage}”</blockquote>
             <dl className="metadata-grid">
               <div>
@@ -78,19 +79,19 @@ export function EvidenceDialog({
               </div>
               <div>
                 <dt>Provenance</dt>
-                <dd>Hand-authored demonstration fixture</dd>
+                <dd>{item.provenance === "synthetic" ? "Hand-authored demonstration fixture" : "Supplied source passage; authenticity requires verification"}</dd>
               </div>
               <div>
                 <dt>Observation unit</dt>
                 <dd>
-                  {item.domain === "customer"
+                  {item.provenance !== "synthetic" ? "Supplied source passage" : item.domain === "customer"
                     ? "One synthetic feedback record"
                     : "One hypothetical scenario note"}
                 </dd>
               </div>
               <div>
                 <dt>Population / sample size</dt>
-                <dd>Unknown / no real respondents</dd>
+                <dd>{item.provenance === "synthetic" ? "Unknown / no real respondents" : "Not established by this passage"}</dd>
               </div>
             </dl>
             {item.quantitative && (
