@@ -1,0 +1,30 @@
+ok so this agent is properly done correct?
+
+---
+
+ok now switch to the market trend branch and make a planned workflow
+
+---
+
+check the dataset to see if there is enough data for market trends or not from here
+/Users/shaur/TUM/BMWHack
+
+---
+
+alright so now make the Market Trend agent but also btw does market trends also include what is hot in the Auto Car industry rn or...? just asking? 
+
+also make the Market Trend Agent now and also ofc update its site properly cleanly not oveflow of random info clean organised please and visually stunning okay make big UI changes if u must but make it look incredible and animative and stuff really cool effects also make it work in the Agent Debate site of course too and accurately arguing capabilities in the debate
+
+---
+
+btw it looks wayyy too weirded out and simlpe and vibe coded AI slop the Market page btw u need to revolutionalize it and stop adding too many unecessary sections and make it clear on one subsite the Market one okay? please do so make it clear make it more chique fancy miniamlistic somehow but with super cool laser elements and glows or something no green pls only BMW styles and stuff
+
+but does the agent work properly everywhere it needs to?
+
+---
+
+r u sure these are REAL verified market trends? from the dataset and maybe from more sources online u can add more and scrape and improve the agent bcs isn't market trends also for trending features and stuff make it more rich and accurate and cooler more organised somehow also the UI and sections please
+
+---
+
+what is this is the agent not working or what is going on? quickly fix it make it work quickly ja
