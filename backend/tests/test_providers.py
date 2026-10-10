@@ -75,8 +75,14 @@ def test_generation_schema_is_bounded_to_the_frozen_request():
     assert definitions["FeatureAssessment"]["properties"]["feature_id"]["enum"] == [f.id for f in request.features]
     assert definitions["CriterionAssessment"]["properties"]["argument_ids"]["items"]["enum"] == [a.id for a in request.arguments]
     assert definitions["Citation"]["properties"]["evidence_id"]["enum"] == [e.id for e in request.evidence if not e.exclusion_reason]
-    assert definitions["ArgumentAssessment"]["properties"]["explanation"]["maxLength"] == 600
+    assert definitions["ArgumentAssessment"]["properties"]["explanation"]["maxLength"] == 240
+    assert definitions["ArgumentAssessment"]["properties"]["citations"]["maxItems"] == 1
+    assert definitions["Citation"]["properties"]["quote"]["maxLength"] == 240
+    assert definitions["ArgumentAssessment"]["properties"]["issues"]["items"]["maxLength"] == 160
     assert definitions["FeatureAssessment"]["properties"]["uncertainties"]["maxItems"] == 2
+    assert definitions["FeatureAssessment"]["properties"]["uncertainties"]["items"]["maxLength"] == 200
+    assert definitions["CriterionAssessment"]["properties"]["rationale"]["maxLength"] == 240
+    assert schema["properties"]["clarification_requests"]["maxItems"] == 1
     assert "maxItems" not in assessment_schema()["properties"]["arguments"]
     # Generating a bounded output must not trim source passages or mutate inputs.
     assert request.model_dump(mode="json") == JudgeRequest.model_validate(request_data()).model_dump(mode="json")

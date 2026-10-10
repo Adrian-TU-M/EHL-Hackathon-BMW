@@ -53,15 +53,15 @@ def assessment_schema(request: JudgeRequest | None = None):
             criterion_ids["items"]["enum"] = argument_ids
         evidence_ids = [item.id for item in request.evidence if not item.exclusion_reason]
         citations = definitions["ArgumentAssessment"]["properties"]["citations"]
-        citations["maxItems"] = min(2, len(evidence_ids))
+        citations["maxItems"] = min(1, len(evidence_ids))
         if evidence_ids:
             definitions["Citation"]["properties"]["evidence_id"]["enum"] = evidence_ids
-        definitions["Citation"]["properties"]["quote"]["maxLength"] = 600
+        definitions["Citation"]["properties"]["quote"]["maxLength"] = 240
         for definition, field in (("ArgumentAssessment", "explanation"),
                                   ("CriterionAssessment", "rationale"),
                                   ("FeatureAssessment", "rationale"),
                                   ("PriorityProposal", "rationale")):
-            definitions[definition]["properties"][field]["maxLength"] = 600
+            definitions[definition]["properties"][field]["maxLength"] = 240
         for definition, fields in (
             ("ArgumentAssessment", ("assumptions", "issues")),
             ("FeatureAssessment", ("benefits", "drawbacks", "risks", "assumptions", "uncertainties", "alternatives")),
@@ -69,16 +69,16 @@ def assessment_schema(request: JudgeRequest | None = None):
             for field in fields:
                 node = definitions[definition]["properties"][field]
                 node["maxItems"] = 2
-                node["items"]["maxLength"] = 400
+                node["items"]["maxLength"] = 160 if definition == "ArgumentAssessment" else 200
         for node in definitions["FeatureAssessment"]["properties"]["proposed_description"]["anyOf"]:
             if node.get("type") == "string":
-                node["maxLength"] = 1200
+                node["maxLength"] = 600
         clarification = schema["properties"]["clarification_requests"]
-        clarification["maxItems"] = 3
-        clarification["items"]["maxLength"] = 400
+        clarification["maxItems"] = 1
+        clarification["items"]["maxLength"] = 240
         proposed_constraints = definitions["PriorityProposal"]["properties"]["constraints"]
         proposed_constraints["maxItems"] = 3
-        proposed_constraints["items"]["maxLength"] = 400
+        proposed_constraints["items"]["maxLength"] = 200
     return schema
 
 
@@ -157,10 +157,14 @@ a fixture or a blanket 'not evaluated'. For positive support cite an EXACT quote
 from attached evidence. Each known criterion needs a supported argument linked
 to THAT feature. Give concrete benefits, drawbacks and alternatives with concise
 decision explanations. Leave influence/priority null and coverage 0 for Python.
-Keep each explanation and rationale to one or two concise sentences. Use one
-short exact quotation per supported argument (at most thirty words). Limit each
+Keep each explanation and rationale to one concise sentence (at most 240
+characters). Use one short exact quotation per supported argument (at most thirty
+words and 240 characters); choose the smallest source substring that supports
+the claim. Limit each
 benefits/drawbacks/risks/assumptions/uncertainties/alternatives array to two concise
-items. Do not repeat entire input passages or restate the whole debate.
+items, each at most 200 characters (argument assumptions/issues: 160). Ask at most
+one targeted clarification. Do not repeat entire input passages or restate the
+whole debate.
 """
         if self.validation_error:
             instructions += "\nCorrect the previous output validation error: " + self.validation_error + ". Return a complete new assessment. Use short exact source quotes, never paraphrased quotations."
