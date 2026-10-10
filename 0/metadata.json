@@ -1,0 +1,60 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4M3VYMHJR1XD9FD2Y844CAD",
+  "session_id": "01a1261a-2a92-7960-ad84-d63846639755",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T23:55:33.708821Z",
+  "branch": "main",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "README.md",
+    "backend/moderator/app.py",
+    "backend/moderator/storage.py",
+    "backend/tests/test_moderator_local.py",
+    "src/components/agents/AgentIcons.tsx",
+    "src/components/agents/AgentSculpture.tsx",
+    "src/components/council/CouncilScene.tsx",
+    "src/lib/council/api.ts",
+    "src/pages/ModeratorCouncil.tsx",
+    "src/store/useModeratorStore.ts",
+    "tests/e2e/council-live-layout.spec.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6-astra",
+  "turn_id": "dcd6acfe26c5",
+  "checkpoint_transcript_start": 5408,
+  "transcript_lines_at_start": 5408,
+  "compact_transcript_start": 865,
+  "token_usage": {
+    "input_tokens": 230434,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 7284480,
+    "output_tokens": 21294,
+    "api_call_count": 90,
+    "subagent_tokens_complete": false
+  },
+  "session_metrics": {
+    "turn_count": 29
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T23:55:32.45781Z",
+    "agent_lines": 1817,
+    "agent_removed": 763,
+    "human_added": 565,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 2382,
+    "total_lines_changed": 3145,
+    "agent_percentage": 82.0349761526232,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
