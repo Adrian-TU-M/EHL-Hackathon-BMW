@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import competitorSources from "../../backend/evidence/competitors.json" with { type: "json" };
 async function start(page: Page) {
   await page.goto("/");
   await page
@@ -89,6 +90,26 @@ test("BMW vehicle selection, real model embed and scoped analysis", async ({
 test("specialist pages filter actual fixture records and disclose sources", async ({
   page,
 }) => {
+  await page.route("**/api/competitor/sources", (route) =>
+    route.fulfill({
+      json: {
+        records: competitorSources.map((r) => ({
+          ...r,
+          eligible_for_current_search:
+            r.reference_status === "current_reference",
+        })),
+      },
+    }),
+  );
+  await page.route("**/api/competitor/status", (route) =>
+    route.fulfill({
+      json: {
+        analysis_ready: false,
+        model: "qwen3:8b",
+        ollama_error: "Offline UI test",
+      },
+    }),
+  );
   await start(page);
   await page
     .getByRole("link", { name: "Customer intelligence", exact: true })
@@ -121,14 +142,29 @@ test("specialist pages filter actual fixture records and disclose sources", asyn
   await page
     .getByRole("link", { name: "Competitor intelligence", exact: true })
     .click();
-  await page.getByLabel("Comparator segment").selectOption("Luxury");
   await expect(
-    page.getByRole("heading", { name: "Reference Luxury A" }),
+    page.getByRole("heading", { name: "What could BMW do better?" }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Inspect Displays comparison source" })
-    .click();
-  await expect(page.getByRole("dialog")).toContainText("hypothetical peer");
+  await expect(page.getByLabel("Competitor model")).toHaveValue(
+    "A6 Sportback e-tron",
+  );
+  await page.getByRole("button", { name: "BYD", exact: true }).click();
+  await expect(page.getByLabel("Competitor model")).toHaveValue("SEAL");
+  await expect(page.locator(".cx-comparison")).toContainText("fixed");
+  await expect(page.locator(".cx-bmw")).toContainText("Gap not yet verified");
+  await expect(page.locator(".cx-success")).toContainText(
+    "No attributable percentage",
+  );
+  await page.getByRole("button", { name: "XPENG", exact: true }).click();
+  await expect(page.locator(".cx-comparison")).toContainText("12 minutes");
+  for (const logo of await page.locator(".cx-brand-picker img").all()) {
+    expect(
+      await logo.evaluate(
+        (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+      ),
+    ).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
   await assertFits(page);
 });
 test("council pause, interruption, challenge, bounded stages and PM handoff", async ({
@@ -136,6 +172,7 @@ test("council pause, interruption, challenge, bounded stages and PM handoff", as
 }) => {
   await start(page);
   await page.getByRole("link", { name: "Agent council", exact: true }).click();
+  await page.goto("/council?demo=1");
   await page.clock.install();
   await page
     .getByRole("button", { name: "Start discussion", exact: true })
@@ -280,6 +317,7 @@ test("mobile layout, navigation, deep links and reduced motion", async ({
   await assertFits(page);
   await page.getByRole("button", { name: "Open navigation" }).click();
   await page.getByRole("link", { name: "Agent council", exact: true }).click();
+  await page.goto("/council?demo=1");
   await assertFits(page);
   await page.screenshot({
     path: "test-results/council-mobile.png",

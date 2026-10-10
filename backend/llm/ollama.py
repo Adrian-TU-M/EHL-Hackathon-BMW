@@ -17,6 +17,7 @@ class OllamaClient:
         *,
         tools: list[dict[str, Any]] | None = None,
         output_schema: dict[str, Any] | None = None,
+        max_tokens: int = 4096,
     ) -> dict[str, Any]:
         """Return Ollama's response; the agent must execute allowed tools itself.
 
@@ -28,7 +29,7 @@ class OllamaClient:
             "messages": messages,
             "stream": False,
             "think": False,
-            "options": {"temperature": 0.2, "num_predict": 2048},
+            "options": {"temperature": 0.2, "num_predict": max_tokens, "num_ctx": 16384},
         }
         if tools:
             payload["tools"] = tools

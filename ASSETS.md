@@ -62,3 +62,31 @@ The five agent identities are original procedural geometry: fluid chrome knot, h
 ## Data
 
 All feedback, study samples, trend curves, competitor comparisons and council statements remain synthetic. Vehicle imagery is real; product intelligence is a clearly identified demo. No confidential BMW datasets, private source documents, credentials or personal information are included.
+
+## Competitor intelligence brand assets
+
+Added 10 October 2026. These genuine brand marks identify the subjects of independent hackathon research; they do not imply endorsement. Mercedes-Benz and BYD were downloaded directly from assets referenced by their official websites. Tesla denied direct downloads; its Tesla-authored logo is sourced through Wikimedia Commons. Files are stored locally to avoid remote image dependencies.
+
+| Local file | Exact asset source | Provenance |
+| --- | --- | --- |
+| `public/images/competitors/mercedes.svg` | https://assets.oneweb.mercedes-benz.com/plugin/hp-assets/latest/images/brands/mercedes-benz/logo.svg | Official UK EQS page header asset |
+| `public/images/competitors/byd.png` | https://www.byd.com/material/domestic-official/footer/footer-logo-white.png | Official BYD UK footer asset |
+| `public/images/competitors/tesla.svg` | https://upload.wikimedia.org/wikipedia/commons/b/bd/Tesla_Motors.svg | https://commons.wikimedia.org/wiki/File:Tesla_Motors.svg credits Tesla as author/source; PD-textlogo, trademark restrictions apply |
+
+The competitor page fetches the public curated catalog through `/api/competitor/sources`.
+It does not bundle private BMW files or saved runs. The backend checks current-reference
+eligibility. Brand, model, market and powertrain filtering is explicit; missing data
+has an empty state. Benefits and trade-offs come from a persisted live Qwen run and
+remain hypotheses. No feature-attributable success percentage or verified BMW gap
+is inferred from these source summaries.
+
+### Expanded brand picker (10 October 2026)
+
+Additional unmodified original files from the brands' official pages:
+
+- Audi: `public/images/competitors/audi.svg` — https://static.audi.com/assets/images/frontend/Audi_Rings_wh-RGB-5SRAGCO4.svg (referenced in the Audi Media Center stylesheet).
+- Volkswagen: `public/images/competitors/volkswagen.png` — https://www.volkswagen.co.uk/etc.clientlibs/clientlibs/vwa-ngw18/ngw18-frontend/apps/resources/statics/img/vw-logo-2x.png (official UK model-page metadata).
+- NIO: `public/images/competitors/nio.svg` — https://www.nio.com/cdn-static/mynio/nextjs/images/icons/nio-logo-white.svg (official website header).
+- XPENG: `public/images/competitors/xpeng.svg` — https://a-cdn.xpeng.com//website/_next/static/media/logo.37ed1b9a.svg (official France website header; CSS inverts the monochrome mark for dark-background contrast).
+
+The revised page fetches its source catalog from the backend instead of bundling it. Live research and council results are explicitly distinct from the remaining platform demo modules.

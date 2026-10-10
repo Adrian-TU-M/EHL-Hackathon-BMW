@@ -38,6 +38,10 @@ export default function AppShell() {
     (item) => item.to === location.pathname,
   );
   const nextPage = navigation[activeIndex + 1];
+  const liveWorkspace =
+    location.pathname === "/competitor" ||
+    (location.pathname === "/council" &&
+      !new URLSearchParams(location.search).has("demo"));
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState("");
@@ -103,8 +107,14 @@ export default function AppShell() {
           <div className="session-card">
             <span className="session-dot" />
             <div>
-              <strong>Demo environment</strong>
-              <span>Local session · synthetic data</span>
+              <strong>
+                {liveWorkspace ? "Local agent workspace" : "Demo environment"}
+              </strong>
+              <span>
+                {liveWorkspace
+                  ? "Official references · Qwen research"
+                  : "Local session · synthetic data"}
+              </span>
             </div>
           </div>
           <p>
@@ -144,11 +154,16 @@ export default function AppShell() {
             </span>
           </div>
           <div>
-            <Badge tone="blue">DEMO</Badge>
+            <Badge tone="blue">{liveWorkspace ? "AGENTS" : "DEMO"}</Badge>
             <Button
               variant="secondary"
               className="export-button"
-              disabled={exporting}
+              disabled={exporting || liveWorkspace}
+              title={
+                liveWorkspace
+                  ? "Live results are saved on this laptop. Report export currently covers demo analyses only."
+                  : undefined
+              }
               onClick={exportReport}
             >
               <Download size={15} />
@@ -205,7 +220,11 @@ export default function AppShell() {
             BMW NEXT <span className="muted">/</span> Product intelligence, with
             perspective.
           </span>
-          <span>Synthetic demo · Human approval required</span>
+          <span>
+            {liveWorkspace
+              ? "Local research · Human approval required"
+              : "Synthetic demo · Human approval required"}
+          </span>
         </footer>
       </div>
       {toast && (

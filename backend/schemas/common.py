@@ -16,7 +16,7 @@ class Scope(Contract):
     market: Literal["Europe", "United States", "China"]
     powertrain: Literal["Electric", "Plug-in hybrid", "Combustion"]
     horizon: int = Field(ge=3, le=5)
-    topic: NonEmpty
+    topic: NonEmpty = Field(max_length=200)
 
 
 class ProposalReference(Contract):

@@ -12,6 +12,9 @@ class Settings:
     ollama_timeout_seconds: float
     data_dir: Path
     frontend_origin: str
+    evidence_index: Path = Path("backend/data/evidence.json")
+    runs_dir: Path = Path("backend/data/runs")
+    agent_timeout_seconds: float = 360
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -21,4 +24,7 @@ class Settings:
             ollama_timeout_seconds=float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "120")),
             data_dir=Path(os.getenv("BMW_DATA_DIR", "private-data")),
             frontend_origin=os.getenv("FRONTEND_ORIGIN", "http://127.0.0.1:5173"),
+            evidence_index=Path(os.getenv("EVIDENCE_INDEX", "backend/data/evidence.json")),
+            runs_dir=Path(os.getenv("AGENT_RUNS_DIR", "backend/data/runs")),
+            agent_timeout_seconds=float(os.getenv("AGENT_TIMEOUT_SECONDS", "360")),
         )

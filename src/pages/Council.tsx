@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Play,
   Pause,
@@ -20,7 +20,12 @@ import { agentMeta } from "../components/agents/AgentSculpture";
 import { stages } from "../lib/council/machine";
 import type { AgentState, Topic } from "../lib/types";
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
+import LiveCouncil from "./LiveCouncil";
 export default function Council() {
+  const [params] = useSearchParams();
+  return params.get("demo") === "1" ? <DemoCouncil /> : <LiveCouncil />;
+}
+function DemoCouncil() {
   const {
     council,
     requirements,
