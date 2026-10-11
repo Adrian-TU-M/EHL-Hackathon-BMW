@@ -108,7 +108,15 @@ export interface JudgeAssessment {
   summary: string;
   unresolved_issues: string[];
   scoring_inputs: Record<string, unknown>[];
-  proposals: Record<string, unknown>[];
+  proposals: {
+    id: string;
+    version: number;
+    title: string;
+    description: string;
+    evidence_ids: string[];
+    claim_ids: string[];
+    assumption_ids: string[];
+  }[];
   native_assessment?: import("../api/judge").JudgeAssessment | null;
   native_request?: Record<string, unknown> | null;
 }
@@ -163,6 +171,14 @@ export interface TopicOutcome {
     at: string;
   }[];
   history: Record<string, unknown>[];
+  proposal_decisions: {
+    proposal_id: string;
+    proposal_version: number;
+    outcome_version: number;
+    status: string;
+    rationale: string;
+    at: string;
+  }[];
 }
 export interface ModeratorSession {
   id: string;

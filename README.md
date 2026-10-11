@@ -14,7 +14,7 @@ Read [PROJECT_SPEC.md](PROJECT_SPEC.md) for the complete product specification, 
 
 Customer, Market Trends, Competitor, Moderator and Judge now share **Ollama `qwen3:8b`** on one laptop. The Customer page uses supplied feedback and studies; Market and Competitor pages offer cited investigations. The council runs only when the PM requests it. The Judge applies its assessment rubric to the actual debate, and the PM retains the final decision.
 
-Presentation generation is excluded. Decisions & Scenarios now shows the actual saved council verdicts, PM reviews, and what-if rankings of the same assessed criteria. The legacy demo portfolio is explicit at `/decisions?demo=1`; its PDF export remains separate. See [backend/README.md](backend/README.md) for routes and runtime details, and [backend/MARKET.md](backend/MARKET.md) for Market sources and limitations.
+Presentation Studio is now integrated. Decisions & Scenarios now shows the actual saved council verdicts, PM reviews, and what-if rankings of the same assessed criteria. The legacy demo portfolio is explicit at `/decisions?demo=1`; its PDF export remains separate. See [backend/README.md](backend/README.md) for routes and runtime details, and [backend/MARKET.md](backend/MARKET.md) for Market sources and limitations.
 
 Open `/council` and choose **Start car debate**. One PM action freezes the selected vehicle scope and starts every evidence-supported Moderator topic automatically, without selecting an individual feature. The large interactive council table sits above a chronological transcript. **Talk to Jury** opens the original ElevenLabs conversation about the completed Qwen verdict; direct local-Qwen text discussion is also available; **Review decisions** opens those same results in Decisions & Scenarios. Saved councils reopen without starting inference. Advanced controls remain at `/council?advanced=1`. The latest native Controls debate completed all three specialist challenges, their replies and the real Judge assessment in **7 minutes** on this laptop. Timing varies with evidence, repairs and other Qwen work; full-car agendas run sequentially and can take much longer. This is local inference, not an instant scripted demo.
 
@@ -30,7 +30,21 @@ The manual integration retains these branch implementations:
 | Moderator | `Moderator_Agent`: `Engine` | Frozen agenda, real claim-targeted rounds, budgets, pause/resume, source validation and audit |
 | Judge | `Judge_Agent`: `JudgeService` | Native argument evaluation, weighted criteria, uncertainty and versioned PM review |
 
-Native outputs and implementation identifiers are retained in new council audit events. Existing saved councils retain their original protocol and evidence; they are not relabelled as native executions. Presentation generation remains excluded.
+Native outputs and implementation identifiers are retained in new council audit events. Existing saved councils retain their original protocol and evidence; they are not relabelled as native executions. Presentation Studio consumes individually approved council requirements.
+
+## Presentation Studio
+
+Use **Presentations → Load presentation demo** to try the complete investment-case workflow without upstream agents or model credentials. The unified `npm run dev` backend includes Presentation Studio on port 8001. For a presentation-only workspace, run `npm run dev:presentation` and `npm run dev:frontend` in separate terminals instead. The isolated demo leaves existing PM decisions untouched and labels its illustrative $6M staged program throughout the deck and exports.
+
+Each department has a separate outline and three clear sections, using one reusable **BMW · Cinematic Automotive** theme, inspired by the supplied BMW case-study template: a photographic dark cover, oversized section type, cyan emphasis, dark editable charts and structured content editors. Choose **Outline → Department outline**, review and approve that department's story, then generate its deck. Existing decks offer **Preview BMW theme** and **Apply BMW theme**, preserving text, ordering, locks and prior versions. Optional presenter details belong on the cover; PM approval status stays inside the studio.
+
+The PM shapes the brief and financial assumptions, approves the outline, generates twelve core slides plus an evidence appendix, edits or reviews proposed changes, rehearses department objections, and exports editable PowerPoint, slide PDF, notes or complete JSON. Executive, Finance, Engineering and Sales/Marketing versions share the same financial case. Presenter mode includes notes and a timer.
+
+**Create presentation** on the live Decisions & scenarios page uses the selected council’s individually approved requirements. The explicit demo Decisions page uses synthetic dashboard approvals. Canonical council proposals require their own individual PM review; approving an outcome never approves all its requirements. Frozen sources, stale approval checks, revision history and deterministic calculations keep the resulting recommendation traceable.
+
+Live writing uses local Ollama (`qwen3:8b` by default). Optional voice editing/rehearsal uses a separate `VITE_ELEVENLABS_PRESENTATION_AGENT_ID`; spoken edits create proposals for PM application. Text editing and the explicit demo remain usable without voice. See [Presentation setup, APIs, finance definitions and ElevenLabs client tools](backend/presentation/README.md).
+
+To test voice, configure the dedicated ElevenLabs agent and matching client tools, set `VITE_ELEVENLABS_PRESENTATION_AGENT_ID` in `.env.local`, and restart Vite. Open **Slides → Open voice assistant → Voice setup & testing** for microphone checks and exact test phrases. **Rehearse → Start rehearsal → Open voice rehearsal** tests objections. The isolated demo uses scripted edits/coaching; live writing and evaluation need a new **Local Ollama / Qwen** workspace. See the [voice smoke-test walkthrough](backend/presentation/README.md#voice-smoke-test).
 
 ## Run locally
 

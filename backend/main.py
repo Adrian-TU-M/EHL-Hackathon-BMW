@@ -31,7 +31,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list({settings.frontend_origin, "http://127.0.0.1:5173", "http://localhost:5173"}),
-    allow_methods=["GET", "POST", "PATCH"],
+    allow_methods=["GET", "POST", "PATCH", "PUT"],
     allow_headers=["Content-Type"],
 )
 app.include_router(competitor.router)

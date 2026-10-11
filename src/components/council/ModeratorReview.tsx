@@ -5,6 +5,7 @@ import type {
   AssumptionRecord,
   SourceEvidence,
   TopicOutcome,
+  ModeratorSession,
 } from "../../lib/council/contracts";
 import { Badge, Button, Modal } from "../ui/Primitives";
 import "../../styles/moderator.css";
@@ -250,6 +251,7 @@ export function ModeratorReview() {
               PM {d.status} of v{d.version}: {d.rationale}
             </p>
           ))}
+          <ProposalReviews outcome={o} session={s} onAccept={accept} />
           <Button
             variant="secondary"
             onClick={() => {
@@ -409,6 +411,134 @@ export function ModeratorReview() {
           </Button>
         </Modal>
       )}
+    </section>
+  );
+}
+
+export function ProposalReviews({
+  outcome,
+  session,
+  onAccept,
+}: {
+  outcome: TopicOutcome;
+  session: ModeratorSession;
+  onAccept: (s: ModeratorSession) => void;
+}) {
+  const [selected, setSelected] = useState<string>();
+  const [status, setStatus] = useState("Approved");
+  const [rationale, setRationale] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const proposals = outcome.assessment?.proposals || [];
+  if (!proposals.length) return null;
+  return (
+    <section className="proposal-reviews">
+      <h4>Requirement approvals for presentations</h4>
+      <p className="small muted">
+        Outcome review is separate. Approve each requirement version explicitly
+        before using it as a presentation recommendation.
+      </p>
+      {proposals.map((p) => {
+        const decision = [...(outcome.proposal_decisions || [])]
+          .reverse()
+          .find((d) => d.proposal_id === p.id);
+        const current =
+          decision?.outcome_version === outcome.version &&
+          decision.proposal_version === p.version;
+        return (
+          <article className="moderator-record" key={p.id}>
+            <strong>
+              {p.title} / v{p.version}
+            </strong>
+            <p>{p.description}</p>
+            <Badge
+              tone={
+                current && decision.status === "Approved" ? "green" : "amber"
+              }
+            >
+              {current ? decision.status : "Pending requirement review"}
+            </Badge>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSelected(p.id);
+                setStatus("Approved");
+                setRationale("");
+                setError("");
+              }}
+            >
+              Review requirement
+            </Button>
+            {selected === p.id ? (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setBusy(true);
+                  setError("");
+                  try {
+                    onAccept(
+                      await moderatorApi.reviewProposal(
+                        session,
+                        outcome.topic_id,
+                        p.id,
+                        p.version,
+                        outcome.version,
+                        status,
+                        rationale,
+                      ),
+                    );
+                    setSelected(undefined);
+                  } catch (reason) {
+                    setError(String(reason));
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                <label className="field-label">
+                  Requirement decision
+                  <select
+                    aria-label={`Decision for ${p.id}`}
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                  >
+                    {[
+                      "Approved",
+                      "Rejected",
+                      "Deferred",
+                      "Challenged",
+                      "Pending review",
+                    ].map((v) => (
+                      <option key={v}>{v}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field-label">
+                  PM rationale
+                  <textarea
+                    aria-label={`Rationale for ${p.id}`}
+                    value={rationale}
+                    onChange={(e) => setRationale(e.target.value)}
+                    maxLength={4000}
+                    rows={3}
+                  />
+                </label>
+                {error ? <p role="alert">{error}</p> : null}
+                <Button type="submit" disabled={busy || !rationale.trim()}>
+                  Record requirement decision
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setSelected(undefined)}
+                >
+                  Cancel
+                </Button>
+              </form>
+            ) : null}
+          </article>
+        );
+      })}
     </section>
   );
 }

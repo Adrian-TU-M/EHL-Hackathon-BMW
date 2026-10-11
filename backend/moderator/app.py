@@ -12,6 +12,10 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import Field
 from backend.config import Settings
 
+from backend.presentation.api import router as presentation_router
+from backend.presentation.service import PresentationService
+from backend.presentation.storage import PresentationStore
+
 from .adapters import DeterministicAdapters, HttpAdapters
 from .local import OllamaAdapters
 from .catalog_bridge import specialist_catalog
@@ -23,6 +27,7 @@ from .models import (
     Control,
     Limits,
     Model,
+    ProposalReviewInput,
     ReviewInput,
     Scope,
 )
@@ -59,11 +64,15 @@ def create_app(engine: Engine | None = None):
             app.state.data_error = None
         else:
             private = Path(os.getenv("MODERATOR_DATA_DIR", str(ROOT / "private-data")))
-            try:
-                catalog = specialist_catalog(load_catalog(Settings.from_env().data_dir.expanduser(), private / "catalogs"))
-                error = None
-            except (FileNotFoundError, ValueError) as e:
-                catalog, error = None, str(e)
+            if os.getenv("PRESENTATION_ONLY") == "1":
+                catalog, error = None, "Presentation-only mode; council source loading disabled"
+            else:
+                try:
+                    catalog = specialist_catalog(load_catalog(Settings.from_env().data_dir.expanduser(), private / "catalogs"))
+                    error = None
+                except (FileNotFoundError, ValueError) as e:
+                    catalog, error = None, str(e)
+
             mode = os.getenv("MODERATOR_ADAPTER", "ollama")
             adapters = (DeterministicAdapters() if mode == "deterministic" else
                         HttpAdapters() if mode == "http" else OllamaAdapters())
@@ -71,7 +80,26 @@ def create_app(engine: Engine | None = None):
                 catalog, Store(private / "moderator.sqlite3"), adapters
             )
             app.state.data_error = error
+        presentation_path = (
+            Path(os.getenv("PRESENTATION_DATA_DIR", os.getenv("MODERATOR_DATA_DIR", str(ROOT / "private-data"))))
+            / "presentations.sqlite3"
+        )
+        # Browser/API tests use their fixture database directory instead of private data.
+        if engine and not os.getenv("PRESENTATION_DATA_DIR"):
+            db_file = engine.store.db.execute("PRAGMA database_list").fetchone()[2]
+            presentation_path = Path(db_file).parent / "presentations.sqlite3"
+        app.state.presentations = PresentationService(
+            PresentationStore(presentation_path), app.state.engine
+        )
+        loop = asyncio.get_running_loop()
+        app.state.engine.on_commit = lambda sid: loop.call_soon(
+            app.state.presentations.reconcile, sid
+        )
+        for sid in app.state.engine.sessions:
+            app.state.presentations.reconcile(sid)
         yield
+        app.state.engine.on_commit = None
+        await app.state.presentations.close()
         await app.state.engine.shutdown()
         if not engine:
             app.state.engine.store.close()
@@ -108,6 +136,7 @@ def create_app(engine: Engine | None = None):
 
     from .discussion import install_discussion
     install_discussion(app)
+    app.include_router(presentation_router)
 
     @app.exception_handler(Conflict)
     async def conflict(_, error):
@@ -235,6 +264,11 @@ def create_app(engine: Engine | None = None):
             raise HTTPException(409, "The saved evidence packet no longer matches this Judge assessment.")
         path = await synthesize(assessment_text(assessment))
         return FileResponse(path, media_type="audio/mpeg", headers={"Cache-Control": "private, max-age=3600"})
+    @app.post("/api/moderator/sessions/{sid}/outcomes/{tid}/proposals/{pid}/review")
+    async def review_proposal(
+        sid: str, tid: str, pid: str, body: ProposalReviewInput, request: Request
+    ):
+        return await request.app.state.engine.review_proposal(sid, tid, pid, body)
 
     @app.get("/api/moderator/sessions/{sid}/packet")
     async def packet(sid: str, request: Request):

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -9,7 +9,11 @@ import {
 } from "lucide-react";
 import { useCouncilSession } from "../components/council/useCouncilSession";
 import { JuryConversation } from "../components/council/JuryConversation";
-import { SourceCards } from "../components/council/ModeratorReview";
+import {
+  ProposalReviews,
+  SourceCards,
+} from "../components/council/ModeratorReview";
+import { presentationApi } from "../lib/presentation/api";
 import { LiveReviewInbox } from "../components/council/LiveReviewInbox";
 import { moderatorApi } from "../lib/council/api";
 import { criterionLabels } from "../lib/scoring";
@@ -57,6 +61,7 @@ export function scenarioScore(feature: FeatureAssessment, weights: Weights) {
 }
 
 export default function LiveDecisions() {
+  const navigate = useNavigate();
   const { session: s, accept, loading, loadError } = useCouncilSession();
   const [scenario, setScenario] = useState("Jury priorities");
   const [statusFilter, setStatusFilter] = useState("All decisions");
@@ -67,6 +72,8 @@ export default function LiveDecisions() {
   const [rationale, setRationale] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [creatingPresentation, setCreatingPresentation] = useState(false);
+  const [presentationError, setPresentationError] = useState("");
   const valid =
     s?.outcomes.filter(
       (o) => o.assessment_valid && o.assessment?.native_assessment,
@@ -86,6 +93,22 @@ export default function LiveDecisions() {
     (row) =>
       statusFilter === "All decisions" ||
       row.outcome.review_status === statusFilter,
+  );
+  const approvedRequirements = valid.flatMap((outcome) =>
+    outcome.closure_reason === "pm_stopped" ||
+    outcome.closure_reason === "budget_exhausted" ||
+    ["Rejected", "Challenged"].includes(outcome.review_status)
+      ? []
+      : (outcome.assessment?.proposals || []).filter((proposal) => {
+          const decision = [...(outcome.proposal_decisions || [])]
+            .reverse()
+            .find((d) => d.proposal_id === proposal.id);
+          return (
+            decision?.status === "Approved" &&
+            decision.proposal_version === proposal.version &&
+            decision.outcome_version === outcome.version
+          );
+        }),
   );
   async function save() {
     if (!s || !review || !rationale.trim()) return;
@@ -170,6 +193,51 @@ export default function LiveDecisions() {
                 : "Every decision is saved against its assessed version."}
             </p>
           </div>
+          <section
+            className="panel panel-padding presentation-entry"
+            style={{ marginBlock: 24 }}
+          >
+            <div className="flex-between">
+              <div>
+                <h3>Present your approved requirements.</h3>
+                <p className="small muted">
+                  {approvedRequirements.length} current requirement approvals.
+                  Review each requirement below before creating a deck.
+                </p>
+              </div>
+              <div className="flex">
+                <Button
+                  disabled={
+                    creatingPresentation || !approvedRequirements.length
+                  }
+                  onClick={async () => {
+                    setCreatingPresentation(true);
+                    setPresentationError("");
+                    try {
+                      const p = await presentationApi.create(
+                        "council",
+                        "ollama",
+                        s.id,
+                      );
+                      navigate(`/presentations/${p.id}`);
+                    } catch (e) {
+                      setPresentationError(
+                        e instanceof Error ? e.message : String(e),
+                      );
+                    } finally {
+                      setCreatingPresentation(false);
+                    }
+                  }}
+                >
+                  {creatingPresentation ? "Preparing…" : "Create presentation"}
+                </Button>
+                <Link className="text-link" to="/presentations">
+                  Open presentation studio ↗
+                </Link>
+              </div>
+            </div>
+            {presentationError && <p role="alert">{presentationError}</p>}
+          </section>
           <div className="decision-scenarios">
             <label>
               <SlidersHorizontal size={16} /> Compare priorities
@@ -314,6 +382,11 @@ export default function LiveDecisions() {
                       Review decision <ArrowRight size={15} />
                     </Button>
                   </div>
+                  <ProposalReviews
+                    outcome={outcome}
+                    session={s}
+                    onAccept={accept}
+                  />
                 </div>
                 <div className="decision-score">
                   <strong>{score.priority ?? "—"}</strong>

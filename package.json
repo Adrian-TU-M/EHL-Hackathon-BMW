@@ -18,7 +18,11 @@
     "dev:frontend": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "dev:backend": "node scripts/dev.mjs --backend-only",
     "setup:backend": "node scripts/setup-backend.mjs",
-    "test:backend": "backend/.venv/bin/python -m pytest -q backend/tests"
+    "test:backend": "backend/.venv/bin/python -m pytest -q backend/tests",
+    "eval:presentation": "cd backend && .venv/bin/python -m presentation.evaluate",
+    "eval:presentation:live": "cd backend && .venv/bin/python -m presentation.evaluate --live",
+    "dev:presentation": "PRESENTATION_ONLY=1 backend/.venv/bin/python -m uvicorn backend.moderator.app:app --host 127.0.0.1 --port 8001",
+    "test:e2e:presentation": "playwright test --config playwright.presentation.config.ts"
   },
   "dependencies": {
     "@elevenlabs/react": "^1.17.0",
@@ -31,7 +35,8 @@
     "react-router-dom": "^7.9.4",
     "recharts": "^3.3.0",
     "three": "^0.180.0",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.8",
+    "pptxgenjs": "^4.0.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",
@@ -44,5 +49,8 @@
     "typescript": "~5.9.3",
     "vite": "^7.1.9",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "image-size": "2.0.4"
   }
 }

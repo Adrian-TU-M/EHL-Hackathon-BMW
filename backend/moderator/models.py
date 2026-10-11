@@ -404,6 +404,19 @@ class Decision(Model):
     at: str = Field(default_factory=now)
 
 
+class ProposalDecision(Decision):
+    proposal_id: str
+    proposal_version: int
+    outcome_version: int
+
+
+class ProposalReviewInput(Model):
+    expected_version: int
+    expected_outcome_version: int
+    status: Literal["Approved", "Rejected", "Deferred", "Challenged", "Pending review"]
+    rationale: str = Field(min_length=1, max_length=4000)
+
+
 class TopicOutcome(Model):
     topic_id: str
     version: int = 1
@@ -414,6 +427,7 @@ class TopicOutcome(Model):
     review_status: str = "Pending review"
     decisions: list[Decision] = Field(default_factory=list)
     history: list[dict[str, Any]] = Field(default_factory=list)
+    proposal_decisions: list[ProposalDecision] = Field(default_factory=list)
 
 
 class Limits(Model):

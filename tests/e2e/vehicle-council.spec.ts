@@ -79,8 +79,29 @@ function fixture() {
       version: number;
       at: string;
     }[],
+    proposal_decisions: [] as {
+      proposal_id: string;
+      proposal_version: number;
+      outcome_version: number;
+      status: string;
+      rationale: string;
+    }[],
     packet: { brief: { question: topics[0].question, scope } },
-    assessment: { native_assessment: assessment, summary: "Saved verdict" },
+    assessment: {
+      native_assessment: assessment,
+      summary: "Saved verdict",
+      proposals: [
+        {
+          id: "controls",
+          version: 1,
+          title: "Control layout pilot",
+          description: "Test a persistent control strip with drivers.",
+          evidence_ids: [],
+          claim_ids: [],
+          assumption_ids: [],
+        },
+      ],
+    },
   };
   const session = {
     id: "vehicle-fixture",
@@ -167,6 +188,17 @@ async function setup(page: Page, openSaved = true) {
       }
       if (path.endsWith("/review")) {
         const body = request.postDataJSON();
+        if (path.includes("/proposals/")) {
+          data.session.outcomes[0].proposal_decisions.push({
+            proposal_id: "controls",
+            proposal_version: 1,
+            outcome_version: 1,
+            status: body.status,
+            rationale: body.rationale,
+          });
+          data.session.revision++;
+          return route.fulfill({ json: data.session });
+        }
         data.session.outcomes[0].review_status = body.status;
         data.session.outcomes[0].decisions.push({
           status: body.status,
@@ -177,6 +209,11 @@ async function setup(page: Page, openSaved = true) {
         data.session.revision++;
         return route.fulfill({ json: data.session });
       }
+      if (path === "/api/presentations" && request.method() === "POST")
+        return route.fulfill({
+          status: 201,
+          json: { id: "presentation-fixture" },
+        });
       return route.fulfill({ status: 404, json: { detail: "Fixture only" } });
     },
   );
@@ -190,6 +227,41 @@ async function setup(page: Page, openSaved = true) {
   );
   return { requests, data };
 }
+
+test("live requirement approval creates a council-backed presentation without approving the outcome", async ({
+  page,
+}) => {
+  const { requests, data } = await setup(page);
+  await page.goto("/decisions?session=vehicle-fixture");
+  const create = page.getByRole("button", {
+    name: "Create presentation",
+    exact: true,
+  });
+  await expect(create).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Review requirement", exact: true })
+    .click();
+  await page
+    .getByLabel("Rationale for controls", { exact: true })
+    .fill("Approve a bounded driver study for this requirement.");
+  await page
+    .getByRole("button", { name: "Record requirement decision", exact: true })
+    .click();
+  await expect(create).toBeEnabled();
+  expect(data.session.outcomes[0].review_status).toBe("Pending review");
+  await create.click();
+  await expect(page).toHaveURL(/presentations\/presentation-fixture/);
+  expect(
+    requests.find((r) => r.path === "/api/presentations")?.body,
+  ).toMatchObject({
+    kind: "council",
+    mode: "ollama",
+    session_id: "vehicle-fixture",
+  });
+  expect(
+    requests.find((r) => r.path === "/api/presentations")?.body,
+  ).not.toHaveProperty("dashboard");
+});
 
 test("PM starts the full vehicle agenda once, with no topic selection step", async ({
   page,

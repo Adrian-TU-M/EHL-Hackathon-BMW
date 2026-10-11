@@ -1,13 +1,16 @@
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
+  outputDir: "test-results/browser-main",
+  testIgnore: /presentation\.spec\.ts/,
   fullyParallel: false,
   workers: 1,
   timeout: 90000,
   expect: { timeout: 12000 },
   use: {
     baseURL: "http://127.0.0.1:5173",
-    channel: process.env.PLAYWRIGHT_CHANNEL === "chromium" ? "chromium" : "chrome",
+    channel:
+      process.env.PLAYWRIGHT_CHANNEL === "chromium" ? "chromium" : "chrome",
     viewport: { width: 1440, height: 1050 },
     launchOptions: { args: ["--enable-unsafe-swiftshader"] },
     trace: "retain-on-failure",

@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Info,
   Check,
+  Presentation,
 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import {
@@ -31,6 +32,7 @@ const navigation = [
   { to: "/competitor", label: "Competitor intelligence", icon: ScanLine },
   { to: "/council", label: "Agent council", icon: Orbit },
   { to: "/decisions", label: "Decisions & scenarios", icon: SlidersHorizontal },
+  { to: "/presentations", label: "Presentations", icon: Presentation },
   { to: "/audit", label: "Audit trail", icon: History },
 ];
 export default function AppShell() {
@@ -40,12 +42,15 @@ export default function AppShell() {
   const demoStatus = useAppStore((s) => s.council.status);
   const tickDemo = useAppStore((s) => s.tickCouncil);
   const location = useLocation();
+  const presentationWorkspace = location.pathname.startsWith("/presentations");
   const liveWorkspace =
     ["/market", "/customer", "/competitor"].includes(location.pathname) ||
     (["/council", "/decisions"].includes(location.pathname) &&
       !new URLSearchParams(location.search).has("demo"));
   const activeIndex = navigation.findIndex(
-    (item) => item.to === location.pathname,
+    (item) =>
+      item.to === location.pathname ||
+      location.pathname.startsWith(item.to + "/"),
   );
   const nextPage = navigation[activeIndex + 1];
   const [open, setOpen] = useState(false);
@@ -120,14 +125,19 @@ export default function AppShell() {
             <span className="session-dot" />
             <div>
               <strong>
-                {liveWorkspace ? "Local agent workspace" : "Demo environment"}
+                {presentationWorkspace
+                  ? "Presentation Studio"
+                  : liveWorkspace
+                    ? "Local agent workspace"
+                    : "Demo environment"}
               </strong>
               <span>
-                {liveWorkspace
-                  ? "Local Qwen · cited evidence"
-                  : "Local session · synthetic data"}
+                {presentationWorkspace
+                  ? "Versioned inputs · PM review"
+                  : liveWorkspace
+                    ? "Local Qwen · cited evidence"
+                    : "Local session · synthetic data"}
               </span>
-
             </div>
           </div>
           <p>
@@ -167,22 +177,30 @@ export default function AppShell() {
             </span>
           </div>
           <div>
-            <Badge tone="blue">{liveWorkspace ? "AGENTS" : "DEMO"}</Badge>
+            <Badge tone="blue">
+              {presentationWorkspace
+                ? "STUDIO"
+                : liveWorkspace
+                  ? "AGENTS"
+                  : "DEMO"}
+            </Badge>
 
-            <Button
-              variant="secondary"
-              className="export-button"
-              disabled={exporting || (liveWorkspace && !moderatorId)}
-              title={
-                liveWorkspace && !moderatorId
-                  ? "Open a completed council to export its discussion and decision record."
-                  : undefined
-              }
-              onClick={exportReport}
-            >
-              <Download size={15} />
-              {exporting ? "Exporting…" : "Export report"}
-            </Button>
+            {!presentationWorkspace && (
+              <Button
+                variant="secondary"
+                className="export-button"
+                disabled={exporting || (liveWorkspace && !moderatorId)}
+                title={
+                  liveWorkspace && !moderatorId
+                    ? "Open a completed council to export its discussion and decision record."
+                    : undefined
+                }
+                onClick={exportReport}
+              >
+                <Download size={15} />
+                {exporting ? "Exporting…" : "Export report"}
+              </Button>
+            )}
             <div className="profile" aria-label="Product manager">
               PM
             </div>
@@ -196,7 +214,7 @@ export default function AppShell() {
         )}
         <div
           className="journey-progress"
-          aria-label={`Step ${activeIndex + 1} of 7: ${navigation[activeIndex]?.label}`}
+          aria-label={`Step ${activeIndex + 1} of ${navigation.length}: ${navigation[activeIndex]?.label}`}
         >
           <span>INTELLIGENCE / {String(activeIndex + 1).padStart(2, "0")}</span>
           <div>
@@ -216,18 +234,19 @@ export default function AppShell() {
         </div>
         <main className="page-content" key={location.pathname}>
           <Outlet />
-          {nextPage && !["/market", "/customer"].includes(location.pathname) && (
-            <NavLink className="journey-next" to={nextPage.to}>
-              <div>
-                <span>
-                  CONTINUE YOUR ANALYSIS /{" "}
-                  {String(activeIndex + 2).padStart(2, "0")}
-                </span>
-                <strong>{nextPage.label}</strong>
-              </div>
-              <ArrowUpRight size={25} />
-            </NavLink>
-          )}
+          {nextPage &&
+            !["/market", "/customer"].includes(location.pathname) && (
+              <NavLink className="journey-next" to={nextPage.to}>
+                <div>
+                  <span>
+                    CONTINUE YOUR ANALYSIS /{" "}
+                    {String(activeIndex + 2).padStart(2, "0")}
+                  </span>
+                  <strong>{nextPage.label}</strong>
+                </div>
+                <ArrowUpRight size={25} />
+              </NavLink>
+            )}
         </main>
         <footer className="workspace-footer">
           <span>
@@ -235,11 +254,12 @@ export default function AppShell() {
             perspective.
           </span>
           <span>
-            {liveWorkspace
-              ? "Local evidence · Human review required"
-              : "Synthetic demo · Human approval required"}
+            {presentationWorkspace
+              ? "Source-linked decks · Human review required"
+              : liveWorkspace
+                ? "Local evidence · Human review required"
+                : "Synthetic demo · Human approval required"}
           </span>
-
         </footer>
       </div>
       {toast && (
