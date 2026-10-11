@@ -95,7 +95,12 @@ async def assess_request(request: JudgeRequest, settings=None, usage=None, *, va
 def assessment_text(assessment: JudgeAssessment) -> str:
     sections = []
     for feature in assessment.features:
-        sections.append(f"My recommendation is {feature.recommendation.replace('_', ' ')}. {feature.rationale}")
+        if feature.proposed_description:
+            sections.append(f"Proposed requirement: {feature.requirement_title or 'Product concept'}. {feature.proposed_description}")
+        label = {"recommend": "Recommend for validation", "revise": "Refine before approval", "defer": "More evidence needed", "do_not_recommend": "Not recommended"}[feature.recommendation]
+        sections.append(f"{label}. {feature.rationale}")
+        if feature.acceptance_criteria:
+            sections.append("Validation: " + " ".join(feature.acceptance_criteria))
         if feature.benefits:
             sections.append("Potential benefit: " + " ".join(feature.benefits))
         if feature.drawbacks:

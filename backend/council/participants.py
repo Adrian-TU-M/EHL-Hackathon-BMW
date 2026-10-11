@@ -16,7 +16,7 @@ ROLES = {
 }
 STAGE_TASKS = {
     'perspectives': 'Give your own role-specific recommendation and one concrete validation step. Customer: prioritize the reported usability need. Market: explain what commercial evidence is missing and what study would resolve it.',
-    'challenge': 'Ask one decision-relevant challenge: why would the proposed feature address the reported customer problem, and what evidence would justify prioritizing it? Anchor it to an actual claim from the lead agent identified in the context. Do not merely ask whether an already quoted specification exists.',
+    'challenge': 'Ask one specific decision-relevant question about an actual peer claim. Name its concrete proposal or assertion and one evidence gap or trade-off that could change its priority. Do not copy the agenda question or use a generic question that would fit any feature. Do not merely ask whether an already quoted specification exists.',
     'revision': 'Directly answer each supplied customer challenge in your rationale. State whether you defend, narrow or withdraw the proposed investigation, why, and one concrete next test. A generic repetition of unknown BMW fitment is not an answer to a customer-value question.',
     'assessment': 'Compare the actual Customer, Market and Competitor arguments. State the unresolved trade-off and a concrete validation step for the PM. Do not simply repeat the BMW fitment limitation or announce consensus.',
 }
@@ -35,6 +35,10 @@ class GroundedParticipant:
         schema['properties']['stage'] = {'type':'string','const':stage}
         schema['$defs']['AgentPosition']['properties']['agent_id'] = {'type':'string','const':self.role}
         schema['$defs']['AgentPosition']['properties']['claims']['maxItems'] = 2
+        if stage == 'revision':
+            position_schema = schema['$defs']['AgentPosition']
+            position_schema['properties']['response_to_challenges'] = position_schema['properties'].pop('rationale')
+            position_schema['required'] = ['response_to_challenges' if key == 'rationale' else key for key in position_schema['required']]
         # The model selects actual sourced facts; free interpretation lives in the reviewed rationale.
         for definition in schema['$defs'].values():
             ids = definition.get('properties',{}).get('evidence_ids')
@@ -78,7 +82,9 @@ class GroundedParticipant:
             responding = sorted({c.target_claim_id for t in prior for c in t.challenges if c.target_agent_id == self.role})
             if responding:
                 answer_schema['items']['enum'] = responding
-                answer_schema['minItems'] = 1
+                answer_schema['minItems'] = len(responding)
+                answer_schema['maxItems'] = len(responding)
+                answer_schema['uniqueItems'] = True
         if stage == 'assessment': answer_schema['minItems'] = len({t.agent_id for t in prior if t.position.claims})
         schema['required'] = list(dict.fromkeys(schema.get('required', []) + ['challenges', 'answered_claim_ids']))
         system = f'''You are the {self.role} specialist in BMW's local product council. {ROLES[self.role]}
@@ -92,18 +98,35 @@ During challenge, question actual earlier claim IDs. During revision, address th
 The judge must list at least one actual claim ID from EACH of the Customer, Market and Competitor roles in answered_claim_ids and explain the unresolved trade-off and next validation step. Do not assess only the competitor specifications.
 Stage task: {STAGE_TASKS[stage]}
 Keep rationale under 120 words. Return only schema JSON.'''
+        if stage == 'revision':
+            system = system.replace('position.rationale', 'position.response_to_challenges')
+            system += '\nWrite a NEW response_to_challenges in at most 80 words. Start by directly answering the questions_to_answer, including what cannot be known from these sources. Then state what you defend or change and the next comparison test. Do not copy a prior position or merely restate the benchmark.'
         # Avoid burying actual challenges in repeated raw PDF tables and metadata.
         source_context = [{'id':r.id, 'source_type':r.source_type,
                            'passage':r.passage[:1500], 'excerpt_truncated':len(r.passage)>1500,
                            'market':r.market, 'country':r.country, 'model':r.model, 'caveats':r.caveats}
                           for r in sources]
-        data = {'context':context, 'sources':source_context, 'prior_turns':[t.model_dump(mode='json') for t in prior]}
+        history = [t.model_dump(mode='json') for t in prior]
+        if stage == 'challenge':
+            # Show peer arguments, not ready-made questions to copy verbatim.
+            history = [{key: value for key, value in item.items() if key != 'challenges'}
+                       for item in history if item['stage'] != 'challenge' or item['position']['claims']]
+        data = {'context':context, 'sources':source_context, 'prior_turns':history}
+        if stage == 'revision':
+            claims_by_id = {claim.id: claim for turn in prior for claim in turn.position.claims}
+            data['questions_to_answer'] = [{'asked_by':turn.agent_id, 'question':question.question,
+                'target_claim_id':question.target_claim_id,
+                'target_assertion':claims_by_id[question.target_claim_id].text if question.target_claim_id in claims_by_id else 'Missing argument: acknowledge the gap.'}
+                for turn in prior for question in turn.challenges if question.target_agent_id == self.role]
         messages = [{'role':'system','content':system},{'role':'user','content':json.dumps(data,ensure_ascii=False)}]
         for attempt in range(2):
             logging.getLogger(__name__).info('Council %s %s draft %s', self.role, stage, attempt + 1)
             response = await self.llm.chat(messages,output_schema=schema,max_tokens=2048)
             try:
-                result = CouncilTurn.model_validate_json(response['message']['content'])
+                output = json.loads(response['message']['content'])
+                if stage == 'revision' and 'response_to_challenges' in output.get('position', {}):
+                    output['position']['rationale'] = output['position'].pop('response_to_challenges')
+                result = CouncilTurn.model_validate(output)
                 if result.agent_id != self.role or result.position.agent_id != self.role or result.stage != stage:
                     raise ValueError('Incorrect council role or stage')
                 if not 1 <= len(result.position.claims) <= 2: raise ValueError('Return 1-2 claims')
@@ -115,12 +138,14 @@ Keep rationale under 120 words. Return only schema JSON.'''
                 for c in result.challenges:
                     if (c.target_agent_id,c.target_claim_id) not in targets: raise ValueError('Challenge must target an actual other-agent claim')
                     if not set(c.evidence_ids) <= allowed.keys(): raise ValueError('Unknown challenge citation')
+                    if c.question.strip() in {old.question.strip() for turn in prior for old in turn.challenges}:
+                        raise ValueError('Do not copy another participant’s question. Ask your own competitor-specific question about an actual peer argument and a comparison that could change the decision.')
                 if not set(result.answered_claim_ids) <= prior_ids: raise ValueError('Unknown answered claim')
                 if stage in ('revision','assessment') and not result.answered_claim_ids:
                     raise ValueError('Must address actual prior claim IDs')
                 challenged = {c.target_claim_id for t in prior for c in t.challenges if c.target_agent_id == self.role}
-                if stage == 'revision' and challenged and not challenged.intersection(result.answered_claim_ids):
-                    raise ValueError('Revision must answer an actual claim challenged by another agent')
+                if stage == 'revision' and challenged and not challenged.issubset(result.answered_claim_ids):
+                    raise ValueError('Revision must answer every actual claim challenged against this agent')
                 if stage == 'assessment':
                     for role in {t.agent_id for t in prior if t.position.claims}:
                         if not any(c.id in result.answered_claim_ids for t in prior if t.agent_id==role for c in t.position.claims):
@@ -148,6 +173,7 @@ Return issues=[] when there are no such unsupported assertions. For a real issue
                 for i,c in enumerate(result.position.claims): c.id=f'{self.role}-{stage}-{i+1}'
                 return result
             except (ValueError,KeyError,TypeError) as exc:
+                logging.getLogger("uvicorn.error").warning("Council %s/%s validation attempt %s: %s", self.role, stage, attempt + 1, str(exc)[:700])
                 if attempt: raise AgentOutputError(f'{self.role} council grounding failed: {str(exc)[:400]}') from exc
                 messages = messages[:2] + [{'role':'assistant','content':response['message']['content']}, {'role':'user','content':'Your previous draft was rejected. Generate a new grounded argument. Do not infer that BMW lacks a proposed feature. Correction required: '+str(exc)[:1200]}]
 

@@ -32,7 +32,6 @@ const STANCE: Record<string, string> = {
 };
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 import LiveCouncil from "./LiveCouncil";
-import ModeratorCouncil from "./ModeratorCouncil";
 import VehicleCouncil from "./VehicleCouncil";
 export default function Council() {
   const [params] = useSearchParams();
@@ -40,8 +39,6 @@ export default function Council() {
     <DemoCouncil />
   ) : params.has("source_run") ? (
     <LiveCouncil />
-  ) : params.get("advanced") === "1" ? (
-    <ModeratorCouncil />
   ) : (
     <VehicleCouncil />
   );

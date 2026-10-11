@@ -109,6 +109,7 @@ export interface JudgeAssessment {
   unresolved_issues: string[];
   scoring_inputs: Record<string, unknown>[];
   proposals: {
+    acceptance_criteria?: string[];
     id: string;
     version: number;
     title: string;

@@ -17,6 +17,8 @@ export interface ArgumentAssessment {
   issues: string[];
 }
 export interface FeatureAssessment {
+  requirement_title?: string | null;
+  acceptance_criteria?: string[];
   feature_id: string;
   feature_version: number;
   recommendation: "recommend" | "revise" | "defer" | "do_not_recommend";

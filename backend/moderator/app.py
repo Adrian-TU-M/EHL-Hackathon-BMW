@@ -52,6 +52,7 @@ class VoiceInput(Model):
 
 
 class VehicleStart(Model):
+    prepare_only: bool = False
     scope: Scope
     idempotency_key: UUID
 
@@ -122,9 +123,13 @@ def create_app(engine: Engine | None = None):
             else:
                 # Deterministic source discovery is immediate; no model job is
                 # needed just to show the PM that their debate has started.
-                s = await e.create(body.scope, limits=Limits(session_seconds=21600, session_tokens=6000000), refine_agenda=False)
+                # Two native reply rounds plus exact-source Judge assessment
+                # need room for the complete packet and bounded model repairs.
+                s = await e.create(body.scope, limits=Limits(topic_tokens=800000, reserve_fraction=0.35, session_seconds=21600, session_tokens=6000000), refine_agenda=False)
                 with e.store.db:
                     e.store.db.execute("INSERT INTO vehicle_starts VALUES (?,?,?)", (key, fingerprint, s.id))
+            if body.prepare_only:
+                return s
             if s.status == "awaiting_confirmation":
                 topics = [t.id for t in s.agenda.topics if t.eligible]
                 if not topics:
@@ -175,8 +180,11 @@ def create_app(engine: Engine | None = None):
         }
 
     @app.get("/api/moderator/inventory")
-    async def inventory(request: Request):
-        catalog = request.app.state.engine.catalog
+    async def inventory(request: Request, source_snapshot: str | None = None):
+        engine = request.app.state.engine
+        catalog = engine.catalogs.get(source_snapshot) if source_snapshot else engine.catalog
+        if source_snapshot and not catalog:
+            raise HTTPException(404, "Frozen source snapshot unavailable")
         if not catalog:
             raise HTTPException(503, "Supplied source collection unavailable")
         return {

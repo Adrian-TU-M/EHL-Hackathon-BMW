@@ -192,7 +192,7 @@ def _finding_schema(themes: list[str], min_quotes: int = 0) -> dict:
 PERSPECTIVE_SCHEMA = {
     "type": "object",
     "properties": {
-        "statement": {"type": "string", "maxLength": 700},
+        "statement": {"type": "string", "maxLength": 1000},
         "recommendation": {"type": "string", "maxLength": 480},
         "evidenceIds": _ID_LIST,
         "studyRefIds": _ID_LIST,
@@ -270,21 +270,22 @@ class CustomerAgent:
         return f" -> {ref.vehicle} has {pos} in this study (numeric comparison only; scale and significance unknown)"
 
     def _theme_block(
-        self, stat: ThemeStat, total: int, rows: pd.DataFrame, k: int
+        self, stat: ThemeStat, total: int, rows: pd.DataFrame, k: int, focus_record_ids: list[str] | None = None
     ) -> tuple[str, dict[str, set[str]], set[str]]:
         """Prompt block for one theme, the citable quote IDs (-> their classifications in
         this theme), and the citable study reference IDs."""
+        quote_rows = rows if focus_record_ids is None else rows[rows["record_id"].isin(focus_record_ids)]
         mostly_positive = stat.positives > stat.complaints + stat.requests
         major, minor = (k * 5 // 8, k - k * 5 // 8)
-        negative = representative(rows, stat.theme, "Complaint", minor if mostly_positive else major - 2)
-        negative += [r for r in representative(rows, stat.theme, "Request", 2 if not mostly_positive else 1)
+        negative = representative(quote_rows, stat.theme, "Complaint", minor if mostly_positive else major - 2)
+        negative += [r for r in representative(quote_rows, stat.theme, "Request", 2 if not mostly_positive else 1)
                      if r not in negative]
-        positive = [r for r in representative(rows, stat.theme, "Positive", major if mostly_positive else minor)
+        positive = [r for r in representative(quote_rows, stat.theme, "Positive", major if mostly_positive else minor)
                     if r not in negative]
         quote_ids = ((positive + negative) if mostly_positive else (negative + positive))[:k]
         if len(quote_ids) < k:  # slots reserved for a missing polarity go to the others
             for polarity in ("Complaint", "Request", "Positive"):
-                quote_ids += [r for r in representative(rows, stat.theme, polarity, k)
+                quote_ids += [r for r in representative(quote_rows, stat.theme, polarity, k)
                               if r not in quote_ids][: k - len(quote_ids)]
         thin = stat.records < THIN_RECORDS
         subs = ", ".join(f"{name}" for name, _ in stat.topSubcategories[:5])
@@ -297,6 +298,8 @@ class CustomerAgent:
             focus = "Mostly positive: say what customers value and must be retained (retain_positive); note any friction."
         else:
             focus = "Mostly negative: identify the recurring complaint pattern, requests or unmet needs."
+        if focus_record_ids is not None:
+            focus = "Describe the individual quotes selected for this council topic, including relevant praise and complaints. Broader theme polarity does not establish the polarity of this narrower problem."
         block = [
             f"## THEME: {stat.theme}",
             f"Focus: {focus}",
@@ -307,6 +310,11 @@ class CustomerAgent:
         if segs:
             block.append(f"Records by segment: {segs}")
         shown = self._top_study_refs(stat.studyRefs, 4)
+        if focus_record_ids is not None and quote_ids:
+            # A broad, unanchored mean must not displace the exact-topic feedback
+            # or become invented praise. Standalone research keeps these means;
+            # scoped council turns retain interpretable ordinal study context.
+            shown = [ref for ref in shown if ref.metric != "mean"]
         if shown:
             block.append("Study results:")
             block.extend(self._study_lines(shown))
@@ -569,7 +577,7 @@ class CustomerAgent:
     @staticmethod
     def _perspective_key(req: PerspectiveRequest) -> str:
         context = json.dumps([m.model_dump() for m in req.context[-MAX_CONTEXT:]])
-        return _scope_key(req.scope, f"{req.topic}|{req.stage}|{req.question}|{req.challenge}|{context}")
+        return _scope_key(req.scope, f"{req.topic}|{req.stage}|{req.question}|{req.challenge}|{context}|{req.focus_record_ids}")
 
     def _perspective(self, req: PerspectiveRequest) -> CouncilEvent:
         scope = req.scope
@@ -595,7 +603,7 @@ class CustomerAgent:
         blocks, allowed_q, allowed_s = [], set(), set()
         # Overall: more themes, fewer quotes each, so the prompt stays bounded.
         for stat in stats[:6] if overall else stats[:3]:
-            text, q, s = self._theme_block(stat, total, rows, 4 if overall else 6)
+            text, q, s = self._theme_block(stat, total, rows, 4 if overall else 6, req.focus_record_ids)
             blocks.append(text)
             allowed_q |= set(q)
             allowed_s |= s
@@ -663,7 +671,9 @@ class CustomerAgent:
             f"{topic_line} Scope: {scope.vehicle} / {scope.market} / {scope.powertrain or 'all powertrains'}.\n"
             f"Moderator question: {req.question or 'How should the next generation address this for customers?'}\n"
             f"{base} (verified by code; shown to the council next to your statement)\n"
-            f"Evidence strength: {strength}\n\n"
+            f"Evidence strength: {strength}\n"
+            + ("Quotes are selected for this exact council topic. Theme counts describe the broader customer theme, not prevalence of this particular problem.\n" if req.focus_record_ids is not None else "")
+            + "\n"
             + "\n\n".join(blocks)
             + "\n\n" + history
             + "# YOUR TURN\n"
@@ -673,11 +683,11 @@ class CustomerAgent:
             "unspecified scale and no sample size; their ordering alone proves neither satisfaction nor "
             "statistical significance. Call something a strength to retain only if customers praise it.\n"
             "Fields: 'statement' = your answer to this Task (for a challenge: your direct reply to it), with NO "
-            "recommendation in it. 'recommendation' = one or two sentences, separate. 'assumption' = one concrete "
+            "recommendation in it. Use at most two short, complete sentences; do not repeat the because field. 'recommendation' = one or two sentences, separate. 'assumption' = one concrete "
             "limitation of THIS evidence (e.g. few records, one channel, study not split by powertrain); never "
             "restate the topic. 'stance' = your position on the statement you answer (agree, partly_agree, "
             "disagree, outside_evidence), or none for an opening position. 'because' = one or two sentences naming "
-            "the specific customer complaint, praise or request (cite its ID) or study result (with its direction) "
+            "the specific customer complaint, praise or request (cite its ID) or a literal study observation with its unknown scale/sample caveat. Praise must cite a Likes feedback quote, NEVER an unknown-scale study mean. A mean alone is neither praise nor dissatisfaction. Name only evidence "
             "that supports your stance; it must add evidence, not repeat the statement. 'counterQuestion' = one "
             "question back to them when you disagree or partly agree, else empty."
         )
@@ -686,7 +696,7 @@ class CustomerAgent:
         st, _ = self._validate_ids(raw.get("studyRefIds", []), allowed_s)
         statement, removed = strip_numeric_claims(raw.get("statement", ""))
         because = strip_numeric_claims(raw.get("because", ""))[0].strip()
-        if because and because.lower() not in statement.lower():
+        if req.focus_record_ids is None and because and because.lower() not in statement.lower():
             statement = f"{statement.rstrip()} {because}"
         if ev:
             title = "Customer priorities for the next generation" if overall else label

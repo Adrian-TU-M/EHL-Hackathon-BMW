@@ -240,6 +240,7 @@ class AgentPosition(Model):
 
 
 class Challenge(Model):
+    reasoning: str = Field(default="", max_length=6000)
     id: str
     actor: Role
     target_actor: Role
@@ -320,6 +321,7 @@ class ScoringInput(Model):
 
 
 class JudgeProposal(Model):
+    acceptance_criteria: list[str] = Field(default_factory=list)
     id: str
     version: int = Field(default=1, ge=1)
     title: str = Field(min_length=1)
@@ -439,9 +441,18 @@ class Limits(Model):
     reserve_fraction: float = Field(default=0.2, ge=0.2, le=0.5)
 
 
+class ModeratorDirection(Model):
+    summary: str = Field(min_length=1, max_length=600)
+    questions: dict[str, str] = Field(default_factory=dict)
+    continue_discussion: bool = False
+
+
 class Work(Model):
     brief: TopicBrief
     stage: str = "perspectives"
+    debate_round: int = 1
+    directions: dict[str, str] = Field(default_factory=dict)
+    challenge_completed: list[str] = Field(default_factory=list)
     positions: list[AgentPosition] = Field(default_factory=list)
     claims: list[Claim] = Field(default_factory=list)
     challenges: list[Challenge] = Field(default_factory=list)

@@ -29,6 +29,7 @@ from .models import (
     Decision,
     DiscussionEvent,
     JudgeAssessment,
+    ModeratorDirection,
     JudgePacket,
     Limits,
     ProposalDecision,
@@ -633,7 +634,7 @@ class Engine:
                 sort_keys=True,
             ).encode()
         ).hexdigest()[:12]
-        slot = f"{w.stage}:{actor}:{operation}:{context}"
+        slot = f"{w.stage}:round{w.debate_round}:{actor}:{operation}:{context}"
         while w.attempts.get(slot, 0) < 2:
             if s.generation != generation or s.status != "running":
                 raise asyncio.CancelledError
@@ -863,7 +864,7 @@ class Engine:
                 elif (
                     w.errors
                     or not w.assessment
-                    or not w.alternatives
+                    or (not w.alternatives and s.participant_runtime != "native")
                     or any(
                         c.consequential and c.validation != "supported"
                         for c in w.claims
@@ -1035,22 +1036,13 @@ class Engine:
                 )
                 self.store.save(s)
                 if w.stage == "perspectives":
-                    positions = await batch(
-                        *(
-                            self.call(
-                                s,
-                                r,
-                                "perspective",
-                                self.payload(s, r),
-                                AgentPosition,
-                                generation,
-                            )
-                            for r in ROLES
-                        )
-                    )
+                    for role in ROLES:
+                        if any(p.actor == role for p in w.positions):
+                            continue
+                        position = await self.call(s, role, "perspective", self.payload(s, role), AgentPosition, generation)
+                        with self.atomic(s):
+                            self.accept_position(s, role, position)
                     with self.atomic(s):
-                        for r, p in zip(ROLES, positions):
-                            self.accept_position(s, r, p)
                         w.stage = "validation"
                 elif w.stage in {
                     "validation",
@@ -1112,38 +1104,41 @@ class Engine:
                             data={"claims": [c.model_dump() for c in w.claims]},
                         )
                         w.stage = {
-                            "validation": "challenges",
-                            "rebuttal_validation": "assessment",
+                            "validation": "moderation" if s.participant_runtime == "native" else "challenges",
+                            "rebuttal_validation": "synthesis" if s.participant_runtime == "native" and w.debate_round < 2 else "assessment",
                             "clarification_validation": "reassessment",
                         }[w.stage]
-                elif w.stage == "challenges":
-                    responses = await batch(
-                        *(
-                            self.call(
-                                s,
-                                r,
-                                "challenge",
-                                self.payload(
-                                    s,
-                                    r,
-                                    positions=[p.model_dump() for p in w.positions],
-                                    pm_challenges=w.pm_challenges,
-                                    priorities=[
-                                        c.id
-                                        for c in w.claims
-                                        if c.consequential
-                                        and c.validation != "supported"
-                                    ],
-                                ),
-                                ChallengeResponse,
-                                generation,
-                            )
-                            for r in ROLES
-                        )
-                    )
+                elif w.stage in {"moderation", "synthesis"}:
+                    synthesis = w.stage == "synthesis"
+                    direction = await self.call(s, "moderator", "moderation",
+                        self.payload(s, "moderator", positions=[p.model_dump() for p in w.positions],
+                            challenges=[c.model_dump() for c in w.challenges],
+                            round=w.debate_round, synthesis=synthesis), ModeratorDirection, generation)
                     with self.atomic(s):
-                        claims = {c.id: c for c in w.claims}
-                        for role, result in zip(ROLES, responses):
+                        if direction:
+                            w.directions = {role: question[:700] for role, question in direction.questions.items() if role in ROLES}
+                            self.emit(s, "moderation", "moderator", direction.summary,
+                                data={"round": w.debate_round, "questions": w.directions})
+                        if synthesis and (not direction or not direction.continue_discussion):
+                            w.stage = "assessment"
+                        else:
+                            if synthesis:
+                                w.debate_round += 1
+                            w.stage = "challenges"
+                elif w.stage == "challenges":
+                    for role in ROLES:
+                        turn_key = f"{w.debate_round}:{role}"
+                        if turn_key in w.challenge_completed or any(c.id == f"{w.brief.topic_id}:{role}:round{w.debate_round}:challenge" for c in w.challenges):
+                            continue
+                        result = await self.call(s, role, "challenge", self.payload(s, role,
+                            positions=[p.model_dump() for p in w.positions], pm_challenges=w.pm_challenges,
+                            moderator_question=w.directions.get(role, ""),
+                            challenges=[c.model_dump() for c in w.challenges],
+                            priorities=[c.id for c in w.claims if c.consequential and c.validation != "supported"]),
+                            ChallengeResponse, generation)
+                        with self.atomic(s):
+                            w.challenge_completed.append(turn_key)
+                            claims = {c.id: c for c in w.claims}
                             c = result.challenge if result else None
                             if c and (
                                 c.actor != role
@@ -1158,13 +1153,19 @@ class Engine:
                                 w.errors.append(f"Invalid {role} challenge rejected")
                                 c = None
                             if c:
-                                c.id = f"{w.brief.topic_id}:{role}:challenge"
+                                c.id = f"{w.brief.topic_id}:{role}:round{w.debate_round}:challenge"
                                 c.status, c.response, c.response_evidence_ids = (
                                     "open",
                                     None,
                                     [],
                                 )
                                 w.challenges.append(c)
+                                if c.reasoning:
+                                    argument = Claim(id=f"discussion:{c.id}", actor=role, statement=c.reasoning,
+                                        kind="inference" if c.evidence_ids else "limitation", evidence_ids=c.evidence_ids)
+                                    validate_claim(argument, self.index(s), s.agenda.scope,
+                                        {e.id for e in self.allowed(s, role)}, {a.id for a in s.assumptions})
+                                    w.claims.append(argument)
                             elif not result:
                                 w.errors.append(
                                     f"{role} challenge opportunity incomplete"
@@ -1184,40 +1185,23 @@ class Engine:
                                 c.evidence_ids if c else [],
                                 {"challenge": c.model_dump() if c else None},
                             )
+                    with self.atomic(s):
                         w.stage = "rebuttals"
                 elif w.stage == "rebuttals":
                     targets = [
                         r
                         for r in ROLES
-                        if any(c.target_actor == r for c in w.challenges)
+                        if any(c.target_actor == r and c.response is None for c in w.challenges)
                     ]
-                    results = await batch(
-                        *(
-                            self.call(
-                                s,
-                                r,
-                                "rebuttal",
-                                self.payload(
-                                    s,
-                                    r,
-                                    challenges=[
-                                        c.model_dump()
-                                        for c in w.challenges
-                                        if c.target_actor == r
-                                    ],
-                                    positions=[p.model_dump() for p in w.positions],
-                                ),
-                                Rebuttal,
-                                generation,
-                            )
-                            for r in targets
-                        )
-                    )
-                    with self.atomic(s):
-                        for role, result in zip(targets, results):
+                    for role in targets:
+                        result = await self.call(s, role, "rebuttal", self.payload(s, role,
+                            challenges=[c.model_dump() for c in w.challenges if c.target_actor == role and c.response is None],
+                            history_challenges=[c.model_dump() for c in w.challenges],
+                            positions=[p.model_dump() for p in w.positions]), Rebuttal, generation)
+                        with self.atomic(s):
                             allowed = {e.id for e in self.allowed(s, role)}
                             for c in [
-                                c for c in w.challenges if c.target_actor == role
+                                c for c in w.challenges if c.target_actor == role and c.response is None
                             ]:
                                 items = (
                                     [
@@ -1281,6 +1265,7 @@ class Engine:
                                         "native_output": result.native_output if result else None,
                                     },
                                 )
+                    with self.atomic(s):
                         w.stage = "rebuttal_validation"
                 elif w.stage in {"assessment", "reassessment"}:
                     packet = self.packet(s)

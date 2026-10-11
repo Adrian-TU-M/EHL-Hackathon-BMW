@@ -508,47 +508,78 @@ export function JudgeConversationSession({
       )}
     </div>
   );
-  return voiceOpen
-    ? createPortal(
-        <dialog
-          ref={dialogRef}
-          className={`jury-voice-popup ${isSpeaking ? "judge-talking" : userIsSpeaking ? "pm-talking" : ""}`}
-          aria-labelledby="jury-voice-title"
-          onCancel={(event) => {
-            event.preventDefault();
-            closeVoice();
-          }}
-          style={
-            {
-              "--aurora-energy": Math.min(
-                1,
-                (isSpeaking ? outputLevel : isMuted ? 0 : inputLevel) * 3,
-              ),
-            } as CSSProperties
-          }
-        >
-          <div className="jury-aurora" aria-hidden="true">
-            <i />
-            <i />
-            <i />
+  return voiceOpen ? (
+    createPortal(
+      <dialog
+        ref={dialogRef}
+        className={`jury-voice-popup ${isSpeaking ? "judge-talking" : userIsSpeaking ? "pm-talking" : ""}`}
+        aria-labelledby="jury-voice-title"
+        onCancel={(event) => {
+          event.preventDefault();
+          closeVoice();
+        }}
+        style={
+          {
+            "--aurora-energy": Math.min(
+              1,
+              (isSpeaking ? outputLevel : isMuted ? 0 : inputLevel) * 3,
+            ),
+          } as CSSProperties
+        }
+      >
+        <div className="jury-aurora" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </div>
+        <header className="jury-popup-heading">
+          <div>
+            <span>BMW NEXT / INTELLIGENT DIALOGUE</span>
+            <h2 id="jury-voice-title">A moment with your Judge.</h2>
           </div>
-          <header className="jury-popup-heading">
-            <div>
-              <span>BMW NEXT / INTELLIGENT DIALOGUE</span>
-              <h2 id="jury-voice-title">A moment with your Judge.</h2>
-            </div>
-            <button
-              type="button"
-              className="jury-popup-close"
-              onClick={closeVoice}
-              aria-label="Close voice conversation"
-            >
-              <X size={22} />
-            </button>
-          </header>
-          <div className="jury-popup-content">{content}</div>
-        </dialog>,
-        document.body,
-      )
-    : content;
+          <button
+            type="button"
+            className="jury-popup-close"
+            onClick={closeVoice}
+            aria-label="Close voice conversation"
+          >
+            <X size={22} />
+          </button>
+        </header>
+        <div className="jury-popup-content">{content}</div>
+      </dialog>,
+      document.body,
+    )
+  ) : channel === "voice" ? (
+    <div className="jury-compact-launch">
+      <JuryAvatar
+        speaking={false}
+        listening={false}
+        thinking={false}
+        text=""
+        energy={0}
+        label="BMW Jury voice assistant"
+      />
+      <div className="jury-launch-actions">
+        <Button onClick={() => connect(true)}>
+          <Mic size={18} /> Start new conversation
+        </Button>
+        {visibleMessages.length > 0 && (
+          <button className="text-link" onClick={() => connect(false)}>
+            Continue previous chat
+          </button>
+        )}
+        <button className="text-link" onClick={() => setChannel("text")}>
+          Use text instead
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+    </div>
+  ) : (
+    content
+  );
 }

@@ -66,6 +66,7 @@ class Argument(Model):
 
 
 class JudgeRequest(Model):
+    decision_stage: Literal["concept", "production"] = "production"
     scope: Scope
     background: Annotated[str, Field(max_length=20000)] = ""
     external_processing_approved: bool = False
@@ -115,6 +116,8 @@ class CriterionAssessment(Model):
 
 
 class FeatureAssessment(Model):
+    requirement_title: str | None = Field(default=None, max_length=100)
+    acceptance_criteria: list[str] = Field(default_factory=list, max_length=3)
     feature_id: Text
     feature_version: Annotated[int, Field(ge=1)]
     recommendation: Literal["recommend", "revise", "defer", "do_not_recommend"]

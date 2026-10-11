@@ -60,7 +60,7 @@ def judge_request(data) -> JudgeRequest:
     proposal_descriptions = [a["title"] + ": " + a["description"] + " Trade-off: " + a["tradeoff"] for a in packet.get("alternatives", [])]
     description = brief["question"] + ("\nAlternatives raised:\n" + "\n".join(proposal_descriptions) if proposal_descriptions else "")
     return JudgeRequest.model_validate({
-        "scope": scope, "background": brief["objective"],
+        "scope": scope, "background": brief["objective"], "decision_stage": "concept",
         "features": [{"id": feature_id, "version": packet["version"], "title": brief["question"],
                       "description": description, "topic": brief["question"]}],
         "arguments": arguments, "evidence": evidence,
@@ -95,12 +95,13 @@ async def assess_packet(data, settings):
                     rationale=rating.rationale + " Judge rubric rating, not a probability.",
                     evidence_ids=refs, claim_ids=supported, assumption_ids=dependencies))
     proposals = [JudgeProposal(id=f.feature_id, version=f.feature_version,
-        title=request.features[index].title,
+        title=f.requirement_title or request.features[index].title,
+        acceptance_criteria=f.acceptance_criteria,
         description=f.proposed_description or request.features[index].description,
         evidence_ids=evidence_ids,
         claim_ids=list(credited),
         assumption_ids=list(dict.fromkeys(aid for cid in credited for aid in claims[cid].get("assumption_ids", []))),
-    ) for index, f in enumerate(assessment.features) if credited]
+    ) for index, f in enumerate(assessment.features) if credited and f.proposed_description]
     mapped = JudgeAssessment(
         summary=assessment_text(assessment),
         unresolved_issues=list(dict.fromkeys([*assessment.clarification_requests,

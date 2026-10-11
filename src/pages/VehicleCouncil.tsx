@@ -18,6 +18,7 @@ import {
 } from "../lib/council/api";
 import { SourceCards } from "../components/council/ModeratorReview";
 import { JuryConversation } from "../components/council/JuryConversation";
+import { AgendaDialog } from "../components/council/AgendaDialog";
 import { agentMeta } from "../components/agents/AgentSculpture";
 import { Button } from "../components/ui/Primitives";
 import type { AgentId, AgentState, CouncilState } from "../lib/types";
@@ -27,6 +28,8 @@ import "../styles/vehicle-council.css";
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 const stages: Record<string, string> = {
   perspectives: "Opening positions",
+  moderation: "Moderator framing the disagreement",
+  synthesis: "Moderator reviewing the responses",
   validation: "Checking sources",
   challenges: "Cross-examination",
   rebuttals: "Responses",
@@ -47,7 +50,27 @@ const isSpeech = (e: ModeratorEvent) =>
     "assessment",
     "clarification",
     "topic",
+    "moderation",
+    "closure",
   ].includes(e.stage);
+
+function challengePosition(event: ModeratorEvent): string | undefined {
+  if (event.stage !== "challenge") return;
+  const challenge = event.data.challenge as
+    | {
+        reasoning?: string;
+        native_output?: {
+          statement?: string;
+          position?: { rationale?: string };
+        };
+      }
+    | undefined;
+  return (
+    challenge?.reasoning ||
+    challenge?.native_output?.position?.rationale ||
+    challenge?.native_output?.statement
+  );
+}
 
 export default function VehicleCouncil() {
   const scope = useAppStore((s) => s.scope);
@@ -64,6 +87,7 @@ export default function VehicleCouncil() {
   } = useCouncilSession();
   const s = params.get("new") === "1" ? undefined : saved;
   const [busy, setBusy] = useState(false);
+  const [agendaOpen, setAgendaOpen] = useState(params.get("advanced") === "1");
   const [tab, setTab] = useState<"discussion" | "jury" | "agenda">(
     "discussion",
   );
@@ -174,12 +198,39 @@ export default function VehicleCouncil() {
     setBusy(true);
     setError(undefined);
     try {
-      const next = await moderatorApi.startVehicle(scope, command.current);
+      setAgendaOpen(true);
+      if (s?.status === "awaiting_confirmation") return;
+      const next = await moderatorApi.startVehicle(
+        scope,
+        command.current,
+        true,
+      );
       accept(next);
       setParams({ session: next.id });
       setTab("discussion");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not start council");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function beginSelected(ids: string[]) {
+    if (!s) return;
+    setBusy(true);
+    setError(undefined);
+    try {
+      const confirmed =
+        s.status === "awaiting_confirmation"
+          ? await moderatorApi.confirm(s, ids, [])
+          : s;
+      accept(confirmed);
+      const running = await moderatorApi.control(confirmed, "start");
+      accept(running);
+      setAgendaOpen(false);
+      setParams({ session: running.id });
+      setTab("discussion");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not start debate");
     } finally {
       setBusy(false);
     }
@@ -214,10 +265,25 @@ export default function VehicleCouncil() {
           : completed
             ? "Council complete"
             : s
-              ? "Council paused"
+              ? s.status === "awaiting_confirmation"
+                ? "Choose your debate topics"
+                : "Council paused"
               : "Ready when you are";
   return (
     <div className="vehicle-council">
+      {agendaOpen && (
+        <AgendaDialog
+          key={s?.id || "preparing"}
+          session={s}
+          busy={busy}
+          error={error}
+          onStart={beginSelected}
+          onClose={() => {
+            setAgendaOpen(false);
+            if (s) setParams({ session: s.id });
+          }}
+        />
+      )}
       <header className="vc-heading">
         <div>
           <span className="eyebrow">BMW NEXT / AGENT COUNCIL</span>
@@ -372,9 +438,9 @@ export default function VehicleCouncil() {
                 </span>
                 <h2>A complete vehicle review.</h2>
                 <p>
-                  Start once. The council covers every topic supported by
-                  evidence for this car, challenges each other’s arguments, and
-                  sends Jury’s verdicts to Decisions & Scenarios.
+                  Choose the topics. Moderator guides the debate, the agents
+                  challenge and refine their proposals, and Jury sends concrete
+                  requirements to Decisions & Scenarios for your approval.
                 </p>
               </div>
               <div className="vc-flow">
@@ -414,7 +480,9 @@ export default function VehicleCouncil() {
                     key={value}
                     role="tab"
                     aria-selected={tab === value}
-                    onClick={() => setTab(value)}
+                    onClick={() =>
+                      value === "agenda" ? setAgendaOpen(true) : setTab(value)
+                    }
                   >
                     {label}
                     {value === "jury" && outcomes.length > 0 && (
@@ -486,7 +554,63 @@ export default function VehicleCouncil() {
                                 }
                               </span>
                             </header>
-                            <p>{e.statement}</p>
+                            {e.stage === "rebuttal" && !!e.data.challenge && (
+                              <blockquote>
+                                Replying to{" "}
+                                {
+                                  (
+                                    e.data.challenge as {
+                                      actor: string;
+                                      question: string;
+                                    }
+                                  ).actor
+                                }
+                                :{" "}
+                                {
+                                  (
+                                    e.data.challenge as {
+                                      actor: string;
+                                      question: string;
+                                    }
+                                  ).question
+                                }
+                              </blockquote>
+                            )}
+                            {e.stage === "challenge" && !!e.data.challenge && (
+                              <small className="vc-challenge-target">
+                                To{" "}
+                                {
+                                  (e.data.challenge as { target_actor: string })
+                                    .target_actor
+                                }
+                              </small>
+                            )}
+                            {challengePosition(e) && (
+                              <p className="vc-challenge-position">
+                                {challengePosition(e)}
+                              </p>
+                            )}
+                            <p>
+                              {e.stage === "challenge" &&
+                                challengePosition(e) && (
+                                  <strong>My question: </strong>
+                                )}
+                              {e.statement}
+                            </p>
+                            {e.stage === "moderation" && !!e.data.questions && (
+                              <div className="moderator-prompts">
+                                {Object.entries(
+                                  e.data.questions as Record<string, string>,
+                                ).map(([role, question]) => (
+                                  <p key={role}>
+                                    <strong>
+                                      {agentMeta[role as AgentId]?.name || role}
+                                    </strong>{" "}
+                                    · {question}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
                             {e.evidence_ids.length > 0 && (
                               <button
                                 className="text-link"
@@ -629,15 +753,14 @@ export default function VehicleCouncil() {
                       className="text-link"
                       to={`/council?session=${s.id}&advanced=1`}
                     >
-                      Advanced Moderator controls ↗
+                      View selected topics ↗
                     </Link>
                   </details>
                 </section>
               )}
               <p className="vc-timing">
-                Local Qwen runs one inference at a time. The latest complete
-                topic took 7 minutes; a full-car agenda takes longer. Pause and
-                resume at any time.
+                Local Qwen · source-grounded proposals · final decisions stay
+                with you.
               </p>
             </>
           )}

@@ -4,6 +4,7 @@ import { moderatorApi } from "../../lib/council/api";
 import type {
   AssumptionRecord,
   SourceEvidence,
+  SourceRecord,
   TopicOutcome,
   ModeratorSession,
 } from "../../lib/council/contracts";
@@ -22,6 +23,21 @@ export function SourceCards({
   const [page, setPage] = useState(0),
     [sources, setSources] = useState<SourceEvidence[]>([]),
     [error, setError] = useState("");
+  const [inventory, setInventory] = useState<SourceRecord[]>([]);
+  useEffect(() => {
+    let disposed = false;
+    moderatorApi
+      .inventory(snapshot)
+      .then((result) => {
+        if (!disposed) setInventory(result.sources);
+      })
+      .catch(() => {
+        if (!disposed) setInventory([]);
+      });
+    return () => {
+      disposed = true;
+    };
+  }, [snapshot]);
   const unique = [...new Set(ids)],
     key = unique.slice(page * 10, page * 10 + 10).join("|");
   useEffect(() => {
@@ -45,17 +61,15 @@ export function SourceCards({
     };
   }, [key, snapshot]);
   return (
-    <Modal
-      title={`Supplied evidence (${unique.length})`}
-      wide
-      onClose={onClose}
-    >
+    <Modal title={`Sources (${unique.length})`} wide onClose={onClose}>
       {error && <p role="alert">{error}</p>}
       {sources.length === 0 && !error && <p>Loading source passages…</p>}
       {sources.map((e) => (
         <article key={e.id} className="moderator-record">
           <strong>
-            {e.source_id} · {e.location}
+            {inventory.find((source) => source.id === e.source_id)?.name ||
+              e.source_id}{" "}
+            · {e.location}
           </strong>
           <p>
             {e.id} · {e.kind} · {e.vehicle || "Corporate context"} ·{" "}
@@ -63,6 +77,21 @@ export function SourceCards({
             {e.powertrain || "Powertrain unspecified"} ·{" "}
             {e.period || e.published_at || "Date unknown"}
           </p>
+          {inventory
+            .find((source) => source.id === e.source_id)
+            ?.source_url?.startsWith("https://") && (
+            <a
+              className="text-link"
+              href={
+                inventory.find((source) => source.id === e.source_id)!
+                  .source_url
+              }
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open original source ↗
+            </a>
+          )}
           <pre>{e.passage}</pre>
           <p>{e.limitations.join(" ")}</p>
           {e.quantitative && (
@@ -419,7 +448,9 @@ export function ProposalReviews({
   outcome,
   session,
   onAccept,
+  compact = false,
 }: {
+  compact?: boolean;
   outcome: TopicOutcome;
   session: ModeratorSession;
   onAccept: (s: ModeratorSession) => void;
@@ -433,10 +464,10 @@ export function ProposalReviews({
   if (!proposals.length) return null;
   return (
     <section className="proposal-reviews">
-      <h4>Requirement approvals for presentations</h4>
+      <h4>Your decision</h4>
       <p className="small muted">
-        Outcome review is separate. Approve each requirement version explicitly
-        before using it as a presentation recommendation.
+        Accept a requirement into the future-car plan, or reject it. Your
+        decision is saved against this exact version.
       </p>
       {proposals.map((p) => {
         const decision = [...(outcome.proposal_decisions || [])]
@@ -447,10 +478,72 @@ export function ProposalReviews({
           decision.proposal_version === p.version;
         return (
           <article className="moderator-record" key={p.id}>
-            <strong>
-              {p.title} / v{p.version}
-            </strong>
-            <p>{p.description}</p>
+            {!compact && (
+              <>
+                <strong>
+                  {p.title} / v{p.version}
+                </strong>
+                <p>{p.description}</p>
+              </>
+            )}
+            {!!p.acceptance_criteria?.length && (
+              <details>
+                <summary>How we will validate it</summary>
+                <ul>
+                  {p.acceptance_criteria.map((criterion, i) => (
+                    <li key={i}>{criterion}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+            <div className="requirement-decision-actions">
+              {(["Approved", "Rejected"] as const).map((decisionStatus) => (
+                <button
+                  key={decisionStatus}
+                  className={
+                    decisionStatus === "Approved"
+                      ? "requirement-accept"
+                      : "requirement-reject"
+                  }
+                  disabled={
+                    busy ||
+                    (current && decision.status === decisionStatus) ||
+                    (decisionStatus === "Approved" &&
+                      (!outcome.assessment_valid ||
+                        ["budget_exhausted", "pm_stopped"].includes(
+                          outcome.closure_reason,
+                        ) ||
+                        ["Rejected", "Challenged"].includes(
+                          outcome.review_status,
+                        )))
+                  }
+                  onClick={async () => {
+                    setBusy(true);
+                    setError("");
+                    try {
+                      onAccept(
+                        await moderatorApi.reviewProposal(
+                          session,
+                          outcome.topic_id,
+                          p.id,
+                          p.version,
+                          outcome.version,
+                          decisionStatus,
+                          `PM explicitly ${decisionStatus === "Approved" ? "accepted" : "rejected"} this proposed requirement in Decisions & scenarios.`,
+                        ),
+                      );
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : String(e));
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                >
+                  {decisionStatus === "Approved" ? "✓ Accept" : "✕ Reject"}
+                </button>
+              ))}
+            </div>
+            {error && <p role="alert">{error}</p>}
             <Badge
               tone={
                 current && decision.status === "Approved" ? "green" : "amber"
@@ -467,7 +560,7 @@ export function ProposalReviews({
                 setError("");
               }}
             >
-              Review requirement
+              Add a decision note
             </Button>
             {selected === p.id ? (
               <form

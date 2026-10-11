@@ -1,6 +1,8 @@
 import asyncio
 import hashlib
 import json
+import logging
+import re
 from datetime import datetime, timezone
 from uuid import uuid4
 from .adapters import AIAdapter
@@ -13,7 +15,11 @@ def timestamp() -> str:
 
 
 def digest(request: JudgeRequest) -> str:
-    return hashlib.sha256(json.dumps(request.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
+    payload = request.model_dump(mode="json")
+    # Preserve digests for historical production packets saved before concept mode.
+    if payload.get("decision_stage") == "production":
+        payload.pop("decision_stage", None)
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
 class JudgeService:
@@ -37,6 +43,7 @@ class JudgeService:
         except ValueError as exc:
             if not hasattr(self.ai, "validation_error"):
                 raise
+            logging.getLogger("uvicorn.error").warning("Judge repairing rejected assessment: %s", str(exc)[:700])
             self.ai.validation_error = str(exc)[:700]
             try:
                 return await self._assess(request)
@@ -70,6 +77,9 @@ class JudgeService:
                 if source.exclusion_reason or citation.quote not in source.passage:
                     raise ValueError("Citation passage is invalid or excluded")
                 active.append(source)
+            if any("scale" in e.passage.lower() and "undocumented" in e.passage.lower() for e in active):
+                if re.search(r"\b(?:low|high|poor|good)\b", result.explanation, re.I) and re.search(r"satisf|rating|mean|score", result.explanation, re.I):
+                    raise ValueError("An undocumented study scale cannot establish high/low satisfaction or good/bad ratings. Assess only the literal source statement and explain this limitation.")
             missing = [eid for eid in original.evidence_ids if eid not in evidence]
             result.issues.extend(f"Missing evidence: {eid}" for eid in missing)
             if result.support and not active:
@@ -128,7 +138,8 @@ class JudgeService:
                     feasibility.value = None
                     feasibility.rationale = "Unknown: the attached evidence does not establish engineering effort, cost or implementation feasibility."
                     result.uncertainties.append("Engineering feasibility requires a technical assessment; market signals and customer feedback cannot establish it.")
-                    result.consequential_uncertainty = True
+                    if request.decision_stage == "production":
+                        result.consequential_uncertainty = True
             relevant = [evidence[c.evidence_id] for a in draft.arguments
                         if feature.id in args[a.argument_id].feature_ids and (a.support or 0) > 0
                         for c in a.citations]
@@ -142,6 +153,7 @@ class JudgeService:
                 result.recommendation = "defer"
                 result.uncertainties.append("Recommendation deferred pending consequential evidence validation.")
             result.priority, result.coverage = score({k: c.value for k, c in result.criteria.items()}, request.weights)
+            result.uncertainties = list(dict.fromkeys(result.uncertainties))
         consequential = any(f.consequential_uncertainty for f in draft.features)
         action = "continue"
         if consequential:

@@ -48,8 +48,12 @@ export async function request<T>(
   return response.json();
 }
 export const moderatorApi = {
-  startVehicle: (scope: Scope, idempotency_key: string) =>
-    request<ModeratorSession>("/vehicle-debates", { scope, idempotency_key }),
+  startVehicle: (scope: Scope, idempotency_key: string, prepare_only = false) =>
+    request<ModeratorSession>("/vehicle-debates", {
+      scope,
+      idempotency_key,
+      prepare_only,
+    }),
   sessions: () => request<{ sessions: ModeratorSessionSummary[] }>("/sessions"),
   health: () =>
     request<{
@@ -94,12 +98,14 @@ export const moderatorApi = {
       "/sources/external",
       body,
     ),
-  inventory: () =>
+  inventory: (snapshot?: string) =>
     request<{
       sources: SourceRecord[];
       warnings: string[];
       snapshot_hash: string;
-    }>("/inventory"),
+    }>(
+      `/inventory${snapshot ? `?source_snapshot=${encodeURIComponent(snapshot)}` : ""}`,
+    ),
   export: (id: string) => request<ModeratorExport>(`/sessions/${id}/export`),
   review: (
     s: ModeratorSession,

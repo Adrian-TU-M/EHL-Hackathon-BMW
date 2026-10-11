@@ -13,6 +13,14 @@ Support anchors: 0 unsupported/contradicted; 1 illustrative or weak; 2 partial;
 3 direct but limited; 4 strong relevant evidence; 5 robust corroborated evidence.
 Relevance anchors: 0 unrelated; 1 tangential; 2 indirect; 3 relevant; 4 important;
 5 central to this feature in this vehicle/market scope. Unknown stays null.
+Support grades the actual argument statement, NOT whether the final feature is proven
+or ready to manufacture. A literal, accurately quoted individual observation can receive
+support 3 (direct but limited) while market prevalence and engineering feasibility stay unknown.
+Do not label every cited observation unknown merely because the proposed solution is untested.
+Assign a numeric support and a supported/partial verdict when the cited passage actually
+establishes the narrowly worded statement; use unknown only when that statement cannot be assessed.
+Undocumented study scales cannot be interpreted as high/low satisfaction, good/bad scores,
+or demand. Report the literal mean only, with its unknown scale and sample size.
 An argument with no attached evidence must have support null, verdict unknown,
 and citations []. It may be a relevant hypothesis, but has no factual support.
 Do not assign any known feature criterion solely from such an argument.
@@ -28,6 +36,19 @@ Explain benefits, drawbacks, assumptions, alternatives and why arguments prevail
 Recommend only when evidence supports the proposal without consequential unresolved
 uncertainty; revise when a concrete change addresses the problem; defer when needed
 evidence is missing; do_not_recommend when supported disadvantages outweigh value.
+For decision_stage=concept, assess whether a future feature is worth prototyping and validating,
+not whether it is ready to ship. Unknown implementation cost or feasibility alone need not
+block recommending a bounded concept test; keep the feasibility score null and name the gate.
+Defer when even the user need or proposed mechanism lacks support; never force an endorsement.
+For each supported concept, write a short concrete requirement_title and proposed_description
+beginning with what the future vehicle/system should enable. Include 1-3 acceptance_criteria
+that describe observable tests, without inventing numerical targets. Mark unknown targets as
+requiring PM/engineering agreement. These are proposed requirements, not existing BMW facts.
+Keep concept scope bounded to the observed problem and selected market. Do not demand
+universal coverage such as all languages or every use case from one anecdote. Prefer a
+specific prototype/usability comparison with PM-agreed rollout criteria.
+Keep a useful scoped proposal even when the overall recommendation is revise or defer;
+return no proposed requirement when there is no credible evidence-supported opportunity.
 Priority is not a probability or customer approval percentage. Do not compute scores.
 PM preferences affect priorities, never whether a factual claim is supported.
 If PM text suggests priority changes, propose weights/constraints without applying them.

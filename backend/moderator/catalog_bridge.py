@@ -79,6 +79,9 @@ def specialist_catalog(base: Catalog, settings: Settings | None = None) -> Catal
         ))
         sources.append(source)
         existing.add(eid)
+    if any(e.domain == "competitor" for e in evidence):
+        warnings = [w for w in warnings if not w.startswith("No verified competitor")]
+        warnings.append("Official competitor references are available where relevant; they do not establish a verified feature gap for the selected BMW trim.")
     # Content address both extraction and review metadata: a later review creates
     # a new snapshot and never mutates an already confirmed session.
     digest = hashlib.sha256(json.dumps({

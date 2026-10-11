@@ -36,10 +36,18 @@ def prior_turns(data):
             agent_id=p["actor"], stance="revise", rationale=p["summary"] or "No completed opening.",
             claims=[NativeClaim(id=c["id"], text=c["statement"], kind="fact" if c.get("evidence_ids") else "inference", evidence_ids=c.get("evidence_ids", [])) for c in p.get("claims", [])],
         )))
-    for c in data.get("challenges", []):
+    active_challenges = {c["id"] for c in data.get("challenges", [])}
+    for c in data.get("history_challenges", data.get("challenges", [])):
+        reasoning = c.get("reasoning", "")
         turns.append(CouncilTurn(agent_id=c["actor"], stage="challenge", position=NativePosition(
-            agent_id=c["actor"], stance="revise", rationale=c["question"], claims=[]),
-            challenges=[NativeChallenge(target_agent_id=c["target_actor"], target_claim_id=c["target_claim_id"], question=c["question"], evidence_ids=c.get("evidence_ids", []))]))
+            agent_id=c["actor"], stance="revise", rationale=reasoning or c["question"],
+            claims=[NativeClaim(id=f"discussion:{c['id']}", text=reasoning, kind="inference", evidence_ids=c.get("evidence_ids", []))] if reasoning else []),
+            challenges=[NativeChallenge(target_agent_id=c["target_actor"], target_claim_id=c["target_claim_id"], question=c["question"], evidence_ids=c.get("evidence_ids", []))] if c["id"] in active_challenges else []))
+        if c.get("response") and not c["response"].startswith("No valid addressed rebuttal;"):
+            turns.append(CouncilTurn(agent_id=c["target_actor"], stage="revision", position=NativePosition(
+                agent_id=c["target_actor"], stance="revise", rationale=c["response"],
+                claims=[NativeClaim(id=f"response:{c['id']}", text=c["response"], kind="inference", evidence_ids=c.get("response_evidence_ids", []))]),
+                answered_claim_ids=[c["target_claim_id"]]))
     return turns
 
 
@@ -96,12 +104,28 @@ class NativeSpecialists:
         scope = data["brief"]["scope"]
         history = [{"actor": p["actor"], "statement": p["summary"][:2000]} for p in data.get("positions", [])]
         foreign = [p for p in data.get("positions", []) if p["actor"] != "customer" and p.get("claims")]
+        for c in data.get("history_challenges", data.get("challenges", [])):
+            if c.get("reasoning") and c["actor"] != "customer":
+                foreign.append({"actor": c["actor"], "summary": c["reasoning"],
+                    "claims": [{"id": f"discussion:{c['id']}"}]})
+            if c.get("response") and c["target_actor"] != "customer" and not c["response"].startswith("No valid addressed rebuttal;"):
+                foreign.append({"actor": c["target_actor"], "summary": c["response"],
+                    "claims": [{"id": f"response:{c['id']}"}]})
         target = foreign[-1] if foreign else None
-        if operation == "challenge" and target:
-            history.append({"actor": target["actor"], "statement": target["summary"][:2000]})
         if operation == "rebuttal":
             history.extend({"actor": c["actor"], "statement": c["question"][:2000]} for c in data.get("challenges", []))
-        request = PerspectiveRequest(scope=CustomerScope.model_validate(scope), topic="",
+        if data.get("moderator_question"):
+            history.append({"actor": "moderator", "statement": data["moderator_question"]})
+        for c in data.get("history_challenges", data.get("challenges", [])):
+            if c.get("response"):
+                history.append({"actor": c["target_actor"], "statement": c["response"][:2000]})
+        if operation == "challenge" and target:
+            history.append({"actor": target["actor"], "statement": target["summary"][:2000]})
+        topic_key = data["brief"]["topic_id"].removeprefix("topic-")
+        customer_topic = {"controls": "Infotainment & connectivity", "display": "Infotainment & connectivity", "app": "Infotainment & connectivity", "services": "Infotainment & connectivity", "range": "Charging & range", "charging": "Charging & range", "seats": "Seats", "climate": "Climate control", "luggage": "Trunk & cargo"}.get(topic_key, "")
+        focus_ids = [e.id.split(":", 1)[1] for e in evidence.values() if e.kind == "feedback" and topic_key in e.topics and ":" in e.id]
+        request = PerspectiveRequest(scope=CustomerScope.model_validate(scope), topic=customer_topic,
+            focus_record_ids=focus_ids,
             stage={"perspective": "perspectives", "challenge": "discussion", "rebuttal": "challenge", "clarification": "revision"}[operation],
             question=data["brief"]["question"], context=history[-20:],
             challenge="\n".join(f"{c['actor']}: {c['question']}" for c in data.get("challenges", [])) if operation == "rebuttal" else data.get("question", {}).get("question", ""))
@@ -150,7 +174,7 @@ class NativeSpecialists:
                     return Reply(empty.model_dump(), 0)
                 participant = MarketParticipant(self.settings) if actor == "market" else GroundedParticipant("competitor", self.settings)
                 stage = {"perspective": "perspectives", "challenge": "challenge", "rebuttal": "revision", "clarification": "perspectives"}[operation]
-                context = {"scope": data["brief"]["scope"], "question": data.get("question", {}).get("question") or data["brief"]["question"], "moderator_framing": data["brief"]["objective"], "limitations": data["brief"]["limitations"]}
+                context = {"scope": data["brief"]["scope"], "question": data.get("question", {}).get("question") or data["brief"]["question"], "moderator_framing": data["brief"]["objective"], "moderator_question": data.get("moderator_question", ""), "discussion_goal": "Give your own specific proposed option and a trade-off; directly answer the Moderator and peer claims. Distinguish a proposed test from an established fact.", "limitations": data["brief"]["limitations"]}
                 result = await participant.turn(stage, context, sources, prior_turns(data))
                 rationale = result.position.rationale
                 ids = list(dict.fromkeys(e for c in result.position.claims for e in c.evidence_ids))
@@ -175,10 +199,10 @@ class NativeSpecialists:
                     abstention_reason=None if ids else rationale, **metadata)
             elif operation == "challenge":
                 output = ChallengeResponse(challenge=Challenge(id="native-challenge", actor=actor, target_actor=target_actor,
-                    target_claim_id=target_claim, kind="interpretation", question=question,
+                    target_claim_id=target_claim, kind="interpretation", question=question, reasoning=rationale,
                     consequence="Clarify the evidence and trade-off before the Judge assesses this proposal.", evidence_ids=ids, **metadata)
                     if question and target_actor and target_claim else None,
-                    abstention_reason=None if question and target_claim else "The native agent raised no further counter-question.")
+                    abstention_reason=None if question and target_claim else rationale or "The native agent raised no further counter-question.")
             elif operation == "rebuttal":
                 output = Rebuttal(actor=actor, responses=[RebuttalItem(challenge_id=c["id"], status="unresolved",
                     statement=rationale, evidence_ids=ids) for c in data.get("challenges", []) if c["target_claim_id"] in answered], **metadata)

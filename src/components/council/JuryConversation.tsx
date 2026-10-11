@@ -47,7 +47,7 @@ export function JuryConversation({
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const [localText, setLocalText] = useState(false);
+  const localText = false;
   const mounted = useRef(true);
   const toolRequests = useRef(new Map<string, Promise<string>>());
   const lastPmEvent = useRef("");
@@ -179,13 +179,6 @@ export function JuryConversation({
       className="jury-live-handoff"
       aria-label="Discuss the actual Judge verdict"
     >
-      <header className="jury-live-heading">
-        <span className="eyebrow">JURY / SAVED VERDICT</span>
-        <h2>Discuss with the Judge</h2>
-        <p>
-          {assessment.features[0]?.rationale || outcome.assessment?.summary}
-        </p>
-      </header>
       {voiceSession && !localText ? (
         <ConversationProvider key={`${sessionId}:${assessment.id}`}>
           <JudgeConversationSession
@@ -268,22 +261,6 @@ export function JuryConversation({
             </>
           )}
         </div>
-      )}
-      {agentId && (
-        <>
-          <p className="small muted">
-            Local Qwen Judge · ElevenLabs speech. Every answer uses this saved
-            verdict. Confirm requirements on Decisions & scenarios.
-          </p>
-          <button
-            className="text-button"
-            onClick={() => setLocalText(!localText)}
-          >
-            {localText
-              ? "Return to Judge voice discussion"
-              : "Ask local Qwen directly in text"}
-          </button>
-        </>
       )}
       {error && (
         <p role="alert" className="error">

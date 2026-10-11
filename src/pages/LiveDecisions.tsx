@@ -89,10 +89,24 @@ export default function LiveDecisions() {
       })),
     )
     .sort((a, b) => (b.score.priority ?? -1) - (a.score.priority ?? -1));
+  const requirementStatus = (outcome: TopicOutcome, featureId: string) => {
+    const proposal = outcome.assessment?.proposals.find(
+      (p) => p.id === featureId,
+    );
+    const decision = [...(outcome.proposal_decisions || [])]
+      .reverse()
+      .find(
+        (d) =>
+          d.proposal_id === featureId &&
+          d.proposal_version === proposal?.version &&
+          d.outcome_version === outcome.version,
+      );
+    return decision?.status || "Pending review";
+  };
   const shown = rows.filter(
     (row) =>
       statusFilter === "All decisions" ||
-      row.outcome.review_status === statusFilter,
+      requirementStatus(row.outcome, row.feature.feature_id) === statusFilter,
   );
   const approvedRequirements = valid.flatMap((outcome) =>
     outcome.closure_reason === "pm_stopped" ||
@@ -173,16 +187,17 @@ export default function LiveDecisions() {
               <span>Jury verdicts</span>
             </div>
             <div>
-              <strong>
-                {valid.filter((o) => o.review_status === "Approved").length}
-              </strong>
+              <strong>{approvedRequirements.length}</strong>
               <span>PM approved</span>
             </div>
             <div>
               <strong>
                 {
-                  valid.filter((o) => o.review_status === "Pending review")
-                    .length
+                  rows.filter(
+                    (row) =>
+                      requirementStatus(row.outcome, row.feature.feature_id) ===
+                      "Pending review",
+                  ).length
                 }
               </strong>
               <span>Awaiting your review</span>
@@ -295,18 +310,30 @@ export default function LiveDecisions() {
                 <div className="decision-content">
                   <div className="decision-status">
                     <span>
-                      Jury · {feature.recommendation.replaceAll("_", " ")}
+                      Jury ·{" "}
+                      {
+                        {
+                          recommend: "Proposed for validation",
+                          revise: "Refine the concept",
+                          defer: "More evidence needed",
+                          do_not_recommend: "Not recommended",
+                        }[feature.recommendation]
+                      }
                     </span>
                     <span>
-                      {outcome.review_status === "Approved" && (
-                        <Check size={12} />
-                      )}
-                      {outcome.review_status}
+                      {requirementStatus(outcome, feature.feature_id) ===
+                        "Approved" && <Check size={12} />}
+                      {requirementStatus(outcome, feature.feature_id)}
                     </span>
                   </div>
                   <h2>
-                    {s.agenda.topics.find((t) => t.id === outcome.topic_id)
-                      ?.label || outcome.packet.brief.question}
+                    {feature.requirement_title ||
+                      outcome.assessment?.proposals.find(
+                        (p) => p.id === feature.feature_id,
+                      )?.title ||
+                      s.agenda.topics.find((t) => t.id === outcome.topic_id)
+                        ?.label ||
+                      outcome.packet.brief.question}
                   </h2>
                   <p>{feature.proposed_description || feature.rationale}</p>
                   <div className="decision-effects">
@@ -371,18 +398,22 @@ export default function LiveDecisions() {
                     >
                       <MessageCircle size={15} /> Discuss with Jury
                     </Button>
-                    <Button
-                      onClick={() => {
-                        setReview(outcome);
-                        setStatus("Deferred");
-                        setRationale("");
-                        setError("");
-                      }}
-                    >
-                      Review decision <ArrowRight size={15} />
-                    </Button>
+                    <details>
+                      <summary>More review options</summary>
+                      <Button
+                        onClick={() => {
+                          setReview(outcome);
+                          setStatus("Deferred");
+                          setRationale("");
+                          setError("");
+                        }}
+                      >
+                        Review whole topic <ArrowRight size={15} />
+                      </Button>
+                    </details>
                   </div>
                   <ProposalReviews
+                    compact
                     outcome={outcome}
                     session={s}
                     onAccept={accept}

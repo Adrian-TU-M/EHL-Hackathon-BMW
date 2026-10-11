@@ -145,6 +145,7 @@ class DiscussionMessage(BaseModel):
 
 
 class PerspectiveRequest(BaseModel):
+    focus_record_ids: list[str] | None = Field(default=None, max_length=500)
     scope: Scope
     # Theme or frontend Topic. Empty / "overall" / "all" = open discussion: topics are taken from
     # the question, or the agent covers the scope's top customer themes.

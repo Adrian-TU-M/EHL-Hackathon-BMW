@@ -41,6 +41,7 @@ export function useLocalJudgeConversation(options: Options) {
   const audioContext = useRef<AudioContext | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const outputTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const playback = useRef<HTMLAudioElement | null>(null);
   const audioUrl = useRef<string | null>(null);
   const abort = useRef<AbortController | null>(null);
@@ -51,6 +52,8 @@ export function useLocalJudgeConversation(options: Options) {
     abort.current?.abort();
     if (timer.current) clearInterval(timer.current);
     timer.current = null;
+    if (outputTimer.current) clearInterval(outputTimer.current);
+    outputTimer.current = null;
     if (recorder.current?.state === "recording") recorder.current.stop();
     recorder.current = null;
     stream.current?.getTracks().forEach((track) => track.stop());
@@ -99,17 +102,11 @@ export function useLocalJudgeConversation(options: Options) {
           source.connect(meter);
           meter.connect(ctx.destination);
           const bytes = new Uint8Array(meter.frequencyBinCount);
-          const poll = setInterval(() => {
+          outputTimer.current = setInterval(() => {
             meter.getByteFrequencyData(bytes);
             state.current.output =
               bytes.reduce((sum, n) => sum + n, 0) / bytes.length / 255;
           }, 80);
-          audio.addEventListener("ended", () => clearInterval(poll), {
-            once: true,
-          });
-          audio.addEventListener("pause", () => clearInterval(poll), {
-            once: true,
-          });
         }
         setThinking(false);
         setSpeaking(true);
@@ -134,6 +131,11 @@ export function useLocalJudgeConversation(options: Options) {
         );
     } finally {
       if (generation === state.current.generation) {
+        if (outputTimer.current) clearInterval(outputTimer.current);
+        outputTimer.current = null;
+        playback.current = null;
+        if (audioUrl.current) URL.revokeObjectURL(audioUrl.current);
+        audioUrl.current = null;
         state.current.busy = false;
         state.current.output = 0;
         setThinking(false);
@@ -159,6 +161,12 @@ export function useLocalJudgeConversation(options: Options) {
       setStatus("connecting");
       try {
         if (!textOnly) {
+          // Unlock output during the PM's click, before microphone permission
+          // or network requests can consume the browser's user activation.
+          const ctx = new AudioContext();
+          audioContext.current = ctx;
+          await ctx.resume();
+          if (generation !== state.current.generation) return;
           const mic = await navigator.mediaDevices.getUserMedia({
             audio: {
               echoCancellation: true,
@@ -171,9 +179,6 @@ export function useLocalJudgeConversation(options: Options) {
             return;
           }
           stream.current = mic;
-          const ctx = new AudioContext();
-          audioContext.current = ctx;
-          await ctx.resume();
           const input = ctx.createMediaStreamSource(mic),
             meter = ctx.createAnalyser();
           meter.fftSize = 1024;
