@@ -1,0 +1,52 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4MEF6KHDVTQR6B8DGDWVD6S",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 13,
+  "files_touched": [
+    "public/images/agents/competitor.png",
+    "public/images/agents/customer.png",
+    "public/images/agents/judge.png",
+    "public/images/agents/market.png",
+    "public/images/agents/moderator.png",
+    "src/components/agents/AgentSculpture.tsx",
+    "src/components/agents/CouncilCharacter.tsx",
+    "src/components/council/CouncilScene.tsx",
+    "src/components/council/JudgeConversationSession.tsx",
+    "src/components/council/JuryAvatar.tsx",
+    "src/components/dashboard/AppShell.tsx",
+    "src/components/ui/fluted-glass-shader.ts",
+    "src/components/ui/fluted-glass.tsx",
+    "src/components/ui/kinetic-grid.tsx",
+    "src/components/vehicle/VehicleViewer.tsx",
+    "src/lib/council/conversation-thread.ts",
+    "src/main.tsx",
+    "src/pages/Home.tsx",
+    "src/pages/VehicleCouncil.tsx",
+    "src/styles/fluted-glass.css",
+    "src/styles/home-landing.css",
+    "src/styles/jury-avatar.css",
+    "src/styles/kinetic-grid.css",
+    "src/styles/vehicle-council.css",
+    "tests/conversation-thread.test.ts",
+    "tests/e2e/vehicle-council.spec.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 825845,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 25796736,
+    "output_tokens": 76366,
+    "api_call_count": 203,
+    "subagent_tokens_complete": false
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4MEF6KHDVTQR6B8DGDWVD6S",
+  "session_id": "01a1261a-2a92-7960-ad84-d63846639755",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-11T03:00:48.223181Z",
+  "branch": "main",
+  "checkpoints_count": 13,
+  "save_step_count": 12,
+  "files_touched": [
+    "public/images/agents/competitor.png",
+    "public/images/agents/customer.png",
+    "public/images/agents/judge.png",
+    "public/images/agents/market.png",
+    "public/images/agents/moderator.png",
+    "src/components/agents/AgentSculpture.tsx",
+    "src/components/agents/CouncilCharacter.tsx",
+    "src/components/council/CouncilScene.tsx",
+    "src/components/council/JudgeConversationSession.tsx",
+    "src/components/council/JuryAvatar.tsx",
+    "src/components/dashboard/AppShell.tsx",
+    "src/components/ui/fluted-glass-shader.ts",
+    "src/components/ui/fluted-glass.tsx",
+    "src/components/ui/kinetic-grid.tsx",
+    "src/components/vehicle/VehicleViewer.tsx",
+    "src/lib/council/conversation-thread.ts",
+    "src/main.tsx",
+    "src/pages/Home.tsx",
+    "src/pages/VehicleCouncil.tsx",
+    "src/styles/fluted-glass.css",
+    "src/styles/home-landing.css",
+    "src/styles/jury-avatar.css",
+    "src/styles/kinetic-grid.css",
+    "src/styles/vehicle-council.css",
+    "tests/conversation-thread.test.ts",
+    "tests/e2e/vehicle-council.spec.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6-astra",
+  "turn_id": "f4c4c0abcb84",
+  "checkpoint_transcript_start": 7258,
+  "transcript_lines_at_start": 7258,
+  "compact_transcript_start": 1179,
+  "token_usage": {
+    "input_tokens": 825845,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 25796736,
+    "output_tokens": 76366,
+    "api_call_count": 203,
+    "subagent_tokens_complete": false
+  },
+  "session_metrics": {
+    "turn_count": 46
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-11T03:00:47.023084Z",
+    "agent_lines": 105,
+    "agent_removed": 821,
+    "human_added": 3580,
+    "human_modified": 170,
+    "human_removed": 0,
+    "total_committed": 3842,
+    "total_lines_changed": 4766,
+    "agent_percentage": 19.42929080990348,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 489,
+      "agent_lines_removed": 6
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1061,
+      "agent_lines_removed": 6
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1712,
+      "agent_lines_removed": 66
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 191,
+      "user_lines_removed": 13,
+      "agent_lines_added": 1712,
+      "agent_lines_removed": 66,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 66,
+        "src/styles/jury-avatar.css": 125
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 303,
+      "user_lines_removed": 13,
+      "agent_lines_added": 1709,
+      "agent_lines_removed": 67,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 95,
+        "src/styles/jury-avatar.css": 208
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 314,
+      "user_lines_removed": 13,
+      "agent_lines_added": 1801,
+      "agent_lines_removed": 79,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 88,
+        "src/styles/jury-avatar.css": 226
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 314,
+      "user_lines_removed": 13,
+      "agent_lines_added": 2007,
+      "agent_lines_removed": 591,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 88,
+        "src/styles/jury-avatar.css": 226
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    },
+    {
+      "checkpoint_number": 9,
+      "user_lines_added": 314,
+      "user_lines_removed": 13,
+      "agent_lines_added": 2011,
+      "agent_lines_removed": 601,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 88,
+        "src/styles/jury-avatar.css": 226
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    },
+    {
+      "checkpoint_number": 10,
+      "user_lines_added": 322,
+      "user_lines_removed": 13,
+      "agent_lines_added": 2413,
+      "agent_lines_removed": 620,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 88,
+        "src/styles/jury-avatar.css": 234
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    },
+    {
+      "checkpoint_number": 11,
+      "user_lines_added": 322,
+      "user_lines_removed": 13,
+      "agent_lines_added": 2437,
+      "agent_lines_removed": 629,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 88,
+        "src/styles/jury-avatar.css": 234
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    },
+    {
+      "checkpoint_number": 12,
+      "user_lines_added": 322,
+      "user_lines_removed": 13,
+      "agent_lines_added": 2986,
+      "agent_lines_removed": 938,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 88,
+        "src/styles/jury-avatar.css": 234
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    },
+    {
+      "checkpoint_number": 13,
+      "user_lines_added": 322,
+      "user_lines_removed": 13,
+      "agent_lines_added": 2986,
+      "agent_lines_removed": 938,
+      "user_added_per_file": {
+        "src/components/council/JuryAvatar.tsx": 88,
+        "src/styles/jury-avatar.css": 234
+      },
+      "user_removed_per_file": {
+        "src/components/council/JuryAvatar.tsx": 13
+      }
+    }
+  ]
+}

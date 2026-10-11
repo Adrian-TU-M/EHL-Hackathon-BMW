@@ -1,0 +1,65 @@
+wait check changes there is a new presentation branch pls merge that into main now the presentation generation part
+
+---
+
+# Files pasted by the user:
+
+## "You are given a task to integrate an existing React component in the codebase T…": /Users/shaur/.codex/attachments/a2c6af31-7f32-4037-990f-0212a92a1fea/Pasted text.txt
+
+## My request:
+first for the whole interface can u make this the background everywhere with the animation actually working everywhere
+
+with the cursor movement
+
+---
+
+# Files pasted by the user:
+
+## "Add an animated WebGL shader background to my app. Style: \"Fluted Glass\" (paper…": /Users/shaur/.codex/attachments/176a1ad7-2f77-4d48-ada5-edeefa25ff49/Pasted text.txt
+
+## My request:
+maybe use this and make into the same BMW logo blue style instead of this more cyan green more the BMW logo colours and also make it moveable with cursor movement
+
+---
+
+u know the voice part the current orb we don't like so much so can u use this official BMW voice assistant orb that looks like this and also add live facial expressions based on what it is saying with some emotions and make the colours move while it talks and make it like bubbly and moving and keep the background hues the same also while we activitate the jury voice chat we want it to be opened in a pop up window with the same colour gradients of the background of this bot yeah? really nicely and it should be aurora moving the background too while we speak
+
+---
+
+can u make sure there are more facial expressions shown with some nice emojis on top of it yk to show expressions and stuff
+
+---
+
+why can't I start the voice chat and don't hear anything also add heart and also add shades to the bot when it shows some emotion ykwim?
+
+---
+
+I meant this kind of SHADES of colour to it not sunglasses bro
+
+also I don't want the text next to it on the top like stuff like "Ready" and the "Encouraging stuff" ja 
+
+also every time I can't have the option to start a new convo it always resumes from the older one which is not good
+
+---
+
+btw remove the current home page and the whole 3D car stuff just keep this style as the home page with a clear button saying "take a deeper dive" and when we click that we come to the actual platform we already have remove the rest of the home page also remove the where it says BMW 7 Series and stuff ja just leave it like this
+
+---
+
+remove the overview section btw and remove audit trail and make agent council at the top btw
+
+---
+
+in the table circle with the agents make the Judge to this one the voice assistant from BMW same character 3D then for the Market, Competitor, Customer, Moderator use the same character but make it unique and different by changing the avatar and the colour corresponding to what their role is for example market can be green and money oriented maybe with coins around it as a crown or something and u must be creative with the customer, competitor and moderator ones as well somehow make it relevant and look very different but still same BMW avatar like that and should all be 3D rotatable style yk moving animations
+
+---
+
+nice but make it bigger more fit the horizontal table like make the table larger perhaps more wider
+
+---
+
+actually put the table more on the left side and make it smaller again and on the right right next to it have the live dialogue stuff going on and next to each text sent it should show the character as well ja so the user doesn't need to scroll down to see the conversation. Also put the characters on the left side on a more round proper table as if seated yeah and make the moderator and judge more elevated in the table like a courtroom like judge on top then moderator then underneath the other agents on the same level
+
+---
+
+how can we check if the debate is real like it is porperly debating and not just showing the demo debate like it is really using the data and the Qwen models I created for my 2 agents and my teammates created for the other agents how can we make sure and double check a real debate occurs here and that essentially everything works together properly including the voice chat later with the judge that it actually uses the outputted functionalitis/requirements and then confirms them with the PM
