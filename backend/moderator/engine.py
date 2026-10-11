@@ -892,6 +892,7 @@ class Engine:
                     closure_reason=reason,
                     packet=packet,
                     assessment=w.assessment,
+                    assessment_valid=w.assessment is not None,
                 )
             )
             s.cursor += 1
