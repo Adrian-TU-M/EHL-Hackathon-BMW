@@ -1,0 +1,49 @@
+ok pause does it all work properly now yes or no?
+
+---
+
+ok before that can we just make sure presentations works properly yeah can u just I will run a debate on the site yeah and hopefully it gives me many like features listed maybe 10 hopefully ja and we make the presentation based off of them could it work yes or no? can u check?
+
+---
+
+ok anyways got to start making the slides now as well I want the same background as used in the platform can u provide me with the code for that background or the image just same exact background?
+
+---
+
+u properly understood the entire product correct? can u recommend a 10 slide pitch for 3 mins presentation? with short screenshots or clips from the product as well and with this also as the background for the slides? give me smth I can give Claude Design alongside this background I am giving it so it can make the slides REAL BMW PREMIUM Style yeah? and accurate of course WINNING style pitch okay?
+
+---
+
+I was thinking more like more sort of like first two slides very intro style first ofc title and second our proposed solution in a holistic view right then the next slides explaining each agent so maybe idk 5 slides for that and then another slide for the presentation genertation and another slide for the human in the loop idk where in the slideshow that would fit but essentially the like approving rejecting part clearly explained bcs the presentation currently has way too less text and stuff bro u should make it have real stuff like bullet points and stuff accurately yeah? oh and when I say one slide for each agent ofc I mean the customer intelligence page also described in the customer feedback agent slide etc. for all the respsective agents that also have their own site ja? 
+
+also the current presentation Claude Design made looks very AI sloppy and too boring and minimalisti I want some cool stuff from 21st.dev where possible yk? maybe even if in the presentation something can move maybe the BMW avatars somehow or the background with cursor movement idk yeah but yeah also tell it to put BMW official logo on the title page ofc 
+
+give me prompt
+
+---
+
+quick thing on the agent council page can u make the table with the agents a little larger?
+
+---
+
+btw is there a way I can make a clip super short and attatch it to a slide on Cluade Design and it sort of keeps loopiing it while on the slide like a gif or smth?
+
+---
+
+can u make this as a proper character image and send it here in this chat?
+
+same for the other bots pls I need it for Claude Design
+
+---
+
+bro btw on the market trends page why does the analysis not work correctly???
+
+---
+
+can u fix the entire presentation part? why is it saying load presentation demo make sure it works properly and also can I now run a debate and expect with real proper data for the jury to output like 10 features/requirements which the presenation feature can use to generate the presentation accurately later or not as we need a live demo video as well.
+
+---
+
+<send_user_message_question_reply>
+[{"questionItemId":"[\"request_user_input_async\",\"call_dea3035ff618452bb3eb0018b3bbf0f8\",0]","question":"There are currently no PM-approved requirements in any real council session. Please approve the real requirements you want to use on Decisions & Scenarios; I can then test a presentation from those exact approvals. Meanwhile, I’m fixing the workflow and testing generation with a separate verification copy of existing real debate output.","answer":"not sure? is it nowhere else in the repo?"}]
+</send_user_message_question_reply>
