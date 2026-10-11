@@ -101,7 +101,7 @@
   filter: drop-shadow(0 0 7px #3991ff);
 }
 .vehicle-council .council-scene {
-  height: 440px;
+  height: 500px;
   min-height: 0;
   border: 0;
   background: transparent;
@@ -109,7 +109,7 @@
   border-radius: 0;
 }
 .vc-scene-loading {
-  height: 440px;
+  height: 500px;
   display: grid;
   place-items: center;
   color: #8ba8cb;
@@ -763,7 +763,7 @@
   }
   .vc-transcript {
     padding: 0 15px;
-    height: 440px;
+    height: 500px;
   }
   .vc-turn {
     grid-template-columns: 25px 1fr;
@@ -879,4 +879,182 @@
 }
 .jury-live-handoff .judge-text-form textarea {
   min-width: 0;
+}
+
+/* Table and dialogue share one viewport; only the conversation scrolls. */
+.vc-workspace {
+  --workspace-height: clamp(500px, calc(100dvh - 300px), 650px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 18px;
+  align-items: stretch;
+}
+.vc-workspace > .vc-chamber,
+.vc-workspace-panel {
+  height: var(--workspace-height);
+  min-width: 0;
+}
+.vc-workspace > .vc-chamber {
+  display: flex;
+  flex-direction: column;
+}
+.vc-workspace .vc-chamber-top {
+  padding: 18px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vc-workspace .council-scene {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+}
+.vc-workspace .vc-scene-loading {
+  flex: 1;
+  height: auto;
+}
+.vc-workspace .vc-chamber-caption {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 18px 20px;
+  font-size: 12px;
+}
+.vc-workspace .scene-agent-label {
+  padding: 5px 8px;
+  font-size: 10px;
+}
+.vc-workspace .scene-agent-label small {
+  display: none;
+}
+.vc-workspace-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  border: 1px solid var(--vc-line);
+  border-radius: 14px;
+  background: #091523db;
+}
+.vc-workspace-panel .vc-progress {
+  margin: 0;
+  flex-shrink: 0;
+}
+.vc-workspace-panel .vc-tabs {
+  gap: 18px;
+  padding: 0 18px;
+  min-height: 56px;
+  flex-shrink: 0;
+}
+.vc-workspace-panel .vc-tabs button {
+  padding: 18px 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.vc-workspace-panel .vc-tabs > small {
+  display: none;
+}
+.vc-workspace-panel .vc-discussion {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border: 0;
+  margin: 0;
+  background: transparent;
+}
+.vc-workspace-panel .vc-discussion-heading {
+  padding: 16px 18px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.vc-workspace-panel .vc-discussion-heading h2 {
+  font-size: 15px;
+}
+.vc-workspace-panel .vc-transcript {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  padding: 0 16px;
+}
+.vc-workspace-panel .vc-turn {
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  padding: 20px 0;
+}
+.vc-character-portrait {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px #0005);
+}
+.vc-workspace-panel .vc-turn header {
+  gap: 5px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.vc-workspace-panel .vc-turn p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+.vc-workspace-panel .vc-transcript-footer {
+  padding: 12px 18px;
+  flex-wrap: wrap;
+}
+.vc-workspace-panel .vc-timing {
+  padding: 0 18px;
+  margin: 10px 0;
+  font-size: 10px;
+}
+.vc-workspace-panel .vc-ready {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 30px;
+  height: 100%;
+  gap: 30px;
+}
+.vc-workspace-panel .vc-flow {
+  justify-content: space-between;
+}
+.vc-workspace-panel .vc-jury-section,
+.vc-workspace-panel .vc-agenda {
+  padding: 20px;
+}
+.vc-workspace-panel .vc-outcome-select {
+  flex-direction: column;
+  align-items: stretch;
+}
+.vc-workspace-panel .jury-live-handoff {
+  padding: 18px;
+}
+@media (max-width: 1100px) {
+  .vc-workspace {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 12px;
+  }
+  .vc-workspace-panel .vc-tabs {
+    gap: 12px;
+    padding: 0 12px;
+  }
+}
+@media (max-width: 800px) {
+  .vc-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vc-workspace > .vc-chamber {
+    height: 420px;
+  }
+  .vc-workspace-panel {
+    height: 580px;
+  }
+  .vc-workspace-panel .vc-turn {
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .vc-character-portrait {
+    width: 50px;
+    height: 50px;
+  }
 }

@@ -219,9 +219,9 @@ async function setup(page: Page, openSaved = true) {
   );
   await page.goto("/");
   await page
-    .getByRole("button", { name: "Start Product Analysis", exact: true })
+    .getByRole("button", { name: "Take a deeper dive", exact: true })
     .click();
-  await page.getByRole("button", { name: "Confirm scope & begin" }).click();
+  await expect(page).toHaveURL(/council/);
   await page.goto(
     openSaved ? "/council?session=vehicle-fixture" : "/council?new=1",
   );
@@ -294,18 +294,49 @@ test("live table, chronological transcript, Jury conversation and real decision 
   await expect(transcript).toContainText("competitor published");
   expect(requests).toHaveLength(0);
   const chamber = page.getByRole("region", { name: "Live council chamber" });
-  expect((await chamber.boundingBox())!.height).toBeGreaterThan(430);
-  expect((await chamber.boundingBox())!.y).toBeLessThan(
-    (await transcript.boundingBox())!.y,
-  );
+  const tableBox = (await chamber.boundingBox())!;
+  const dialogueBox = (await transcript.boundingBox())!;
+  expect(tableBox.height).toBeGreaterThan(430);
+  expect(dialogueBox.x).toBeGreaterThan(tableBox.x + tableBox.width);
+  expect(dialogueBox.y).toBeLessThan(tableBox.y + 150);
+  expect(dialogueBox.y + dialogueBox.height).toBeLessThan(1050);
+  await expect(page.locator(".vc-character-portrait")).toHaveCount(4);
+  await expect
+    .poll(() =>
+      page
+        .locator(".vc-character-portrait")
+        .evaluateAll((images) =>
+          images.every((image) => (image as HTMLImageElement).naturalWidth > 0),
+        ),
+    )
+    .toBe(true);
   await page.screenshot({
     path: "test-results/vehicle-council-desktop.png",
     fullPage: true,
     animations: "disabled",
   });
+  const marketLabel = chamber
+    .locator(".scene-agent-label")
+    .filter({ hasText: "Market" });
+  const beforeOrbit = await marketLabel.getAttribute("style");
+  const canvas = (await chamber.locator("canvas").boundingBox())!;
+  await page.mouse.move(
+    canvas.x + canvas.width * 0.5,
+    canvas.y + canvas.height * 0.85,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    canvas.x + canvas.width * 0.65,
+    canvas.y + canvas.height * 0.85,
+    { steps: 12 },
+  );
+  await page.mouse.up();
+  await expect
+    .poll(() => marketLabel.getAttribute("style"))
+    .not.toBe(beforeOrbit);
   await page.getByRole("tab", { name: /Talk to Jury/ }).click();
   await expect(
-    page.getByRole("button", { name: "Start voice discussion" }),
+    page.getByRole("button", { name: "Start new conversation" }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Ask local Qwen directly in text" })
@@ -370,7 +401,7 @@ test("council and Jury remain usable on a narrow viewport", async ({
   ).toBe(true);
   await page.getByRole("tab", { name: /Talk to Jury/ }).click();
   await expect(
-    page.getByRole("button", { name: "Start voice discussion" }),
+    page.getByRole("button", { name: "Start new conversation" }),
   ).toBeVisible();
   expect(
     await page.evaluate(

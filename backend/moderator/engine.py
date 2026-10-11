@@ -670,6 +670,7 @@ class Engine:
             w.tokens += reserve
             s.tokens += reserve
             self.store.save(s)
+            request_activity = None
             try:
                 remaining = (
                     self.deadlines.get(s.id, time.monotonic() + s.limits.call_seconds)
@@ -678,17 +679,19 @@ class Engine:
                 if remaining <= 0:
                     raise Budget("Active time exhausted")
                 timeout = min(max(s.limits.call_seconds, 900) if assessment and self.adapters.mode == "ollama" else s.limits.call_seconds, remaining)
-                reply = await asyncio.wait_for(
-                    self.adapters.call(
-                        actor,
-                        operation,
-                        {**payload, "token_allowance": reserve},
-                        schema,
-                        output_allowance,
-                        f"{s.run_id}:{w.brief.topic_id}:{slot}:{attempt}",
-                    ),
-                    timeout,
-                )
+                from backend.llm.usage import tracked_requests
+                with tracked_requests() as request_activity:
+                    reply = await asyncio.wait_for(
+                        self.adapters.call(
+                            actor,
+                            operation,
+                            {**payload, "token_allowance": reserve},
+                            schema,
+                            output_allowance,
+                            f"{s.run_id}:{w.brief.topic_id}:{slot}:{attempt}",
+                        ),
+                        timeout,
+                    )
                 if s.generation != generation:
                     raise asyncio.CancelledError
                 if reply.tokens > reserve:
@@ -729,6 +732,12 @@ class Engine:
                 )
                 return None
             except asyncio.CancelledError:
+                if self.adapters.mode == "ollama" and request_activity is not None and not request_activity["started"]:
+                    # Cancelled while waiting for the laptop's inference lock:
+                    # no request was sent, so restore both budget and retry slot.
+                    w.tokens -= reserve
+                    s.tokens -= reserve
+                    w.attempts[slot] -= 1
                 raise
             except Exception as error:
                 w.errors.append(

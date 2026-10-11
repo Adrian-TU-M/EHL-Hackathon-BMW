@@ -1,19 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Environment,
   Lightformer,
   OrbitControls,
   Line,
 } from "@react-three/drei";
-import { Vector3 } from "three";
-import {
-  UserRound,
-  ChartNoAxesCombined,
-  CarFront,
-  Mic,
-  Scale,
-} from "lucide-react";
+import { PerspectiveCamera, Vector3 } from "three";
 import type { RefObject } from "react";
 import { AgentSculpture, agentMeta } from "../agents/AgentSculpture";
 import { SceneBoundary } from "../ui/SceneBoundary";
@@ -27,20 +20,33 @@ const agents: AgentId[] = [
   "moderator",
   "judge",
 ];
-const fallbackIcons = {
-  customer: UserRound,
-  market: ChartNoAxesCombined,
-  competitor: CarFront,
-  moderator: Mic,
-  judge: Scale,
-};
 const positions: Record<AgentId, [number, number, number]> = {
-  customer: [-2.35, 0.35, 0.15],
-  market: [-1.3, 0.35, -1.8],
-  competitor: [1.35, 0.35, -1.8],
-  moderator: [-1.1, 0.35, 1.9],
-  judge: [1.5, 0.35, 1.4],
+  customer: [-2.1, 0.35, 0.5],
+  market: [0, 0.35, 2.1],
+  competitor: [2.1, 0.35, 0.5],
+  moderator: [0, 1.1, -0.15],
+  judge: [0, 2.5, -1.8],
 };
+const labelPositions: Record<AgentId, [number, number, number]> = {
+  customer: [-3.05, 0.35, 0.5],
+  market: [0, -1.3, 2.1],
+  competitor: [3.05, 0.35, 0.5],
+  moderator: [1.2, 1.1, -0.15],
+  judge: [1.15, 2.65, -1.8],
+};
+// Frame the round table and raised benches together at every panel width.
+function ResponsiveFraming() {
+  const { camera, size } = useThree();
+  useEffect(() => {
+    if (!(camera instanceof PerspectiveCamera)) return;
+    camera.fov = Math.min(
+      65,
+      37 * Math.max(1, 1.1 / (size.width / size.height)),
+    );
+    camera.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
+  return null;
+}
 function ProjectLabels({
   labels,
 }: {
@@ -51,9 +57,17 @@ function ProjectLabels({
     for (const agent of agents) {
       const label = labels.current[agent];
       if (!label) continue;
-      const [x, y, z] = positions[agent];
-      point.current.set(x, y - 0.9, z).project(camera);
-      label.style.transform = `translate(${((point.current.x + 1) * size.width) / 2}px, ${((-point.current.y + 1) * size.height) / 2}px) translate(-50%, -50%)`;
+      point.current.set(...labelPositions[agent]).project(camera);
+      const half = label.offsetWidth / 2 + 8;
+      const left = Math.max(
+        half,
+        Math.min(size.width - half, ((point.current.x + 1) * size.width) / 2),
+      );
+      const top = Math.max(
+        18,
+        Math.min(size.height - 18, ((-point.current.y + 1) * size.height) / 2),
+      );
+      label.style.transform = `translate(${left}px, ${top}px) translate(-50%, -50%)`;
       label.style.visibility = "visible";
     }
   });
@@ -92,7 +106,6 @@ export default function CouncilScene({
   const fallback = (
     <div className="agent-static-row">
       {agents.map((a) => {
-        const Icon = fallbackIcons[a];
         return (
           <button
             type="button"
@@ -101,11 +114,11 @@ export default function CouncilScene({
             onClick={() => onSelectAgent?.(a)}
             aria-pressed={selectedAgent === a}
           >
-            <Icon
-              size={52}
-              strokeWidth={1.3}
-              aria-hidden="true"
-              style={{ color: agentMeta[a].color, marginBottom: 12 }}
+            <img
+              src={`/images/agents/${a}.png`}
+              alt=""
+              width={72}
+              height={72}
             />
             {agentMeta[a].name}
             <small>{stateFor(a)}</small>
@@ -119,7 +132,7 @@ export default function CouncilScene({
       className="council-scene"
       ref={wrapper}
       role="group"
-      aria-label="Agent council: customer feedback, market trends, rival cars, moderator microphone and judge scales"
+      aria-label="Five interactive 3D council characters: Customer, Market, Competitor, Moderator and Judge"
     >
       <div className="chamber-grid" />
       <SceneBoundary fallback={fallback}>
@@ -128,9 +141,10 @@ export default function CouncilScene({
           frameloop={
             !visible || !inView ? "never" : reduced ? "demand" : "always"
           }
-          camera={{ position: [0, 4.4, 7], fov: 34 }}
-          fallback={<p>3D rendering is unavailable in this browser.</p>}
+          camera={{ position: [0, 4.5, 10], fov: 37 }}
+          fallback={fallback}
         >
+          <ResponsiveFraming />
           <ProjectLabels labels={labels} />
           <ambientLight intensity={1.2} />
           <pointLight position={[0, 3, 4]} intensity={35} color="#9ebeff" />
@@ -161,7 +175,7 @@ export default function CouncilScene({
                 agent={a}
                 position={positions[a]}
                 state={stateFor(a)}
-                scale={1.08}
+                scale={1.05}
                 reduced={reduced || !visible || !inView}
               />
               <Line
@@ -176,6 +190,30 @@ export default function CouncilScene({
               />
             </group>
           ))}
+          {/* Raised benches make the council hierarchy visible in real 3D. */}
+          {(["moderator", "judge"] as const).map((agent) => {
+            const [x, y, z] = positions[agent];
+            const height = y - 0.68 * 1.05 + 0.45;
+            return (
+              <group key={`${agent}-bench`}>
+                <mesh position={[x, -0.45 + height / 2, z]}>
+                  <cylinderGeometry args={[0.78, 0.92, height, 64]} />
+                  <meshStandardMaterial
+                    color="#122844"
+                    metalness={0.65}
+                    roughness={0.32}
+                  />
+                </mesh>
+                <mesh
+                  position={[x, -0.44 + height, z]}
+                  rotation={[-Math.PI / 2, 0, 0]}
+                >
+                  <ringGeometry args={[0.76, 0.79, 64]} />
+                  <meshBasicMaterial color={agentMeta[agent].color} />
+                </mesh>
+              </group>
+            );
+          })}
           <mesh position={[0, -0.61, 0.1]}>
             <cylinderGeometry args={[3, 2.87, 0.32, 96]} />
             <meshStandardMaterial
@@ -195,6 +233,7 @@ export default function CouncilScene({
           {[2.94, 2.72, 0.65].map((radius) => (
             <mesh
               key={radius}
+
               rotation={[-Math.PI / 2, 0, 0]}
               position={[0, -0.44, 0.1]}
             >
@@ -207,13 +246,14 @@ export default function CouncilScene({
             </mesh>
           ))}
           <OrbitControls
-            target={[0, -0.35, 0.1]}
+            target={[0, 0.85, 0.1]}
             enablePan={false}
             enableZoom={false}
             minPolarAngle={0.7}
             maxPolarAngle={1.3}
-            minAzimuthAngle={-0.4}
-            maxAzimuthAngle={0.4}
+            enableDamping
+            dampingFactor={0.08}
+            rotateSpeed={0.55}
           />
         </Canvas>
       </SceneBoundary>

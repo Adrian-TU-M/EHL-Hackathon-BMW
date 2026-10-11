@@ -1,0 +1,592 @@
+/* Reference-inspired character, drawn in CSS; not an official BMW asset. */
+.jury-voice-popup {
+  width: min(900px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  margin: auto;
+  padding: clamp(20px, 4vw, 44px);
+  border: 1px solid #b6d4ef55;
+  border-radius: 32px;
+  color: #f5f7fc;
+  background: #172b43;
+  box-shadow:
+    0 40px 140px #0009,
+    inset 0 1px 0 #ffffff30;
+  overflow: auto;
+  isolation: isolate;
+}
+.jury-voice-popup::backdrop {
+  background: #030b19b8;
+  backdrop-filter: blur(16px);
+}
+.jury-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(155deg, #102b44 8%, #354461 48%, #8c7079 100%);
+}
+.jury-aurora i {
+  position: absolute;
+  width: 100%;
+  height: 80%;
+  left: -20%;
+  top: -15%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #207aaf90, transparent 67%);
+  filter: blur(42px);
+  animation: jury-aurora-flow 17s ease-in-out infinite alternate;
+  opacity: calc(0.5 + var(--aurora-energy, 0) * 0.5);
+  transition: opacity 0.15s;
+}
+.jury-aurora i:nth-child(2) {
+  left: 30%;
+  top: 20%;
+  background: radial-gradient(ellipse, #b497b09a, transparent 68%);
+  animation-delay: -7s;
+  animation-duration: 21s;
+}
+.jury-aurora i:nth-child(3) {
+  left: -10%;
+  top: 50%;
+  background: radial-gradient(ellipse, #eac29877, transparent 68%);
+  animation-delay: -12s;
+}
+.jury-voice-popup:is(.judge-talking, .pm-talking) .jury-aurora i {
+  filter: blur(32px);
+}
+.jury-popup-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  position: relative;
+}
+.jury-popup-heading span {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #c6d8e9;
+}
+.jury-popup-heading h2 {
+  font-size: clamp(23px, 3vw, 34px);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  margin: 10px 0 20px;
+}
+.jury-popup-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: white;
+  background: #ffffff10;
+  border: 1px solid #ffffff40;
+  cursor: pointer;
+}
+.jury-popup-close:hover {
+  background: #ffffff26;
+}
+.jury-popup-close:focus-visible {
+  outline: 3px solid #b9deff;
+  outline-offset: 4px;
+}
+.jury-popup-content {
+  position: relative;
+}
+.jury-voice-popup .judge-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.jury-voice-popup .judge-conversation-context {
+  display: none;
+}
+.jury-voice-popup .judge-message-list {
+  max-height: 180px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 5px 0 0;
+  scrollbar-width: thin;
+}
+.jury-voice-popup .judge-message {
+  background: #0b1c345e;
+  border: 1px solid #d8e7ff24;
+  border-radius: 18px;
+  padding: 15px 18px;
+}
+.jury-voice-popup .judge-message p {
+  color: #f3f5fc;
+  line-height: 1.6;
+}
+.jury-voice-popup .judge-conversation-controls {
+  background: #0c1e365e;
+  border: 1px solid #ffffff24;
+  border-radius: 22px;
+  padding: 18px;
+}
+.jury-voice-popup .judge-voice-status {
+  background: transparent;
+  border-color: #ffffff25;
+}
+.jury-voice-popup .muted,
+.jury-voice-popup .judge-voice-status-copy span {
+  color: #d4dfec;
+}
+.jury-avatar-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 0 12px;
+  text-align: center;
+  position: relative;
+}
+.jury-avatar-stage > strong {
+  margin-top: 22px;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.jury-avatar-stage > span {
+  color: #d1dceb;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.jury-avatar-float {
+  position: relative;
+  z-index: 1;
+  animation: jury-float 6s ease-in-out infinite;
+}
+.jury-avatar {
+  width: clamp(180px, 26vw, 264px);
+  aspect-ratio: 1;
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  isolation: isolate;
+  background: #064d87;
+  box-shadow:
+    inset -22px -15px 35px #00102fbb,
+    inset 5px 5px 14px #b6e9fa80,
+    0 0 55px #407cad40;
+  transform: scale(calc(1 + var(--voice-energy, 0) * 0.075));
+  transition: transform 0.12s ease-out;
+}
+.jury-avatar-colors {
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(
+      ellipse at 28% 68%,
+      #f3d584 0%,
+      #e0cba37a 20%,
+      transparent 40%
+    ),
+    radial-gradient(ellipse at 54% 20%, #199ed0 0%, transparent 35%),
+    radial-gradient(ellipse at 32% 50%, #bfc0d0 0%, transparent 43%),
+    conic-gradient(from 25deg, #00458e, #07295e, #6c96b0, #087cb2, #00458e);
+  filter: blur(10px);
+  animation: jury-color-flow 15s ease-in-out infinite alternate;
+}
+.jury-avatar-tint {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 80% 36%, #ae1a877d, transparent 64%),
+    radial-gradient(ellipse at 28% 77%, #f8d36ca6, transparent 55%),
+    radial-gradient(ellipse at 48% 43%, #ddd0ed70, transparent 60%);
+  opacity: 0.4;
+  mix-blend-mode: screen;
+  transition: opacity 1s ease;
+}
+.jury-avatar-texture {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: radial-gradient(#e1e8ff45 0.6px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: 0.18;
+  mask-image: radial-gradient(ellipse at 35% 70%, black, transparent 72%);
+}
+.jury-avatar:is(
+    .expression-warm,
+    .expression-affectionate,
+    .expression-reassuring
+  )
+  .jury-avatar-tint {
+  opacity: 1;
+}
+.jury-avatar:is(.expression-excited, .expression-confident) .jury-avatar-tint {
+  opacity: 0.85;
+  background:
+    radial-gradient(ellipse at 77% 37%, #852feeb0, transparent 67%),
+    radial-gradient(ellipse at 25% 70%, #f6d77ca0, transparent 60%);
+}
+.jury-avatar.expression-concerned .jury-avatar-tint {
+  opacity: 0.7;
+  background: radial-gradient(ellipse at 28% 65%, #e6aa6790, transparent 65%);
+}
+.jury-avatar:is(
+    .expression-warm,
+    .expression-affectionate,
+    .expression-reassuring
+  )
+  .jury-eye {
+  height: 19%;
+  background: transparent;
+  border-top: 12px solid #fff1da;
+  border-radius: 60% 60% 0 0;
+  box-shadow: none;
+  filter: drop-shadow(0 0 7px #fff0dd88);
+}
+.jury-thread-note {
+  flex-basis: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.jury-avatar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset -22px -8px 35px #00133d99,
+    inset 3px 2px 7px #dcefff5c;
+  pointer-events: none;
+}
+.jury-avatar-reflection {
+  position: absolute;
+  top: 5%;
+  left: 14%;
+  width: 55%;
+  height: 24%;
+  border-top: 3px solid #d6f0ffad;
+  border-radius: 50%;
+  transform: rotate(-24deg);
+  filter: blur(1.4px);
+}
+.jury-avatar-face {
+  position: absolute;
+  inset: 0;
+  transform: translateY(0);
+  transition: transform 0.6s;
+}
+.jury-eye {
+  position: absolute;
+  top: 41%;
+  width: 25%;
+  height: 13%;
+  background: #fff1da;
+  border-radius: 36% 40% 43% 36%;
+  box-shadow: 0 0 12px #fff0ddad;
+  animation: jury-blink 6.7s infinite;
+  transition:
+    border-radius 0.5s,
+    height 0.5s,
+    transform 0.5s;
+}
+.jury-eye.left {
+  left: 16%;
+  transform: rotate(3deg);
+}
+.jury-eye.right {
+  right: 16%;
+  transform: rotate(-5deg);
+}
+.jury-brow {
+  position: absolute;
+  top: 32%;
+  height: 3%;
+  width: 13%;
+  background: #035daa;
+  border-radius: 60%;
+  opacity: 0.8;
+  transition:
+    transform 0.5s,
+    top 0.5s;
+}
+.jury-brow.left {
+  left: 18%;
+}
+.jury-brow.right {
+  right: 19%;
+}
+.expression-warm .jury-eye {
+  border-radius: 65% 65% 30% 30%;
+  height: 10%;
+}
+.expression-warm .jury-brow {
+  transform: translateY(-5px);
+}
+.expression-thoughtful .jury-brow.left {
+  transform: rotate(-18deg);
+  top: 29%;
+}
+.expression-thoughtful .jury-eye.right {
+  height: 9%;
+  transform: rotate(-9deg);
+}
+.expression-curious .jury-brow.right {
+  top: 26%;
+  transform: rotate(12deg);
+}
+.expression-curious .jury-avatar-face {
+  transform: rotate(-5deg);
+}
+.expression-engaged .jury-eye {
+  height: 14%;
+}
+.jury-expression-badge {
+  position: absolute;
+  z-index: 3;
+  top: -18px;
+  right: -16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #e6f3ff66;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f1f4ff30, #395a8070);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    0 8px 24px #06182d35,
+    inset 0 1px 0 #ffffff30;
+  animation: jury-expression-arrive 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  pointer-events: none;
+}
+.jury-expression-emoji {
+  font-size: 28px;
+  line-height: 1.1;
+}
+.jury-mouth {
+  position: absolute;
+  left: 43%;
+  top: 65%;
+  width: 14%;
+  height: 5%;
+  border-bottom: 3px solid #eff5ffb3;
+  border-radius: 0 0 50% 50%;
+  opacity: 0.5;
+  transition: all 0.45s ease;
+}
+.expression-warm .jury-mouth,
+.expression-reassuring .jury-mouth {
+  left: 39%;
+  width: 22%;
+  height: 8%;
+  opacity: 0.85;
+}
+.expression-excited .jury-eye {
+  height: 16%;
+  border-radius: 48%;
+}
+.expression-excited .jury-brow {
+  top: 25%;
+  transform: rotate(-7deg);
+}
+.expression-excited .jury-brow.right {
+  transform: rotate(7deg);
+}
+.expression-excited .jury-mouth {
+  left: 39%;
+  width: 22%;
+  height: 9%;
+  background: #e6f2ff66;
+  border-radius: 15% 15% 65% 65%;
+  opacity: 0.9;
+}
+.expression-surprised .jury-eye {
+  width: 19%;
+  height: 20%;
+  border-radius: 50%;
+}
+.expression-surprised .jury-brow {
+  top: 24%;
+}
+.expression-surprised .jury-mouth {
+  left: 46%;
+  width: 8%;
+  height: 9%;
+  border: 2px solid #eff5ffb3;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+.expression-concerned .jury-brow.left {
+  transform: rotate(20deg);
+}
+.expression-concerned .jury-brow.right {
+  transform: rotate(-20deg);
+}
+.expression-concerned .jury-eye {
+  height: 10%;
+}
+.expression-concerned .jury-mouth {
+  border-radius: 50% 50% 0 0;
+  border-bottom: 0;
+  border-top: 2px solid #eff5ff99;
+}
+.expression-thoughtful .jury-mouth {
+  width: 10%;
+  left: 49%;
+  transform: rotate(-12deg);
+  border-radius: 0;
+}
+.expression-reassuring .jury-eye {
+  height: 9%;
+  border-radius: 65% 65% 25% 25%;
+}
+.expression-reassuring .jury-avatar-face {
+  transform: rotate(4deg);
+}
+.expression-calm .jury-eye {
+  height: 10%;
+}
+.expression-affectionate .jury-eye {
+  height: 10%;
+  border-radius: 70% 70% 25% 25%;
+}
+.expression-affectionate .jury-mouth,
+.expression-confident .jury-mouth {
+  width: 22%;
+  left: 39%;
+  height: 9%;
+  opacity: 0.9;
+}
+.jury-floating-hearts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.jury-floating-hearts span {
+  position: absolute;
+  left: -5%;
+  top: 45%;
+  font-size: 26px;
+  animation: jury-heart-rise 3s ease-out infinite;
+}
+.jury-floating-hearts span:nth-child(2) {
+  left: 88%;
+  top: 55%;
+  animation-delay: -1s;
+  font-size: 20px;
+}
+.jury-floating-hearts span:nth-child(3) {
+  left: 8%;
+  top: 12%;
+  animation-delay: -2s;
+  font-size: 18px;
+}
+@keyframes jury-heart-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.65);
+  }
+  25% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-70px) scale(1.1) rotate(15deg);
+  }
+}
+.jury-avatar-stage.is-speaking .jury-mouth {
+  scale: 1 calc(1 + var(--voice-energy, 0) * 0.6);
+}
+@keyframes jury-expression-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.75) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+.jury-avatar-stage.is-speaking .jury-avatar-colors {
+  animation-duration: 3s;
+}
+.jury-avatar-stage.is-speaking .jury-avatar-float {
+  animation: jury-talk-bob 1.8s ease-in-out infinite;
+}
+.jury-avatar-stage.is-listening .jury-avatar {
+  box-shadow:
+    inset -22px -15px 35px #00102fbb,
+    inset 5px 5px 14px #b6e9fa80,
+    0 0 calc(35px + var(--voice-energy, 0) * 50px) #91c6f46b;
+}
+.jury-avatar-shadow {
+  width: 120px;
+  height: 14px;
+  margin-top: 20px;
+  border-radius: 50%;
+  background: #071a3a65;
+  filter: blur(9px);
+}
+@keyframes jury-aurora-flow {
+  to {
+    transform: translate(20%, 12%) rotate(28deg) scale(1.15);
+  }
+}
+@keyframes jury-float {
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
+}
+@keyframes jury-talk-bob {
+  50% {
+    transform: translateY(-7px) rotate(-3deg) scaleY(1.025);
+  }
+}
+@keyframes jury-color-flow {
+  to {
+    transform: rotate(32deg) translate(5%, -4%) scale(1.08);
+  }
+}
+@keyframes jury-blink {
+  0%,
+  43%,
+  47%,
+  100% {
+    scale: 1 1;
+  }
+  45% {
+    scale: 1 0.09;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jury-avatar-stage *,
+  .jury-aurora i {
+    animation: none !important;
+    transition: none !important;
+  }
+  .jury-avatar-stage .jury-avatar {
+    transform: none;
+  }
+}
+@media (max-width: 600px) {
+  .jury-voice-popup {
+    max-height: calc(100dvh - 16px);
+    width: calc(100vw - 16px);
+    border-radius: 24px;
+  }
+  .jury-avatar-stage {
+    padding-top: 12px;
+  }
+  .jury-voice-popup .judge-message-list {
+    max-height: 140px;
+  }
+}
+
+@media (max-width: 700px) {
+  .judge-conversation-controls { flex-wrap: nowrap; }
+  .jury-thread-note { flex-basis: auto; width: 100%; }
+}

@@ -322,310 +322,327 @@ export default function VehicleCouncil() {
           )}
         </section>
       )}
-      <section className="vc-chamber" aria-label="Live council chamber">
-        <div className="vc-chamber-top">
-          <span className={active ? "vc-live" : ""}>
-            <Radio size={14} /> {status}
-          </span>
-          <small>
-            {runtime?.model || "Local Qwen"}
-            {active && !connected ? " · reconnecting" : ""}
-          </small>
-        </div>
-        <Suspense
-          fallback={
-            <div className="vc-scene-loading">Preparing the council table…</div>
-          }
-        >
-          <CouncilScene
-            council={scene}
-            agentStates={states}
-            onSelectAgent={(agent) => {
-              setFilter((previous) => (previous === agent ? null : agent));
-              setTab("discussion");
-            }}
-            selectedAgent={filter}
-          />
-        </Suspense>
-        <div className="vc-chamber-caption">
-          <span>
-            {active
-              ? `${topic?.label || "Full car agenda"} · ${Math.min((s?.cursor || 0) + 1, agenda.length)} of ${agenda.length}`
-              : completed
-                ? `${outcomes.length} Jury verdict${outcomes.length === 1 ? "" : "s"} ready for your review`
-                : "Customer needs. Market direction. Competitive advantage."}
-          </span>
-          <small>
-            Drag to orbit · select an agent to read their contributions
-          </small>
-        </div>
-      </section>
-      {!s ? (
-        <section className="vc-ready">
-          <div>
-            <span className="eyebrow">
-              YOU SET THE CAR. MODERATOR SETS THE AGENDA.
+      <div className="vc-workspace">
+        <section className="vc-chamber" aria-label="Live council chamber">
+          <div className="vc-chamber-top">
+            <span className={active ? "vc-live" : ""}>
+              <Radio size={14} /> {status}
             </span>
-            <h2>A complete vehicle review.</h2>
-            <p>
-              Start once. The council covers every topic supported by evidence
-              for this car, challenges each other’s arguments, and sends Jury’s
-              verdicts to Decisions & Scenarios.
-            </p>
-          </div>
-          <div className="vc-flow">
-            <span>
-              01 <b>Debate</b>
-            </span>
-            <span>
-              02 <b>Discuss with Jury</b>
-            </span>
-            <span>
-              03 <b>PM decision</b>
-            </span>
-          </div>
-        </section>
-      ) : (
-        <>
-          <div className="vc-progress">
-            <div
-              style={{
-                width: `${agenda.length ? (s.outcomes.length / agenda.length) * 100 : 0}%`,
-              }}
-            />
-          </div>
-          <div
-            className="vc-tabs"
-            role="tablist"
-            aria-label="Council workspace"
-          >
-            {(
-              [
-                ["discussion", "Live discussion"],
-                ["jury", "Talk to Jury"],
-                ["agenda", "Full agenda"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                role="tab"
-                aria-selected={tab === value}
-                onClick={() => setTab(value)}
-              >
-                {label}
-                {value === "jury" && outcomes.length > 0 && (
-                  <span>{outcomes.length}</span>
-                )}
-              </button>
-            ))}
             <small>
-              {s.outcomes.length}/{agenda.length} topics closed
+              {runtime?.model || "Local Qwen"}
+              {active && !connected ? " · reconnecting" : ""}
             </small>
           </div>
-          {tab === "discussion" && (
-            <section
-              className="vc-discussion"
-              aria-label="Published live debate"
-            >
-              <div className="vc-discussion-heading">
-                <h2>
-                  {filter
-                    ? `${agentMeta[filter].name} contributions`
-                    : "At the table"}
-                </h2>
-                <span>{published.length} published turns</span>
-                {filter && (
-                  <button className="text-link" onClick={() => setFilter(null)}>
-                    Show everyone
-                  </button>
-                )}
+          <Suspense
+            fallback={
+              <div className="vc-scene-loading">
+                Preparing the council table…
+              </div>
+            }
+          >
+            <CouncilScene
+              council={scene}
+              agentStates={states}
+              onSelectAgent={(agent) => {
+                setFilter((previous) => (previous === agent ? null : agent));
+                setTab("discussion");
+              }}
+              selectedAgent={filter}
+            />
+          </Suspense>
+          <div className="vc-chamber-caption">
+            <span>
+              {active
+                ? `${topic?.label || "Full car agenda"} · ${Math.min((s?.cursor || 0) + 1, agenda.length)} of ${agenda.length}`
+                : completed
+                  ? `${outcomes.length} Jury verdict${outcomes.length === 1 ? "" : "s"} ready for your review`
+                  : "Customer needs. Market direction. Competitive advantage."}
+            </span>
+            <small>
+              Drag to orbit · select an agent to read their contributions
+            </small>
+          </div>
+        </section>
+        <div className="vc-workspace-panel">
+          {!s ? (
+            <section className="vc-ready">
+              <div>
+                <span className="eyebrow">
+                  YOU SET THE CAR. MODERATOR SETS THE AGENDA.
+                </span>
+                <h2>A complete vehicle review.</h2>
+                <p>
+                  Start once. The council covers every topic supported by
+                  evidence for this car, challenges each other’s arguments, and
+                  sends Jury’s verdicts to Decisions & Scenarios.
+                </p>
+              </div>
+              <div className="vc-flow">
+                <span>
+                  01 <b>Debate</b>
+                </span>
+                <span>
+                  02 <b>Discuss with Jury</b>
+                </span>
+                <span>
+                  03 <b>PM decision</b>
+                </span>
+              </div>
+            </section>
+          ) : (
+            <>
+              <div className="vc-progress">
+                <div
+                  style={{
+                    width: `${agenda.length ? (s.outcomes.length / agenda.length) * 100 : 0}%`,
+                  }}
+                />
               </div>
               <div
-                className="vc-transcript"
-                ref={feed}
-                onScroll={() => {
-                  const el = feed.current;
-                  if (el)
-                    follow.current =
-                      el.scrollHeight - el.scrollTop - el.clientHeight < 70;
-                }}
-                role="log"
-                aria-label="Council transcript"
-                aria-live="polite"
-                aria-relevant="additions"
+                className="vc-tabs"
+                role="tablist"
+                aria-label="Council workspace"
               >
-                {published
-                  .filter((e) => !filter || e.actor === filter)
-                  .map((e) => (
-                    <article className={`vc-turn vc-${e.actor}`} key={e.id}>
-                      <div className="vc-turn-mark">
-                        {agentMeta[e.actor as AgentId]?.number}
+                {(
+                  [
+                    ["discussion", "Live discussion"],
+                    ["jury", "Talk to Jury"],
+                    ["agenda", "Full agenda"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    role="tab"
+                    aria-selected={tab === value}
+                    onClick={() => setTab(value)}
+                  >
+                    {label}
+                    {value === "jury" && outcomes.length > 0 && (
+                      <span>{outcomes.length}</span>
+                    )}
+                  </button>
+                ))}
+                <small>
+                  {s.outcomes.length}/{agenda.length} topics closed
+                </small>
+              </div>
+              {tab === "discussion" && (
+                <section
+                  className="vc-discussion"
+                  aria-label="Published live debate"
+                >
+                  <div className="vc-discussion-heading">
+                    <h2>
+                      {filter
+                        ? `${agentMeta[filter].name} contributions`
+                        : "At the table"}
+                    </h2>
+                    <span>{published.length} published turns</span>
+                    {filter && (
+                      <button
+                        className="text-link"
+                        onClick={() => setFilter(null)}
+                      >
+                        Show everyone
+                      </button>
+                    )}
+                  </div>
+                  <div
+                    className="vc-transcript"
+                    ref={feed}
+                    onScroll={() => {
+                      const el = feed.current;
+                      if (el)
+                        follow.current =
+                          el.scrollHeight - el.scrollTop - el.clientHeight < 70;
+                    }}
+                    role="log"
+                    aria-label="Council transcript"
+                    aria-live="polite"
+                    aria-relevant="additions"
+                  >
+                    {published
+                      .filter((e) => !filter || e.actor === filter)
+                      .map((e) => (
+                        <article className={`vc-turn vc-${e.actor}`} key={e.id}>
+                          <img
+                            className="vc-character-portrait"
+                            src={`/images/agents/${e.actor}.png`}
+                            alt={`${agentMeta[e.actor as AgentId]?.name} character`}
+                            width={64}
+                            height={64}
+                          />
+                          <div>
+                            <header>
+                              <strong>
+                                {agentMeta[e.actor as AgentId]?.name}
+                              </strong>
+                              <span>
+                                {e.stage.replaceAll("_", " ")} ·{" "}
+                                {
+                                  s.agenda.topics.find(
+                                    (t) => t.id === e.topic_id,
+                                  )?.label
+                                }
+                              </span>
+                            </header>
+                            <p>{e.statement}</p>
+                            {e.evidence_ids.length > 0 && (
+                              <button
+                                className="text-link"
+                                onClick={() => setIds(e.evidence_ids)}
+                              >
+                                {e.evidence_ids.length} source
+                                {e.evidence_ids.length === 1 ? "" : "s"} ↗
+                              </button>
+                            )}
+                          </div>
+                        </article>
+                      ))}
+                    {!published.length && (
+                      <div className="vc-empty">
+                        <Radio size={28} />
+                        <h3>
+                          {active
+                            ? "The agents are reading the car’s evidence."
+                            : "The published discussion will appear here."}
+                        </h3>
+                        <p>
+                          Actual statements appear when each turn is ready. The
+                          stage above updates while local Qwen works.
+                        </p>
                       </div>
-                      <div>
-                        <header>
-                          <strong>{agentMeta[e.actor as AgentId]?.name}</strong>
-                          <span>
-                            {e.stage.replaceAll("_", " ")} ·{" "}
-                            {
-                              s.agenda.topics.find((t) => t.id === e.topic_id)
-                                ?.label
-                            }
-                          </span>
-                        </header>
-                        <p>{e.statement}</p>
-                        {e.evidence_ids.length > 0 && (
-                          <button
-                            className="text-link"
-                            onClick={() => setIds(e.evidence_ids)}
-                          >
-                            {e.evidence_ids.length} source
-                            {e.evidence_ids.length === 1 ? "" : "s"} ↗
-                          </button>
-                        )}
+                    )}
+                    {active && (
+                      <div className="vc-working" role="status">
+                        <i />
+                        <span>
+                          {stages[s.work?.stage || ""] ||
+                            "Moderator preparing the next topic"}
+                          …
+                        </span>
                       </div>
-                    </article>
-                  ))}
-                {!published.length && (
+                    )}
+                  </div>
+                  <footer className="vc-transcript-footer">
+                    <small>
+                      Saved automatically · ordered from first to latest
+                    </small>
+                    <button
+                      className="text-link"
+                      onClick={() => {
+                        follow.current = true;
+                        feed.current?.scrollTo({
+                          top: feed.current.scrollHeight,
+                          behavior: "smooth",
+                        });
+                      }}
+                    >
+                      Jump to latest ↓
+                    </button>
+                  </footer>
+                </section>
+              )}
+              {tab === "jury" &&
+                (outcome ? (
+                  <section className="vc-jury-section">
+                    <label className="vc-outcome-select">
+                      Discuss a completed verdict
+                      <select
+                        value={outcome.topic_id}
+                        onChange={(e) => setJuryTopic(e.target.value)}
+                      >
+                        {outcomes.map((o) => (
+                          <option key={o.topic_id} value={o.topic_id}>
+                            {s.agenda.topics.find((t) => t.id === o.topic_id)
+                              ?.label || o.topic_id}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <JuryConversation
+                      key={`${s.id}:${outcome.assessment?.native_assessment?.id}`}
+                      sessionId={s.id}
+                      outcome={outcome}
+                    />
+                  </section>
+                ) : (
                   <div className="vc-empty">
-                    <Radio size={28} />
-                    <h3>
-                      {active
-                        ? "The agents are reading the car’s evidence."
-                        : "The published discussion will appear here."}
-                    </h3>
+                    <h2>
+                      {completed
+                        ? "Jury assessment unavailable."
+                        : "Jury joins when the first verdict is ready."}
+                    </h2>
                     <p>
-                      Actual statements appear when each turn is ready. The
-                      stage above updates while local Qwen works.
+                      {completed
+                        ? "This discussion closed without a valid Jury assessment. The agenda’s audit record contains the failure details."
+                        : "You can discuss each completed assessment while the rest of the car’s agenda continues."}
                     </p>
                   </div>
-                )}
-                {active && (
-                  <div className="vc-working" role="status">
-                    <i />
-                    <span>
-                      {stages[s.work?.stage || ""] ||
-                        "Moderator preparing the next topic"}
-                      …
-                    </span>
-                  </div>
-                )}
-              </div>
-              <footer className="vc-transcript-footer">
-                <small>
-                  Saved automatically · ordered from first to latest
-                </small>
-                <button
-                  className="text-link"
-                  onClick={() => {
-                    follow.current = true;
-                    feed.current?.scrollTo({
-                      top: feed.current.scrollHeight,
-                      behavior: "smooth",
-                    });
-                  }}
-                >
-                  Jump to latest ↓
-                </button>
-              </footer>
-            </section>
-          )}
-          {tab === "jury" &&
-            (outcome ? (
-              <section className="vc-jury-section">
-                <label className="vc-outcome-select">
-                  Discuss a completed verdict
-                  <select
-                    value={outcome.topic_id}
-                    onChange={(e) => setJuryTopic(e.target.value)}
-                  >
-                    {outcomes.map((o) => (
-                      <option key={o.topic_id} value={o.topic_id}>
-                        {s.agenda.topics.find((t) => t.id === o.topic_id)
-                          ?.label || o.topic_id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <JuryConversation
-                  key={`${s.id}:${outcome.assessment?.native_assessment?.id}`}
-                  sessionId={s.id}
-                  outcome={outcome}
-                />
-              </section>
-            ) : (
-              <div className="vc-empty">
-                <h2>
-                  {completed
-                    ? "Jury assessment unavailable."
-                    : "Jury joins when the first verdict is ready."}
-                </h2>
-                <p>
-                  {completed
-                    ? "This discussion closed without a valid Jury assessment. The agenda’s audit record contains the failure details."
-                    : "You can discuss each completed assessment while the rest of the car’s agenda continues."}
-                </p>
-              </div>
-            ))}
-          {tab === "agenda" && (
-            <section className="vc-agenda">
-              <h2>The car’s complete agenda</h2>
-              <p>
-                {agenda.length} confirmed topics ·{" "}
-                {s.agenda.topics.filter((t) => !t.eligible).length} excluded
-                because evidence does not match this car and scope.
-              </p>
-              <ol>
-                {agenda.map((t) => (
-                  <li
-                    key={t.id}
-                    className={t.id === topic?.id ? "current" : ""}
-                  >
-                    <span>
-                      {s.outcomes.some((o) => o.topic_id === t.id)
-                        ? "Reviewed"
-                        : t.id === topic?.id
-                          ? "In discussion"
-                          : "Upcoming"}
-                    </span>
-                    <strong>{t.label}</strong>
-                    <small>{t.area}</small>
-                  </li>
                 ))}
-              </ol>
-              <details>
-                <summary>Evidence scope & audit record</summary>
-                <p>
-                  {s.agenda.scope.prompt ||
-                    "Review innovation opportunities across the vehicle."}
-                </p>
-                <p>Frozen source snapshot: {s.agenda.source_snapshot}</p>
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    moderatorApi
-                      .export(s.id)
-                      .then(downloadRecords)
-                      .catch((e) => setError(e.message))
-                  }
-                >
-                  <Download size={15} /> Download transcript & evidence record
-                </Button>
-                <Link
-                  className="text-link"
-                  to={`/council?session=${s.id}&advanced=1`}
-                >
-                  Advanced Moderator controls ↗
-                </Link>
-              </details>
-            </section>
+              {tab === "agenda" && (
+                <section className="vc-agenda">
+                  <h2>The car’s complete agenda</h2>
+                  <p>
+                    {agenda.length} confirmed topics ·{" "}
+                    {s.agenda.topics.filter((t) => !t.eligible).length} excluded
+                    because evidence does not match this car and scope.
+                  </p>
+                  <ol>
+                    {agenda.map((t) => (
+                      <li
+                        key={t.id}
+                        className={t.id === topic?.id ? "current" : ""}
+                      >
+                        <span>
+                          {s.outcomes.some((o) => o.topic_id === t.id)
+                            ? "Reviewed"
+                            : t.id === topic?.id
+                              ? "In discussion"
+                              : "Upcoming"}
+                        </span>
+                        <strong>{t.label}</strong>
+                        <small>{t.area}</small>
+                      </li>
+                    ))}
+                  </ol>
+                  <details>
+                    <summary>Evidence scope & audit record</summary>
+                    <p>
+                      {s.agenda.scope.prompt ||
+                        "Review innovation opportunities across the vehicle."}
+                    </p>
+                    <p>Frozen source snapshot: {s.agenda.source_snapshot}</p>
+                    <Button
+                      variant="secondary"
+                      onClick={() =>
+                        moderatorApi
+                          .export(s.id)
+                          .then(downloadRecords)
+                          .catch((e) => setError(e.message))
+                      }
+                    >
+                      <Download size={15} /> Download transcript & evidence
+                      record
+                    </Button>
+                    <Link
+                      className="text-link"
+                      to={`/council?session=${s.id}&advanced=1`}
+                    >
+                      Advanced Moderator controls ↗
+                    </Link>
+                  </details>
+                </section>
+              )}
+              <p className="vc-timing">
+                Local Qwen runs one inference at a time. The latest complete
+                topic took 7 minutes; a full-car agenda takes longer. Pause and
+                resume at any time.
+              </p>
+            </>
           )}
-          <p className="vc-timing">
-            Local Qwen runs one inference at a time. The latest complete topic
-            took 7 minutes; a full-car agenda takes longer. Pause
-            and resume at any time.
-          </p>
-        </>
-      )}
+        </div>
+      </div>
       {ids && <SourceCards ids={ids} onClose={() => setIds(null)} />}
     </div>
   );

@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Group } from "three";
 import type { AgentId, AgentState } from "../../lib/types";
-import { AgentIcon } from "./AgentIcons";
+import { CouncilCharacter } from "./CouncilCharacter";
 
 export const agentMeta: Record<
   AgentId,
@@ -11,25 +11,25 @@ export const agentMeta: Record<
   customer: {
     name: "Customer",
     role: "The human perspective",
-    color: "#4799ff",
+    color: "#ef91b6",
     number: "01",
   },
   market: {
     name: "Market",
     role: "The future perspective",
-    color: "#82baff",
+    color: "#4edb9a",
     number: "02",
   },
   competitor: {
     name: "Competitor",
     role: "The competitive perspective",
-    color: "#b9c8e0",
+    color: "#fa6c7d",
     number: "03",
   },
   moderator: {
     name: "Moderator",
     role: "Discussion & coordination",
-    color: "#e3e9f3",
+    color: "#b7a3ff",
     number: "04",
   },
   judge: {
@@ -107,7 +107,7 @@ export function AgentSculpture({
         </group>
       )}
       <group ref={emblem}>
-        <AgentIcon agent={agent} active={active} paused={paused} />
+        <CouncilCharacter agent={agent} state={state} paused={paused} />
         <group ref={halo} position={[0, 0.02, -0.23]}>
           {[0, Math.PI].map((angle) => (
             <mesh key={angle} rotation={[0, 0, angle]}>

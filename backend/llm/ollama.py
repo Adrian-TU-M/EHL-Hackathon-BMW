@@ -37,6 +37,8 @@ class OllamaClient:
         if output_schema:
             payload["format"] = output_schema
         async with inference_lock, httpx.AsyncClient(timeout=self.settings.ollama_timeout_seconds) as client:
+            from backend.llm.usage import mark_request_started
+            mark_request_started()
             response = await client.post(
                 f"{self.settings.ollama_base_url}/api/chat", json=payload
             )

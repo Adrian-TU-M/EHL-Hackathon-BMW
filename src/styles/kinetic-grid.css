@@ -1,0 +1,67 @@
+/* One persistent viewport canvas; all input stays with the app above it. */
+.kinetic-grid {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background: #080e18;
+}
+.kinetic-grid-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+.kinetic-grid-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+/* Higher specificity also covers styles loaded later by individual routes. */
+.kinetic-grid
+  :is(
+    .app-shell,
+    .workspace,
+    .premium-home,
+    .home-main,
+    .page-content,
+    .intelligence-section
+  ) {
+  background: transparent;
+}
+.kinetic-grid
+  :is(
+    .sidebar,
+    .workspace-topbar,
+    .premium-home .home-nav,
+    .workspace-footer,
+    .home-footer
+  ) {
+  background: rgb(8 14 24 / 78%);
+  backdrop-filter: blur(8px);
+}
+.kinetic-grid
+  :is(
+    .panel,
+    .mt-workspace,
+    .mt-signal-card,
+    .mt-agent-card,
+    .cx-selection,
+    .cx-comparison,
+    .cx-action,
+    .cx-result,
+    .lc-turn,
+    .vc-chamber,
+    .vc-discussion,
+    .decision-card,
+    .vc-ready
+  ) {
+  background: rgb(10 19 32 / 78%);
+}
+/* Preserve artwork, readable form controls and presentation slide/export colours. */
+@media print {
+  .kinetic-grid-canvas {
+    display: none;
+  }
+}

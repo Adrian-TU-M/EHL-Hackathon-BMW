@@ -239,6 +239,8 @@ whole debate.
                 lock = getattr(runtime, "inference_lock", None)
                 if lock is not None:
                     async with lock:
+                        from backend.llm.usage import mark_request_started
+                        mark_request_started()
                         response = await client.post(self.base_url + endpoint, headers=headers, json=body)
                 else:
                     response = await client.post(self.base_url + endpoint, headers=headers, json=body)

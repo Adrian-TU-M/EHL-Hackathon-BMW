@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard,
   Users,
   TrendingUp,
   ScanLine,
   Orbit,
   SlidersHorizontal,
-  History,
   ArrowUpRight,
   Download,
   Menu,
@@ -26,14 +24,12 @@ import { moderatorApi } from "../../lib/council/api";
 import { vehicleNames } from "../../lib/mock-data";
 import { Badge, Button } from "../ui/Primitives";
 const navigation = [
-  { to: "/overview", label: "Overview", icon: LayoutDashboard },
+  { to: "/council", label: "Agent council", icon: Orbit },
   { to: "/customer", label: "Customer intelligence", icon: Users },
   { to: "/market", label: "Market trends", icon: TrendingUp },
   { to: "/competitor", label: "Competitor intelligence", icon: ScanLine },
-  { to: "/council", label: "Agent council", icon: Orbit },
   { to: "/decisions", label: "Decisions & scenarios", icon: SlidersHorizontal },
   { to: "/presentations", label: "Presentations", icon: Presentation },
-  { to: "/audit", label: "Audit trail", icon: History },
 ];
 export default function AppShell() {
   const started = useAppStore((s) => s.started);
@@ -146,7 +142,7 @@ export default function AppShell() {
             Humans decide.
           </p>
           <NavLink to="/">
-            <ArrowLeft size={15} /> Analysis setup <ArrowUpRight size={14} />
+            <ArrowLeft size={15} /> Back to home <ArrowUpRight size={14} />
           </NavLink>
           <small>UNOFFICIAL HACKATHON CONCEPT</small>
         </div>

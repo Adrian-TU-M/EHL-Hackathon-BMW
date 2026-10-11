@@ -106,6 +106,8 @@ class NativeSpecialists:
             question=data["brief"]["question"], context=history[-20:],
             challenge="\n".join(f"{c['actor']}: {c['question']}" for c in data.get("challenges", [])) if operation == "rebuttal" else data.get("question", {}).get("question", ""))
         async with inference_lock:
+            from backend.llm.usage import mark_request_started
+            mark_request_started()
             event = await asyncio.to_thread(agent.perspective, request)
         citations = list(dict.fromkeys(customer_citation(c, scope, evidence) for c in event.evidenceIds))
         # Resolve every citation, and verify native feedback text against the frozen excerpt.
