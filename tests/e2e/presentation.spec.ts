@@ -6,10 +6,23 @@ import JSZip from "jszip";
 async function start(page: Page) {
   await page.goto("/");
   await page
-    .getByRole("button", { name: "Start Product Analysis", exact: true })
+    .getByRole("button", { name: "Take a deeper dive", exact: true })
     .click();
-  await page.getByRole("button", { name: "Confirm scope & begin" }).click();
   await page.getByRole("link", { name: "Presentations", exact: true }).click();
+}
+
+// Synthetic fixtures remain explicit test inputs, never the production entry point.
+async function loadFixture(page: Page) {
+  const response = await page.request.post("/api/presentations", {
+    data: {
+      kind: "isolated_demo",
+      mode: "demo",
+      idempotency_key: crypto.randomUUID(),
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+  const presentation = await response.json();
+  await page.goto(`/presentations/${presentation.id}`);
 }
 
 test("isolated studio: PM review, slides, variants, revision, exports and rehearsal", async ({
@@ -18,7 +31,7 @@ test("isolated studio: PM review, slides, variants, revision, exports and rehear
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await start(page);
-  await page.getByRole("button", { name: "Load presentation demo" }).click();
+  await loadFixture(page);
   await expect(page.locator(".studio-context")).toContainText(
     "3 approved decisions",
   );
@@ -282,14 +295,13 @@ test("presentation studio fits a phone and exposes backend failures", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page
-    .getByRole("button", { name: "Start Product Analysis", exact: true })
+    .getByRole("button", { name: "Take a deeper dive", exact: true })
     .click();
-  await page.getByRole("button", { name: "Confirm scope & begin" }).click();
   await page
     .getByRole("button", { name: "Open navigation", exact: true })
     .click();
   await page.getByRole("link", { name: "Presentations", exact: true }).click();
-  await page.getByRole("button", { name: "Load presentation demo" }).click();
+  await loadFixture(page);
   await page
     .getByRole("button", { name: "Save brief & review outline" })
     .click();
@@ -326,9 +338,7 @@ test("four department stories share the BMW theme and export clean editable slid
 }) => {
   test.setTimeout(120000);
   await start(page);
-  await page
-    .getByRole("button", { name: "Load presentation demo", exact: true })
-    .click();
+  await loadFixture(page);
   await page
     .getByLabel("Presenter name (optional)", { exact: true })
     .fill("Alex Morgan");
@@ -444,9 +454,7 @@ test("BMW preview is read-only and theme application preserves locked PM content
   page,
 }) => {
   await start(page);
-  await page
-    .getByRole("button", { name: "Load presentation demo", exact: true })
-    .click();
+  await loadFixture(page);
   await page
     .getByRole("button", { name: "Save brief & review outline", exact: true })
     .click();

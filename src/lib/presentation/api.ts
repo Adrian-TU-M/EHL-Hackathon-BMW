@@ -40,7 +40,7 @@ export async function presentationRequest<T>(
     );
   } catch {
     throw new Error(
-      "Presentation service unavailable. Start the local backend with npm run dev:presentation.",
+      "Presentation service unavailable. Start the unified backend with npm run dev:backend.",
     );
   }
   if (!response.ok) {
@@ -49,7 +49,7 @@ export async function presentationRequest<T>(
       typeof data?.detail === "string"
         ? data.detail
         : response.status >= 500
-          ? "Presentation service unavailable. Start the local backend with npm run dev:presentation."
+          ? "Presentation service unavailable. Start the unified backend with npm run dev:backend."
           : `Presentation request failed (${response.status}). Check the inputs and reload.`,
     );
   }
@@ -57,6 +57,11 @@ export async function presentationRequest<T>(
 }
 
 export const presentationApi = {
+  health: () =>
+    presentationRequest<{
+      available: boolean;
+      ollama: { available: boolean; model: string };
+    }>("/health"),
   list: () => presentationRequest<PresentationList>(""),
   get: (id: string) => presentationRequest<Presentation>(`/${id}`),
   create: (

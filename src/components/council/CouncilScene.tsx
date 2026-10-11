@@ -41,7 +41,7 @@ function ResponsiveFraming() {
     if (!(camera instanceof PerspectiveCamera)) return;
     camera.fov = Math.min(
       65,
-      37 * Math.max(1, 1.1 / (size.width / size.height)),
+      34 * Math.max(1, 1.1 / (size.width / size.height)),
     );
     camera.updateProjectionMatrix();
   }, [camera, size.width, size.height]);
@@ -141,7 +141,7 @@ export default function CouncilScene({
           frameloop={
             !visible || !inView ? "never" : reduced ? "demand" : "always"
           }
-          camera={{ position: [0, 4.5, 10], fov: 37 }}
+          camera={{ position: [0, 4.5, 10], fov: 34 }}
           fallback={fallback}
         >
           <ResponsiveFraming />

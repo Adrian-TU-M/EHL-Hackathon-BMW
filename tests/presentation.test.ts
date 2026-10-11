@@ -635,3 +635,49 @@ describe("ElevenLabs client tool boundaries", () => {
     expect(presentationApi.answer).not.toHaveBeenCalled();
   });
 });
+
+it("fits four real council requirement labels without blocking export", () => {
+  const p = fixture();
+  p.decks.executive!.theme_id = "bmw-cinematic-v1";
+  const slide = p.decks.executive!.slides[0];
+  slide.role = "portfolio";
+  slide.layout = "portfolio";
+  slide.content = {
+    kind: "portfolio",
+    items: [
+      {
+        label: "How should usable range meet journey needs?",
+        detail:
+          "Adaptive range estimation for cold weather and dynamic fast-charging adjustments",
+      },
+      {
+        label: "Essential controls accessibility",
+        detail:
+          "Evaluate physical buttons for essential controls during driving.",
+      },
+      {
+        label: "Simpler and dependable charging",
+        detail:
+          "Charging card integration and real-time charger data in navigation",
+      },
+      {
+        label: "Display legibility and usability",
+        detail: "Evaluate haptic controls and a panoramic display",
+      },
+    ].map((item) => ({
+      ...item,
+      owner: "",
+      timing: "",
+      dependency: "",
+      condition: "",
+      source_id: "",
+    })),
+  };
+  const layout = layoutSlide(p, slide, 3, "executive");
+  expect(layout.issues).toEqual([]);
+  expect(
+    layout.elements
+      .filter((e) => e.kind === "text")
+      .every((e) => e.y + e.h <= 540),
+  ).toBe(true);
+});

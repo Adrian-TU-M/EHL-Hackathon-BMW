@@ -16,7 +16,7 @@ from backend.presentation.content import scenario_note, validate_slide
 from backend.presentation.finance import calculate
 from backend.presentation.llm import OllamaWriter
 from backend.presentation.models import FinancialInput, PresentationBrief, SlideSpec
-from backend.presentation.service import PresentationService
+from backend.presentation.service import Dossier, PresentationService
 from backend.presentation.sources import (
     council_snapshot,
     dashboard_snapshot,
@@ -53,7 +53,7 @@ class StubWriter:
         } or schema.__name__.startswith("StructuredSlideCopy"):
             original = data.get("template", data.get("slide"))
             return schema.model_validate({k: original[k] for k in schema.model_fields})
-        if schema.__name__ == "Dossier":
+        if issubclass(schema, Dossier):
             return schema(
                 summary="Supplied customer need; prevalence unknown",
                 objection="Feasibility unverified",
@@ -61,6 +61,8 @@ class StubWriter:
                     "allowed_ids", data.get("chunks", [{}])[0].get("evidence_ids", [])
                 ),
             )
+        if schema.__name__ == "SlideCaptionRepair":
+            return schema(**{key: "Validate the need" for key in schema.model_fields})
         if schema.__name__ == "OutlineResponse":
             return schema(
                 items=[
@@ -605,7 +607,8 @@ async def test_ollama_schema_format_one_repair_and_no_synthetic_fallback():
     assert result.findings == [] and len(requests) == 2
     assert requests[0]["format"] == ReviewResponse.model_json_schema()
     assert requests[0]["think"] is False and requests[0]["options"]["num_ctx"] == 16384
-    assert "schema error" in requests[1]["messages"][1]["content"]
+    assert requests[1]["messages"][-2] == {"role": "assistant", "content": "invalid json"}
+    assert "Validation errors" in requests[1]["messages"][-1]["content"]
     requests.clear()
     await writer.client.aclose()
     writer.client = httpx.AsyncClient(

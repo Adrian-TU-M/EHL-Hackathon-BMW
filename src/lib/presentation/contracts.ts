@@ -251,7 +251,15 @@ export interface PresentationList {
     source_kind: string;
     updated_at: string;
   }[];
-  sessions: { id: string; status: string; approved_count: number }[];
+  sessions: {
+    id: string;
+    status: string;
+    approved_count: number;
+    proposal_count?: number;
+    mode?: string;
+    scope?: { vehicle: string; market: string };
+    created_at?: string;
+  }[];
 }
 
 export function departmentOutline(

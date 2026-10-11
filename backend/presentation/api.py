@@ -99,9 +99,13 @@ async def listing(request: Request):
         {
             "id": x.id,
             "status": x.status,
+            "mode": x.mode,
+            "scope": x.agenda.scope.model_dump(),
+            "created_at": x.created_at,
+            "proposal_count": sum(len(o.assessment.proposals) for o in x.outcomes if o.assessment_valid and o.assessment),
             "approved_count": len(council_snapshot(s.engine, x.id).decisions),
         }
-        for x in s.engine.sessions.values()
+        for x in sorted(s.engine.sessions.values(), key=lambda x: x.created_at, reverse=True)
     ]
     return {
         "presentations": [

@@ -2,20 +2,23 @@
 
 The presentation agent runs alongside FastAPI's moderator, with its own SQLite database, generation queue and budgets. It turns explicitly approved requirements into a frozen investment case. The PM owns the brief, outline approval, edits, revision application and finalization. Finalizing a deck does **not** authorize its budget.
 
-## Start the isolated demo
+## Start from real council requirements
 
-After the root README's dependency setup, run these in separate terminals:
+After the root README's dependency setup, run the unified platform:
 
 ```sh
-npm run dev:presentation
-npm run dev:frontend
+npm run dev
 ```
 
-Open the app, confirm the analysis scope, then **Presentations → Load presentation demo**. Save the brief, review and approve the twelve-slide outline, then generate the deck. The result has twelve core slides and three evidence appendix slides. This explicit deterministic demo needs neither upstream agents nor Ollama nor ElevenLabs. It creates no dashboard decisions and modifies no council records.
+If the frontend is already running, start only the unified backend with `npm run dev:backend`. Run one backend worker on port 8001; do not run the presentation-only backend alongside it.
 
-The fixture covers controls, charging and assistance. Pending/rejected fixture records are deliberately excluded. Its approval history, discussion, owners, milestones, success measures and finances are all synthetic. The $6M illustrative program consists of a $600K pilot, $2.4M development and $3M rollout. Disclosures appear in preview, every exported slide, notes and snapshot JSON.
+Open **Presentations**, choose a council, and use **Review requirements** to accept individual Jury proposals in Decisions & Scenarios. Then choose **Create presentation**, save the brief, approve the outline and generate the audience deck with local Qwen. The studio shows the configured model and refreshes approval counts automatically.
 
-`dev:presentation` skips private source ingestion. To include real council work, use the unified `npm run dev` backend on port 8001 instead; both expose `/api/presentations`. Run one backend worker. Data lives in ignored `private-data/presentations.sqlite3`; `PRESENTATION_DATA_DIR` changes the directory. The source collection is never put in frontend assets.
+Generation includes twelve main slides and an evidence appendix for every accepted requirement. Ten requirements are supported, but neither ten debate topics nor a completed debate guarantees ten supported proposals. Pending, rejected and obsolete approvals are excluded. A real debate and PM approval are required for real council input.
+
+Existing synthetic samples remain under **Previous synthetic samples**. They are not real council results. Explicit `isolated_demo` API input remains available for isolated developer tests; it is not the main product workflow and never changes live council approvals. `dev:presentation` is a presentation-only development mode that skips council ingestion.
+
+Data lives in ignored `private-data/presentations.sqlite3`; `PRESENTATION_DATA_DIR` changes the directory. The source collection is never put in frontend assets.
 
 ## Local Qwen writing
 
@@ -28,9 +31,9 @@ ollama pull qwen3:8b
 
 The second command is a separate terminal command while the daemon runs. Defaults are `OLLAMA_BASE_URL=http://127.0.0.1:11434` and `OLLAMA_MODEL=qwen3:8b`; export overrides before starting FastAPI. `GET /api/presentations/health` reports the configured model's availability. The backend does not automatically read `backend/.env.example`.
 
-Choose **Local Ollama / Qwen** when creating from dashboard approvals or a council session. Dashboard records remain visibly synthetic even with live model writing. Live council inputs are resolved by the server. Ollama is called with schema-constrained `format`, `think: false`, a 16K context, a 180-second call timeout and one schema-repair attempt. Slide content gets one targeted validation repair when needed. Each job has a 30-minute overall limit.
+The studio creates real council presentations with **Local Ollama / Qwen**. Council inputs are resolved by the server. Legacy dashboard samples remain visibly synthetic even with live model writing. Ollama is called with schema-constrained `format`, `think: false`, a 16K context, a 180-second call timeout and one schema-repair attempt. Slide content gets one targeted validation repair when needed. Each job has a 30-minute overall limit.
 
-Stages are decision dossiers → shared business argument and deterministic financial case → outline → slide writing → review. Transcript fragments are read sequentially rather than silently truncated. Slides are generated one at a time, checkpointed after each slide. One generation job runs at a time across workspaces. Cancellation, provider failure and server restart preserve checkpoints; retry uses a new idempotency key and continues completed work. There is no silent synthetic fallback.
+Stages are decision dossiers → shared business argument and deterministic financial case → outline → slide writing → review. The writer receives spoken turns, structured claims, challenges and the native Judge assessment, with duplicate catalogs and event payloads removed from the prompts. The complete original packets stay in the frozen snapshot. Remaining fragments are read sequentially rather than silently truncated; progress identifies each requirement and evidence section. Dossier citations are constrained to the requirement’s evidence IDs during generation. Slides are generated one at a time, checkpointed after each slide. One generation job runs at a time across workspaces. Cancellation, provider failure and server restart preserve checkpoints; retry uses a new idempotency key and continues completed work. There is no silent synthetic fallback.
 
 ## Approval and source boundaries
 
@@ -115,13 +118,13 @@ The React controls are adapted from `main`'s Judge conversation into `src/compon
 ### Voice smoke test
 
 1. Configure the separate presentation agent and exact client tools above. Set its agent ID in root `.env.local`, permit the app origin if restricted, and restart Vite. The current browser integration uses a public development agent; authenticated agents need a signed-session integration.
-2. Start `npm run dev:presentation` and `npm run dev` in separate terminals. Open **Presentations → Load presentation demo**, approve the outline and generate its deck.
+2. Start the unified platform with `npm run dev`. Open **Presentations**, create a deck from accepted council requirements, approve the outline and generate it.
 3. Under **Slides → Open voice assistant**, open **Voice setup & testing**. **Test microphone** checks access and immediately stops the test stream. If access fails, use the conversation's **Text** channel to test agent connection and tools independently.
 4. Start a voice conversation. Ask “Which audience is this for?”, “Show slide seven”, and “Make this slide clearer for Finance”. Expect navigation and a pending revision proposal. Review it, then Apply or Discard; speech never applies it.
 5. Under **Rehearse**, choose CFO, start rehearsal, then open voice rehearsal. Answer each of the three questions. Expect feedback and no deck changes. Keep the deck unchanged during a rehearsal; a new revision requires starting a new rehearsal.
 6. Check tool calls in the ElevenLabs conversation transcript if navigation or proposals fail. Names and parameter identifiers are case-sensitive; enable **Wait for response**. A connected agent that only talks without changing the UI may be missing its tools.
 
-**Demo versus live:** the isolated demo intentionally uses scripted revisions and coaching. It verifies real ElevenLabs conversation/tool integration without Ollama, but does not measure AI writing or coaching quality. For those, start Ollama, install `qwen3:8b`, and create a new dashboard/council workspace with **Local Ollama / Qwen**. Starting Ollama does not convert existing demo workspaces. Dashboard input data remains labeled synthetic.
+**Demo versus live:** the isolated demo intentionally uses scripted revisions and coaching. It verifies real ElevenLabs conversation/tool integration without Ollama, but does not measure AI writing or coaching quality. For those, start Ollama, install `qwen3:8b`, and create a new council presentation from accepted requirements. Starting Ollama does not convert existing demo workspaces. Dashboard input data remains labeled synthetic.
 
 No account agent is provisioned automatically. Live ElevenLabs tests need a valid configured dedicated agent; automated tool and microphone-failure tests do not establish live audio quality.
 

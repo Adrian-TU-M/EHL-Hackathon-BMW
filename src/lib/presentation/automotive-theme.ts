@@ -474,21 +474,30 @@ export function layoutAutomotiveSlide(
       });
     }
     items.forEach((item, i) => {
-      const y = 222 + i * (276 / items.length);
+      const rowHeight = 276 / items.length;
+      const y = 222 + i * rowHeight;
       if (!portfolio)
         text(String(i + 1).padStart(2, "0"), 48, y, 64, 55, 36, t.blue, true);
       text(
         item.label || "Customer need",
         portfolio ? 160 : 136,
         y,
-        portfolio ? 220 : 244,
-        78,
-        22,
+        244,
+        portfolio ? rowHeight - 1 : 78,
+        portfolio && items.length > 3 ? 18 : 22,
         ink,
         true,
       );
-      text(item.detail, 420, y, 492, 78, 20, muted);
-      if (i < items.length - 1) rect(136, y + 82, 776, 1, "D5DFEA");
+      text(
+        item.detail,
+        420,
+        y,
+        492,
+        portfolio ? rowHeight - 1 : 78,
+        portfolio && items.length > 3 ? 18 : 20,
+        muted,
+      );
+      if (i < items.length - 1) rect(136, y + rowHeight - 1, 776, 1, "D5DFEA");
     });
   } else if (role === "appendix" || s.layout === "appendix") {
     // Editorial rows avoid the old four-quadrant appendix collisions.

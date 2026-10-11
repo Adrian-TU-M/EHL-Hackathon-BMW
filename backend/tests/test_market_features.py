@@ -74,6 +74,19 @@ class PageCheckTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):await refresh(['https://127.0.0.1/private'])
 
 class StudyGroundingTests(unittest.TestCase):
+    def test_source_caveat_can_be_published_separately_without_licensing_overclaims(self):
+        from backend.agents.market import required_source_limits, validate_text
+        from backend.schemas.evidence import EvidenceRecord
+        r=EvidenceRecord(id='study',source_type='customer_study',source_title='Test',source_uri='local:test',locator='E24',passage='Reported mean: 8.067.',retrieved_at='2026-01-01T00:00:00Z',brand='BMW',model='G60',market='Europe',caveats=['Rating scale is not documented here.'])
+        limits=required_source_limits([r])
+        self.assertEqual(len(limits),1)
+        validate_text('\n'.join(['Test voice task completion before prioritizing a change.',*limits]),[r])
+        with self.assertRaises(ValueError):
+            validate_text('\n'.join(['The study shows high satisfaction.',*limits]),[r])
+        with self.assertRaises(ValueError):
+            validate_text('\n'.join(['This produces 87% success.',*limits]),[r])
+        self.assertEqual(required_source_limits([]),[])
+
     def test_unknown_scale_interpretation_rejected(self):
         from backend.agents.market import validate_text
         from backend.schemas.evidence import EvidenceRecord

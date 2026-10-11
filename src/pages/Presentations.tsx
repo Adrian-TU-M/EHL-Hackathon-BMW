@@ -17,7 +17,6 @@ import {
   FileText,
   LockKeyhole,
   Play,
-  Plus,
   RefreshCw,
   Sparkles,
   UnlockKeyhole,
@@ -69,7 +68,10 @@ export default function Presentations() {
   const [tab, setTab] = useState<Tab>("brief");
   const [audience, setAudience] = useState<Audience>("executive");
   const [index, setIndex] = useState(0);
-  const [mode, setMode] = useState<"ollama" | "demo">("ollama");
+  const [runtime, setRuntime] = useState<{
+    available: boolean;
+    model: string;
+  } | null>(null);
   const [presenting, setPresenting] = useState(false);
   const [voice, setVoice] = useState(false);
   const [themePreview, setThemePreview] = useState(false);
@@ -135,6 +137,32 @@ export default function Presentations() {
       disposed = true;
     };
   }, [id, accept]);
+
+  useEffect(() => {
+    if (id) return;
+    let disposed = false;
+    async function refreshListing() {
+      try {
+        const [next, health] = await Promise.all([
+          presentationApi.list(),
+          presentationApi.health(),
+        ]);
+        if (!disposed) {
+          setListing(next);
+          setRuntime(health.ollama);
+          setError("");
+        }
+      } catch (e) {
+        if (!disposed) setError(e instanceof Error ? e.message : String(e));
+      }
+    }
+    void refreshListing();
+    const timer = window.setInterval(() => void refreshListing(), 5000);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+    };
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -205,9 +233,23 @@ export default function Presentations() {
           ) || [],
       )
     : [];
-  const approvedCount = workspace.requirements.filter(
-    (r) => r.status === "Approved" && r.approvedVersion === r.version,
-  ).length;
+  const liveSessions = listing.sessions
+    .filter(
+      (s) =>
+        s.mode !== "deterministic" &&
+        (s.proposal_count !== 0 || s.approved_count > 0),
+    )
+    .sort(
+      (a, b) =>
+        b.approved_count - a.approved_count ||
+        (b.proposal_count || 0) - (a.proposal_count || 0),
+    );
+  const livePresentations = listing.presentations.filter(
+    (item) => !item.synthetic && item.mode === "ollama",
+  );
+  const samplePresentations = listing.presentations.filter(
+    (item) => item.synthetic || item.mode !== "ollama",
+  );
 
   async function run(
     action: () => Promise<Presentation>,
@@ -232,7 +274,7 @@ export default function Presentations() {
     setLoading(true);
     setError("");
     try {
-      const next = await presentationApi.create(kind, mode, sessionId);
+      const next = await presentationApi.create(kind, "ollama", sessionId);
       navigate(`/presentations/${next.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -297,89 +339,96 @@ export default function Presentations() {
           <section className="studio-welcome">
             <div>
               <span className="eyebrow">
-                FROM EVIDENCE TO AN INVESTMENT DECISION
+                YOUR COUNCIL / YOUR APPROVED REQUIREMENTS
               </span>
               <h2>
-                A strong story.
-                <br />A defensible business case.
+                Real decisions.
+                <br />
+                Ready to present.
               </h2>
               <p>
-                One consistent recommendation, tailored for leadership, Finance,
-                Engineering, and Sales. Your judgment stays at the center.
+                Choose a debate below. Local Qwen writes the presentation from
+                the exact requirements you accepted, with their evidence and the
+                Jury’s reasoning.
               </p>
               <div className="studio-actions">
-                <Button
-                  disabled={loading}
-                  onClick={() => void create("isolated_demo")}
+                <Link
+                  className="button primary"
+                  to={
+                    liveSessions[0]
+                      ? `/decisions?session=${liveSessions[0].id}`
+                      : "/decisions"
+                  }
                 >
-                  <Sparkles size={17} />
-                  Load presentation demo
-                </Button>
-                <Badge tone="amber">ISOLATED SYNTHETIC WORKSPACE</Badge>
+                  Review Jury requirements <ArrowRight size={17} />
+                </Link>
+                <Link to="/council">Start a debate</Link>
               </div>
             </div>
             <div className="studio-welcome-aside">
-              <span>01 / SHAPE THE BRIEF</span>
-              <span>02 / APPROVE THE ARGUMENT</span>
-              <span>03 / REFINE THE PRESENTATION</span>
-              <span>04 / REHEARSE THE DECISION</span>
-              <p>
-                No model or completed debate is needed for the isolated demo.
+              <span>01 / ACCEPT REQUIREMENTS</span>
+              <span>02 / REVIEW THE BRIEF & OUTLINE</span>
+              <span>03 / GENERATE WITH QWEN</span>
+              <span>04 / REVIEW & EXPORT</span>
+              <p role="status">
+                {runtime
+                  ? runtime.available
+                    ? `${runtime.model} · ready on this laptop`
+                    : `${runtime.model} is unavailable. Start Ollama before generating.`
+                  : "Checking local Qwen…"}
               </p>
             </div>
           </section>
           <section className="studio-card">
-            <h2>Start from your approved decisions</h2>
+            <h2>Choose your council</h2>
             <p>
-              {approvedCount} current dashboard approvals available. Dashboard
-              inputs remain labeled synthetic.
+              Only current, individually accepted requirements enter the deck.
+              Pending and rejected requirements stay out. Every accepted
+              requirement is covered; ten are welcome, but not required.
             </p>
-            <div className="studio-actions">
-              <label>
-                Presentation writer
-                <select
-                  value={mode}
-                  onChange={(e) => setMode(e.target.value as "ollama" | "demo")}
-                >
-                  <option value="ollama">Local Ollama / Qwen</option>
-                  <option value="demo">Deterministic synthetic preview</option>
-                </select>
-              </label>
-              <Button
-                disabled={loading || !approvedCount}
-                onClick={() => void create("dashboard_demo")}
-              >
-                <Plus size={16} />
-                Create from dashboard approvals
-              </Button>
-              <Link to="/decisions">Review decisions</Link>
-            </div>
-            {listing.sessions.map((s) => (
+            {!liveSessions.length && (
+              <p>
+                No real councils yet. Start a debate, then review its
+                requirements.
+              </p>
+            )}
+            {liveSessions.map((s) => (
               <div className="studio-session" key={s.id}>
                 <div>
-                  <strong>Council {s.id.slice(-8)}</strong>
+                  <strong>
+                    {s.scope
+                      ? `BMW ${s.scope.vehicle} · ${s.scope.market}`
+                      : "Council"}{" "}
+                    · {s.id.slice(-8)}
+                  </strong>
                   <p>
-                    {s.status} / {s.approved_count} explicitly approved
-                    proposals
-                    {s.approved_count
-                      ? ""
-                      : " / waiting for requirement approvals"}
+                    {s.status.replaceAll("_", " ")} · {s.approved_count}{" "}
+                    accepted
+                    {typeof s.proposal_count === "number"
+                      ? ` / ${s.proposal_count} proposed`
+                      : ""}
                   </p>
                 </div>
-                <Button
-                  variant="secondary"
-                  disabled={loading || !s.approved_count}
-                  onClick={() => void create("council", s.id)}
-                >
-                  Create from council
-                </Button>
+                <div className="studio-actions">
+                  <Link to={`/decisions?session=${s.id}`}>
+                    Review requirements
+                  </Link>
+                  <Button
+                    disabled={
+                      loading || !s.approved_count || !runtime?.available
+                    }
+                    onClick={() => void create("council", s.id)}
+                  >
+                    <Sparkles size={16} /> Create presentation
+                  </Button>
+                </div>
               </div>
             ))}
           </section>
           <section className="studio-library">
             <h2>Your presentations</h2>
-            {listing.presentations.length ? (
-              listing.presentations.map((item) => (
+            {livePresentations.length ? (
+              livePresentations.map((item) => (
                 <Link
                   key={item.id}
                   to={`/presentations/${item.id}`}
@@ -405,6 +454,24 @@ export default function Presentations() {
               </p>
             )}
           </section>
+          {samplePresentations.length > 0 && (
+            <details className="studio-card">
+              <summary>
+                Previous synthetic samples ({samplePresentations.length})
+              </summary>
+              <p>
+                These are sample decks, separate from your real council
+                requirements.
+              </p>
+              {samplePresentations.map((item) => (
+                <p key={item.id}>
+                  <Link to={`/presentations/${item.id}`}>
+                    {item.title} · synthetic sample
+                  </Link>
+                </p>
+              ))}
+            </details>
+          )}
         </>
       ) : p ? (
         <>

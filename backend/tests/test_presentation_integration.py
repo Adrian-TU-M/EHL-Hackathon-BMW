@@ -23,9 +23,15 @@ async def test_unified_routes_preserve_jury_and_require_explicit_requirement_app
                 "status": "Approved", "rationale": "Approve this bounded test for the presentation."}
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            before = (await client.get("/api/presentations")).json()["sessions"][0]
+            assert before["approved_count"] == 0
+            assert before["proposal_count"] == 1
+            assert before["scope"]["vehicle"] == scope.vehicle
+            assert before["mode"] == session.mode
             assert (await client.post("/api/presentations", json=create)).status_code == 422
             assert (await client.post(review_url, json={**approval, "expected_version": proposal.version + 1})).status_code == 409
             assert (await client.post(review_url, json=approval)).status_code == 200
+            assert (await client.get("/api/presentations")).json()["sessions"][0]["approved_count"] == 1
             response = await client.post("/api/presentations", json=create)
             assert response.status_code == 201, response.text
             p = response.json()

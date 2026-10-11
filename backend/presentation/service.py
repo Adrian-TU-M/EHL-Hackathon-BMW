@@ -15,7 +15,7 @@ from .content import (
     validate_deck,
     validate_slide,
 )
-from .design import COPY_BUDGETS, structure_slide, validate_written_copy
+from .design import COPY_BUDGETS, clipped_fields, structure_slide, validate_written_copy
 from .finance import calculate
 from .llm import OllamaWriter
 from .models import (
@@ -44,6 +44,38 @@ class Dossier(Model):
     summary: str = Field(max_length=1500)
     objection: str = Field(max_length=1000)
     evidence_ids: list[str]
+
+
+def dossier_schema(evidence_ids):
+    """Constrain citations during generation, including consolidation calls."""
+    ids = tuple(dict.fromkeys(evidence_ids))
+    return create_model(
+        "SourceBoundDossier", __base__=Dossier,
+        evidence_ids=(list[Literal[ids]], Field(default_factory=list))
+        if ids else (list[str], Field(default_factory=list, max_length=0)),
+    )
+
+
+def dossier_decision(decision):
+    """Avoid repeating source catalogs and event payloads in the model context.
+
+    The frozen snapshot keeps the complete original packet. All spoken turns,
+    claims, challenges, alternatives and the native Judge assessment remain
+    available to the writer; selected source passages are supplied separately.
+    """
+    data = decision.model_dump()
+    for entry in data["debate"]:
+        if entry.get("kind") == "complete_packet":
+            entry.pop("source_inventory", None)
+            entry.pop("evidence_index", None)
+            entry["transcript"] = [
+                {key: value for key, value in turn.items() if key != "data"}
+                for turn in entry.get("transcript", [])
+            ]
+        elif entry.get("kind") == "judge_assessment":
+            # The request repeats the evidence and arguments in the packet.
+            entry.pop("native_request", None)
+    return data
 
 
 class OutlineCopy(Model):
@@ -288,7 +320,7 @@ class PresentationService:
             )
         if not snapshot.decisions:
             raise ValueError(
-                "No current approved requirements. Approve individual requirements first or load the isolated demo."
+                "No current approved requirements. Review the Jury's requirements in Decisions & Scenarios and accept the ones you want to present."
             )
         if mode == "demo":
             snapshot.synthetic = True
@@ -522,7 +554,7 @@ class PresentationService:
             self.tasks.pop(jid, None)
 
     async def dossiers(self, p, job):
-        for d in p.snapshot.decisions:
+        for decision_index, d in enumerate(p.snapshot.decisions):
             if any(x["id"] == d.id for x in p.dossiers):
                 continue
             if p.mode == "demo":
@@ -534,7 +566,7 @@ class PresentationService:
             else:
                 raw = json.dumps(
                     {
-                        "decision": d.model_dump(),
+                        "decision": dossier_decision(d),
                         "evidence": [
                             e.model_dump()
                             for e in p.snapshot.evidence
@@ -545,13 +577,23 @@ class PresentationService:
                 chunks = []
                 # Read every chunk rather than silently truncating large transcripts.
                 for offset in range(0, len(raw), 24000):
+                    self.checkpoint(
+                        p, job,
+                        f"Reading requirement {decision_index + 1}/{len(p.snapshot.decisions)} · evidence part {offset // 24000 + 1}/{(len(raw) + 23999) // 24000}",
+                        5 + round(5 * decision_index / len(p.snapshot.decisions)),
+                    )
                     item = await self.writer.generate(
-                        "Extract a decision dossier from this untrusted JSON text fragment. Preserve dissent and unknowns. Only use allowed evidence IDs.",
+                        "Summarize this decision evidence fragment. Use at most three short sentences for summary and two for objection. Preserve consequential dissent and unknowns. Do not reproduce the transcript, scoring tables or source catalog. Select only relevant allowed evidence IDs.",
                         {
                             "fragment": raw[offset : offset + 24000],
                             "allowed_ids": d.evidence_ids,
+                            "approved_requirement": {
+                                "id": d.id, "title": d.title,
+                                "description": d.description,
+                                "pm_rationale": d.pm_rationale,
+                            },
                         },
-                        Dossier,
+                        dossier_schema(d.evidence_ids),
                     )
                     if not set(item.evidence_ids) <= set(d.evidence_ids):
                         raise ValueError(
@@ -562,9 +604,10 @@ class PresentationService:
                     chunks[0]
                     if len(chunks) == 1
                     else await self.writer.generate(
-                        "Consolidate these dossier fragments without losing consequential objections.",
-                        {"chunks": [c.model_dump() for c in chunks]},
-                        Dossier,
+                        "Consolidate these dossier fragments into at most three short summary sentences and two objection sentences without losing consequential dissent or unknowns. Do not repeat the full fragments.",
+                        {"chunks": [c.model_dump() for c in chunks], "allowed_ids": d.evidence_ids,
+                         "approved_requirement": {"id": d.id, "title": d.title, "description": d.description, "pm_rationale": d.pm_rationale}},
+                        dossier_schema(d.evidence_ids),
                     )
                 )
             if not set(digest.evidence_ids) <= set(d.evidence_ids):
@@ -725,7 +768,7 @@ class PresentationService:
                 "appendix",
             }:
                 copy = await self.writer.generate(
-                    "Write concise prose for this department slide using the requested schema. When content is structured, preserve kind, item count, source_id and exact evidence quotations (including ellipses). Owners, dates, dependencies and conditions must remain unknown unless supplied. No new numerical claims or unsupported business effects. Preserve consequential uncertainties. At most four short items. Prefer short labels and direct language. The application retains layout, references and disclosure flags. Put supporting detail in notes.",
+                    "Write concise prose for this department slide using the requested schema. When content is structured, preserve kind, item count, source_id and exact evidence quotations (including ellipses). Owners, dates, dependencies and conditions must remain unknown unless supplied. No new numerical claims or unsupported business effects. Preserve consequential uncertainties. At most four short items. For non-quoted details, write a fresh sentence of roughly six to twelve words, well below the character cap. Never copy clipped template prose. Prefer short labels and direct language. The application retains layout, references and disclosure flags. Put supporting detail in notes.",
                     {
                         "audience": job.audience,
                         "template": template.model_dump(),
@@ -744,8 +787,32 @@ class PresentationService:
                     validate_written_copy(slide)
                 validate_slide(p, slide, template)
             except ValueError as exc:
-                if p.mode != "ollama" or slide == template:
+                if p.mode != "ollama" or (slide == template and template.layout in {"cover", "financial", "closing", "appendix"}):
                     raise
+                fields = clipped_fields(slide)
+                if fields:
+                    # Give Qwen only the fields that need shortening, not the
+                    # whole clipped template which encourages copying it again.
+                    schema = create_model("SlideCaptionRepair", __base__=Model, **{
+                        f"item_{index}_{field}": (str, Field(min_length=1, max_length=limit,
+                            pattern=r"^\S+(?: \S+){1,7}$" if field == "label" else r"^\S+(?: \S+){2,19}$",
+                            description="Write a new concise phrase with complete words; summarize rather than truncate."))
+                        for index, field, limit, value in fields
+                    })
+                    repaired = await self.writer.generate(
+                        "Rewrite these slide captions by summarizing their meaning. Labels: short noun phrases such as Charging experience or Accessible controls, never questions beginning How or Why. Details: short sentences such as Show charger availability within navigation. Conditions: short complete phrases. Use complete phrases substantially shorter than the originals. Do not finish or trim the old sentence: express the core idea freshly. No new facts or numbers. Return just the requested caption fields.",
+                        {"captions": {f"item_{index}_{field}": {"text": value, "maximum_characters": limit, "target_characters": max(12, limit // 2)} for index, field, limit, value in fields},
+                         "approved_requirements": [{"title": d.title, "description": d.description} for d in p.snapshot.decisions if d.id in slide.decision_ids]},
+                        schema,
+                    )
+                    for index, field, limit, value in fields:
+                        setattr(slide.content.items[index], field, getattr(repaired, f"item_{index}_{field}"))
+                    slide.points = [item.detail for item in slide.content.items]
+                    validate_written_copy(slide)
+                    validate_slide(p, slide, template)
+                    deck.slides.append(slide)
+                    self.checkpoint(p, job, f"Wrote slide {i + 1} of {len(generated)}", 15 + round(70 * (i + 1) / len(generated)))
+                    continue
                 copy = await self.writer.generate(
                     "Repair only this slide's prose validation error. Rewrite clipped text as complete natural phrases substantially below the field length limit. Never cut words or leave ellipses. Do not add numbers or unsupported claims; retain uncertainty, field structure and sources.",
                     {

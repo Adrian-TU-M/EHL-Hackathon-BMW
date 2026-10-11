@@ -163,26 +163,33 @@ def structure_slide(p, slide: SlideSpec) -> SlideSpec:
     return slide
 
 
-def validate_written_copy(slide):
-    """Catch local-model character-limit chopping separately from PM-authored text."""
+def clipped_fields(slide):
+    """Identify every narrative field requiring a semantic rewrite."""
     import re
-
     if not slide.content:
-        return
-    for item in slide.content.items:
+        return []
+    issues = []
+    for index, item in enumerate(slide.content.items):
         for field, limit in COPY_BUDGETS[slide.content.kind].items():
             value = getattr(item, field)
             if field == "detail" and item.source_id:
                 continue
             if (
                 value.endswith(("...", "…"))
-                or len(value) >= limit
-                or re.search(
-                    r"\b(and|or|an|the|with|before|after|to|of|for|by|is|are)\s*$",
-                    value,
-                    re.I,
-                )
+                or len(value) > limit
+                or (len(value) == limit and not value.endswith((".", "!", "?")))
+                or re.search(r"\b(and|or|an|the|with|before|after|to|of|for|by|is|are|be|remain|into|including)\s*$", value, re.I)
+                or re.search(r"\s[A-Z]$", value)
             ):
-                raise ValueError(
-                    f"Rewrite {field} as a complete concise phrase under {max(20, limit - 12)} characters. Do not cut words or end with ellipses."
-                )
+                issues.append((index, field, limit, value))
+    return issues
+
+
+def validate_written_copy(slide):
+    """Catch character-limit chopping separately from PM-authored text."""
+    issues = clipped_fields(slide)
+    if issues:
+        raise ValueError("\n".join(
+            f"Item {index + 1} {field}: rewrite as a complete concise phrase under {max(20, limit - 12)} characters. Do not cut words or end with ellipses. Invalid text: {value!r}"
+            for index, field, limit, value in issues
+        ))
