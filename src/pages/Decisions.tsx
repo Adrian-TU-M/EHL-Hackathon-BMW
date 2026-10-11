@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { presentationApi } from "../lib/presentation/api";
 import {
   ArrowUpRight,
   FileText,
@@ -29,6 +31,9 @@ import {
 } from "../lib/scoring";
 import type { Criterion, Requirement, Weights } from "../lib/types";
 export default function Decisions() {
+  const navigate = useNavigate();
+  const [creatingPresentation, setCreatingPresentation] = useState(false);
+  const [presentationError, setPresentationError] = useState("");
   const { requirements, weights, setWeights, evidence } = useAppStore();
   const [draft, setDraft] = useState<Weights>(weights);
   const [review, setReview] = useState<Requirement | null>(null);
@@ -75,6 +80,54 @@ export default function Decisions() {
           </Button>
         }
       />
+      <section
+        className="panel panel-padding presentation-entry"
+        style={{ marginBottom: 24 }}
+      >
+        <div className="flex-between">
+          <div>
+            <h3>Take your approved decisions into the room.</h3>
+            <p className="small muted">
+              Create a presentation from current approvals, or explore an
+              isolated synthetic demo.
+            </p>
+          </div>
+          <div className="flex">
+            <Button
+              disabled={
+                creatingPresentation ||
+                !requirements.some(
+                  (r) =>
+                    r.status === "Approved" && r.approvedVersion === r.version,
+                )
+              }
+              onClick={async () => {
+                setCreatingPresentation(true);
+                setPresentationError("");
+                try {
+                  const p = await presentationApi.create("dashboard_demo");
+                  navigate(`/presentations/${p.id}`);
+                } catch (e) {
+                  setPresentationError(
+                    e instanceof Error ? e.message : String(e),
+                  );
+                } finally {
+                  setCreatingPresentation(false);
+                }
+              }}
+            >
+              {creatingPresentation ? "Preparing…" : "Create presentation"}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/presentations")}
+            >
+              Open presentation studio
+            </Button>
+          </div>
+        </div>
+        {presentationError ? <p role="alert">{presentationError}</p> : null}
+      </section>
       <div className="strategy-bar">
         <div>
           <span className="eyebrow">YOUR STRATEGY</span>

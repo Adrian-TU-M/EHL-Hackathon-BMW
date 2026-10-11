@@ -36,11 +36,25 @@ npm run dev:moderator:demo
 npm run dev
 ```
 
-Vite normally serves http://127.0.0.1:5173 and proxies `/api/moderator` to localhost:8000. `MODERATOR_API_URL` overrides the development proxy. Run one backend worker. The default backend data directory is `private-data`; `MODERATOR_DATA_DIR` overrides it. Only the nine explicitly authorized input documents are tracked. Keep additional raw sources, extracted catalogs and generated runtime data out of Git and public assets.
+Vite normally serves http://127.0.0.1:5173 and proxies `/api/moderator` and `/api/presentations` to localhost:8000. `MODERATOR_API_URL` overrides the development proxy. Run one backend worker. The default backend data directory is `private-data`; `MODERATOR_DATA_DIR` overrides it. Only the nine explicitly authorized input documents are tracked. Keep additional raw sources, extracted catalogs and generated runtime data out of Git and public assets.
 
 `dev:moderator:demo` explicitly uses deterministic integration adapters: they quote sources and exercise workflow gates but do not generate final requirement scores. To use the team's live services, configure the five `*_AGENT_URL` variables in [backend/.env.example](backend/.env.example), then run `npm run dev:moderator`. Missing live configuration is shown as unavailable, with no silent scripted fallback. The specialist reasoning and final judge rubric are outside this implementation.
 
 The other dashboard pages retain their synthetic analysis and versioned demo requirements. The council's source-backed outcomes are clearly separate. The frontend can still explore those dashboard pages without confidential data or a backend.
+
+## Presentation Studio
+
+Use **Presentations → Load presentation demo** to try the complete investment-case workflow without upstream agents or model credentials. Start `npm run dev:presentation` and `npm run dev` in separate terminals; this mode skips source ingestion. The isolated demo leaves existing PM decisions untouched and labels its illustrative $6M staged program throughout the deck and exports.
+
+Each department has a separate outline and three clear sections, using one reusable **BMW · Cinematic Automotive** theme, inspired by the supplied BMW case-study template: a photographic dark cover, oversized section type, cyan emphasis, dark editable charts and structured content editors. Choose **Outline → Department outline**, review and approve that department's story, then generate its deck. Existing decks offer **Preview BMW theme** and **Apply BMW theme**, preserving text, ordering, locks and prior versions. Optional presenter details belong on the cover; PM approval status stays inside the studio.
+
+The PM shapes the brief and financial assumptions, approves the outline, generates twelve core slides plus an evidence appendix, edits or reviews proposed changes, rehearses department objections, and exports editable PowerPoint, slide PDF, notes or complete JSON. Executive, Finance, Engineering and Sales/Marketing versions share the same financial case. Presenter mode includes notes and a timer.
+
+**Create presentation** on Decisions & scenarios uses current, version-matched dashboard approvals. Canonical council proposals require their own individual PM review; approving an outcome never approves all its requirements. Frozen sources, stale approval checks, revision history and deterministic calculations keep the resulting recommendation traceable.
+
+Live writing uses local Ollama (`qwen3:8b` by default). Optional voice editing/rehearsal uses a separate `VITE_ELEVENLABS_PRESENTATION_AGENT_ID`; spoken edits create proposals for PM application. Text editing and the explicit demo remain usable without voice. See [Presentation setup, APIs, finance definitions and ElevenLabs client tools](backend/presentation/README.md).
+
+To test voice, configure the dedicated ElevenLabs agent and matching client tools, set `VITE_ELEVENLABS_PRESENTATION_AGENT_ID` in `.env.local`, and restart Vite. Open **Slides → Open voice assistant → Voice setup & testing** for microphone checks and exact test phrases. **Rehearse → Start rehearsal → Open voice rehearsal** tests objections. The isolated demo uses scripted edits/coaching; live writing and evaluation need a new **Local Ollama / Qwen** workspace. See the [voice smoke-test walkthrough](backend/presentation/README.md#voice-smoke-test).
 
 ## Council workflow
 
@@ -74,6 +88,8 @@ npm run test:moderator          # Workflow, source, boundary and private lineage
 npm run build                  # TypeScript and production bundle
 npm run test:e2e                # Dedicated synthetic FastAPI fixture + Chrome UI tests
 npm run eval:moderator          # Same-opening baseline vs moderated artifacts
+npm run eval:presentation       # Deterministic presentation fixture checks
+npm run eval:presentation:live  # Separate live Qwen evaluation; requires Ollama
 ```
 
 Browser tests require installed Google Chrome and the Python environment above. They use ports 8001/5175 and synthetic fixtures; no private collection or live models are needed. Private-data tests skip when the collection is absent. Screenshots, traces and downloads go to ignored `test-results/`.

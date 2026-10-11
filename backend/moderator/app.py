@@ -9,6 +9,10 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import Field
 
+from presentation.api import router as presentation_router
+from presentation.service import PresentationService
+from presentation.storage import PresentationStore
+
 from .adapters import DeterministicAdapters, HttpAdapters
 from .engine import Conflict, Engine
 from .external import ExternalInput, extend_catalog, fetch_source
@@ -18,6 +22,7 @@ from .models import (
     Control,
     Limits,
     Model,
+    ProposalReviewInput,
     ReviewInput,
     Scope,
 )
@@ -45,11 +50,17 @@ def create_app(engine: Engine | None = None):
             app.state.data_error = None
         else:
             private = Path(os.getenv("MODERATOR_DATA_DIR", str(ROOT / "private-data")))
-            try:
-                catalog = load_catalog(private / "inputs", private / "catalogs")
-                error = None
-            except (FileNotFoundError, ValueError) as e:
-                catalog, error = None, str(e)
+            if os.getenv("PRESENTATION_ONLY") == "1":
+                catalog, error = (
+                    None,
+                    "Presentation-only mode; council source loading disabled",
+                )
+            else:
+                try:
+                    catalog = load_catalog(private / "inputs", private / "catalogs")
+                    error = None
+                except (FileNotFoundError, ValueError) as e:
+                    catalog, error = None, str(e)
             adapters = (
                 DeterministicAdapters()
                 if os.getenv("MODERATOR_ADAPTER", "http") == "deterministic"
@@ -59,12 +70,32 @@ def create_app(engine: Engine | None = None):
                 catalog, Store(private / "moderator.sqlite3"), adapters
             )
             app.state.data_error = error
+        presentation_path = (
+            Path(os.getenv("PRESENTATION_DATA_DIR", str(ROOT / "private-data")))
+            / "presentations.sqlite3"
+        )
+        # Browser/API tests use their fixture database directory instead of private data.
+        if engine and not os.getenv("PRESENTATION_DATA_DIR"):
+            db_file = engine.store.db.execute("PRAGMA database_list").fetchone()[2]
+            presentation_path = Path(db_file).parent / "presentations.sqlite3"
+        app.state.presentations = PresentationService(
+            PresentationStore(presentation_path), app.state.engine
+        )
+        loop = asyncio.get_running_loop()
+        app.state.engine.on_commit = lambda sid: loop.call_soon(
+            app.state.presentations.reconcile, sid
+        )
+        for sid in app.state.engine.sessions:
+            app.state.presentations.reconcile(sid)
         yield
+        app.state.engine.on_commit = None
+        await app.state.presentations.close()
         await app.state.engine.shutdown()
         if not engine:
             app.state.engine.store.close()
 
     app = FastAPI(title="BMW moderator controller", version="1.0.0", lifespan=lifespan)
+    app.include_router(presentation_router)
 
     @app.exception_handler(Conflict)
     async def conflict(_, error):
@@ -160,6 +191,12 @@ def create_app(engine: Engine | None = None):
     @app.get("/api/moderator/sessions/{sid}/outcomes")
     async def outcomes(sid: str, request: Request):
         return request.app.state.engine.get(sid).outcomes
+
+    @app.post("/api/moderator/sessions/{sid}/outcomes/{tid}/proposals/{pid}/review")
+    async def review_proposal(
+        sid: str, tid: str, pid: str, body: ProposalReviewInput, request: Request
+    ):
+        return await request.app.state.engine.review_proposal(sid, tid, pid, body)
 
     @app.get("/api/moderator/sessions/{sid}/packet")
     async def packet(sid: str, request: Request):

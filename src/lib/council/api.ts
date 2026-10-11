@@ -88,6 +88,24 @@ export const moderatorApi = {
       status,
       rationale,
     }),
+  reviewProposal: (
+    s: ModeratorSession,
+    topicId: string,
+    proposalId: string,
+    version: number,
+    outcomeVersion: number,
+    status: string,
+    rationale: string,
+  ) =>
+    request<ModeratorSession>(
+      `/sessions/${s.id}/outcomes/${topicId}/proposals/${encodeURIComponent(proposalId)}/review`,
+      {
+        expected_version: version,
+        expected_outcome_version: outcomeVersion,
+        status,
+        rationale,
+      },
+    ),
   assumption: (
     s: ModeratorSession,
     id: string,

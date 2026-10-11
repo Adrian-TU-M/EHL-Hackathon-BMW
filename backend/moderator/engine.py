@@ -29,6 +29,8 @@ from .models import (
     JudgeAssessment,
     JudgePacket,
     Limits,
+    ProposalDecision,
+    ProposalReviewInput,
     Rebuttal,
     ReviewInput,
     Scope,
@@ -73,6 +75,7 @@ class Engine:
         self.capabilities = {}
         self.deadlines = {}
         self.pending = {}
+        self.on_commit = None
         saved = store.catalogs()
         self.catalogs = {c.snapshot_hash: c for c in saved}
         if catalog:
@@ -156,6 +159,8 @@ class Engine:
             yield
             pending = self.pending[s.id]
             self.store.save(s, pending["events"], command=pending["command"])
+            if self.on_commit:
+                self.on_commit(s.id)
         except BaseException:
             s.__dict__.update(before.__dict__)
             raise
@@ -1498,6 +1503,61 @@ class Engine:
                     data={
                         "topic_id": tid,
                         "version": outcome.version,
+                        "status": request.status,
+                    },
+                )
+            return s
+
+    async def review_proposal(self, sid, tid, pid, request: ProposalReviewInput):
+        async with self.locks[sid]:
+            s = self.get(sid)
+            outcome = next((o for o in s.outcomes if o.topic_id == tid), None)
+            proposal = (
+                next((p for p in outcome.assessment.proposals if p.id == pid), None)
+                if outcome and outcome.assessment
+                else None
+            )
+            if not proposal:
+                raise KeyError(pid)
+            if (
+                outcome.version != request.expected_outcome_version
+                or proposal.version != request.expected_version
+            ):
+                raise Conflict(
+                    "Proposal or outcome changed. Review the current version."
+                )
+            if not request.rationale.strip():
+                raise ValueError("A proposal decision needs a PM rationale")
+            if request.status == "Approved" and (
+                not outcome.assessment_valid
+                or outcome.closure_reason in {"pm_stopped", "budget_exhausted"}
+                or outcome.review_status in {"Rejected", "Challenged"}
+            ):
+                raise Conflict(
+                    "Invalidated or incomplete outcome needs review before approving a requirement"
+                )
+            with self.atomic(s):
+                outcome.proposal_decisions.append(
+                    ProposalDecision(
+                        version=proposal.version,
+                        proposal_id=pid,
+                        proposal_version=proposal.version,
+                        outcome_version=outcome.version,
+                        status=request.status,
+                        rationale=request.rationale.strip(),
+                    )
+                )
+                s.revision += 1
+                self.emit(
+                    s,
+                    "proposal_review",
+                    "PM",
+                    request.rationale.strip(),
+                    data={
+                        "topic_id": tid,
+                        "proposal_id": pid,
+                        "proposal_version": proposal.version,
+                        "outcome_version": outcome.version,
                         "status": request.status,
                     },
                 )

@@ -12,6 +12,7 @@ const Market = lazy(() => import("./pages/Market"));
 const Competitor = lazy(() => import("./pages/Competitor"));
 const Council = lazy(() => import("./pages/Council"));
 const Decisions = lazy(() => import("./pages/Decisions"));
+const Presentations = lazy(() => import("./pages/Presentations"));
 const Audit = lazy(() => import("./pages/Audit"));
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -26,6 +27,8 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/competitor" element={<Competitor />} />
             <Route path="/council" element={<Council />} />
             <Route path="/decisions" element={<Decisions />} />
+            <Route path="/presentations" element={<Presentations />} />
+            <Route path="/presentations/:id" element={<Presentations />} />
             <Route path="/audit" element={<Audit />} />
           </Route>
           <Route

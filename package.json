@@ -14,13 +14,18 @@
     "dev:moderator:demo": "MODERATOR_ADAPTER=deterministic backend/.venv/bin/python -m uvicorn moderator.app:app --app-dir backend --host 127.0.0.1 --port 8000",
     "test:moderator": "backend/.venv/bin/python -m pytest -q backend/tests",
     "ingest:moderator": "cd backend && .venv/bin/python -m moderator.ingest",
-    "eval:moderator": "cd backend && .venv/bin/python -m moderator.evaluate"
+    "eval:moderator": "cd backend && .venv/bin/python -m moderator.evaluate",
+    "eval:presentation": "cd backend && .venv/bin/python -m presentation.evaluate",
+    "eval:presentation:live": "cd backend && .venv/bin/python -m presentation.evaluate --live",
+    "dev:presentation": "PRESENTATION_ONLY=1 MODERATOR_ADAPTER=deterministic backend/.venv/bin/python -m uvicorn moderator.app:app --app-dir backend --host 127.0.0.1 --port 8000"
   },
   "dependencies": {
+    "@elevenlabs/react": "^1.17.0",
     "@react-three/drei": "^10.7.0",
     "@react-three/fiber": "^9.4.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.468.0",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.4",
@@ -38,5 +43,8 @@
     "typescript": "~5.9.3",
     "vite": "^7.1.9",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "image-size": "2.0.4"
   }
 }

@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Info,
   Check,
+  Presentation,
 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import {
@@ -31,6 +32,7 @@ const navigation = [
   { to: "/competitor", label: "Competitor intelligence", icon: ScanLine },
   { to: "/council", label: "Agent council", icon: Orbit },
   { to: "/decisions", label: "Decisions & scenarios", icon: SlidersHorizontal },
+  { to: "/presentations", label: "Presentations", icon: Presentation },
   { to: "/audit", label: "Audit trail", icon: History },
 ];
 export default function AppShell() {
@@ -39,7 +41,9 @@ export default function AppShell() {
   const moderatorId = useModeratorStore((s) => s.id);
   const location = useLocation();
   const activeIndex = navigation.findIndex(
-    (item) => item.to === location.pathname,
+    (item) =>
+      item.to === location.pathname ||
+      location.pathname.startsWith(item.to + "/"),
   );
   const nextPage = navigation[activeIndex + 1];
   const [open, setOpen] = useState(false);
@@ -172,7 +176,7 @@ export default function AppShell() {
         )}
         <div
           className="journey-progress"
-          aria-label={`Step ${activeIndex + 1} of 7: ${navigation[activeIndex]?.label}`}
+          aria-label={`Step ${activeIndex + 1} of ${navigation.length}: ${navigation[activeIndex]?.label}`}
         >
           <span>INTELLIGENCE / {String(activeIndex + 1).padStart(2, "0")}</span>
           <div>

@@ -6065,3 +6065,14 @@ hr {
     gap: 20px;
   }
 }
+.presentation-entry .flex-between,
+.presentation-entry .flex {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.presentation-entry .flex-between > div {
+  min-width: 0;
+}
+.presentation-entry .button {
+  white-space: normal;
+}

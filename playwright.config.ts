@@ -31,7 +31,10 @@ export default defineConfig({
     {
       command: "npm run dev -- --port 5175 --strictPort",
       url: "http://127.0.0.1:5175",
-      env: { MODERATOR_API_URL: "http://127.0.0.1:8001" },
+      env: {
+        MODERATOR_API_URL: "http://127.0.0.1:8001",
+        VITE_ELEVENLABS_PRESENTATION_AGENT_ID: "",
+      },
       reuseExistingServer: !process.env.CI,
     },
   ],

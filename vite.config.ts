@@ -4,6 +4,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [react()],
   server: {
     proxy: {
+      "/api/presentations":
+        loadEnv(mode, ".", "MODERATOR_").MODERATOR_API_URL ||
+        "http://127.0.0.1:8000",
       "/api/moderator":
         loadEnv(mode, ".", "MODERATOR_").MODERATOR_API_URL ||
         "http://127.0.0.1:8000",
