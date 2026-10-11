@@ -1,0 +1,13 @@
+did u finish properly?
+
+---
+
+how can u confirm that u didn't fully remake fake agents from scratch and actually used the agents my teammates made in their branches and put them on here the main?
+
+---
+
+and all are working from Qwen properly?
+
+---
+
+wait check changes there is a new presentation branch pls merge that into main now the presentation generation part

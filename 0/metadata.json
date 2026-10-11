@@ -1,0 +1,61 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4M8N89X4V8WWZVE8429VW6D",
+  "session_id": "01a1261a-2a92-7960-ad84-d63846639755",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-11T01:19:03.703112Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "backend/main.py",
+    "backend/moderator/app.py",
+    "backend/moderator/engine.py",
+    "backend/moderator/errors.py",
+    "backend/presentation/llm.py",
+    "backend/presentation/service.py",
+    "backend/tests/test_presentation_integration.py",
+    "playwright.config.ts",
+    "playwright.presentation.config.ts",
+    "src/components/council/ModeratorReview.tsx",
+    "src/components/dashboard/AppShell.tsx",
+    "src/pages/LiveDecisions.tsx",
+    "tests/e2e/vehicle-council.spec.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6-astra",
+  "turn_id": "ccebbf01094e",
+  "checkpoint_transcript_start": 7001,
+  "transcript_lines_at_start": 7001,
+  "compact_transcript_start": 1133,
+  "token_usage": {
+    "input_tokens": 119123,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 5156224,
+    "output_tokens": 19524,
+    "api_call_count": 38
+  },
+  "session_metrics": {
+    "turn_count": 33
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-11T01:19:03.110103Z",
+    "agent_lines": 1603,
+    "agent_removed": 50,
+    "human_added": 11153,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 12756,
+    "total_lines_changed": 12812,
+    "agent_percentage": 12.9019669060256,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
