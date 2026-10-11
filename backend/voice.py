@@ -6,7 +6,7 @@ import re
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict
 
@@ -38,6 +38,41 @@ class VoiceRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     message_id: UUID | None = None
     assessment_id: str | None = None
+
+
+@router.post("/transcribe")
+async def transcribe(request: Request):
+    """Only audio explicitly recorded by the PM is sent to ElevenLabs."""
+    config = configuration()
+    if not config["key"]:
+        raise HTTPException(503, "Add an ElevenLabs key with speech-to-text permission. You can type your question meanwhile.")
+    content_type = request.headers.get("content-type", "").split(";")[0]
+    extensions = {"audio/webm": "webm", "audio/mp4": "m4a", "audio/ogg": "ogg", "audio/wav": "wav"}
+    if content_type not in extensions:
+        raise HTTPException(415, "Use a supported audio recording")
+    audio = bytearray()
+    async for chunk in request.stream():
+        audio.extend(chunk)
+        if len(audio) > 8_000_000:
+            raise HTTPException(413, "Keep your voice question under one minute")
+    if not audio:
+        raise HTTPException(422, "No audio was recorded")
+    try:
+        async with httpx.AsyncClient(timeout=90) as client:
+            response = await client.post("https://api.elevenlabs.io/v1/speech-to-text",
+                headers={"xi-api-key": config["key"]},
+                data={"model_id": "scribe_v2", "tag_audio_events": "false", "diarize": "false"},
+                files={"file": (f"question.{extensions[content_type]}", bytes(audio), content_type)})
+        if response.status_code in (401, 403):
+            raise HTTPException(503, "Enable Speech to Text access for the ElevenLabs backend key. Typed Jury discussion still works.")
+        if not response.is_success:
+            raise HTTPException(502, f"ElevenLabs could not transcribe this recording ({response.status_code}). You can type the question.")
+        text = response.json().get("text", "").strip()
+        if not text:
+            raise HTTPException(422, "No speech detected. Try again or type your question.")
+        return {"text": text[:3000]}
+    except httpx.HTTPError as exc:
+        raise HTTPException(503, "ElevenLabs is unreachable. You can type your question.") from exc
 
 
 def saved_speech(review, body):

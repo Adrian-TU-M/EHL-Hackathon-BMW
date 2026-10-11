@@ -209,7 +209,7 @@ export default function ModeratorCouncil() {
       return;
     }
     setError(undefined);
-    setSearchParams({ session: id });
+    setSearchParams({ session: id, advanced: "1" });
   }
   const chosen = selected || s?.agenda.selected_ids || [],
     topic = s?.agenda.topics.find((t) => t.id === s.work?.brief.topic_id),

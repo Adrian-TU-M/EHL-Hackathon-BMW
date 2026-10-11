@@ -64,7 +64,10 @@ class OllamaClient:
             raise LLMUnavailable(f"Model {self.model!r} not found. Run: ollama pull {self.model}")
         if response.status_code >= 400:
             raise LLMUnavailable(f"Ollama error {response.status_code}: {response.text[:300]}")
-        content = response.json().get("message", {}).get("content", "")
+        result = response.json()
+        from backend.llm.usage import record_usage
+        record_usage(result)
+        content = result.get("message", {}).get("content", "")
         try:
             return json.loads(content)
         except json.JSONDecodeError as exc:

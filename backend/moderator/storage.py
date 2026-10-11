@@ -40,6 +40,8 @@ class Store:
             CREATE TABLE IF NOT EXISTS events (session_id TEXT NOT NULL REFERENCES sessions(id), sequence INTEGER NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(session_id,sequence));
             CREATE TABLE IF NOT EXISTS commands (session_id TEXT NOT NULL REFERENCES sessions(id), command_key TEXT NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(session_id,command_key));
             CREATE TABLE IF NOT EXISTS catalogs (snapshot_hash TEXT PRIMARY KEY, payload TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS vehicle_starts (command_key TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, session_id TEXT NOT NULL REFERENCES sessions(id));
+            CREATE TABLE IF NOT EXISTS jury_discussions (session_id TEXT NOT NULL REFERENCES sessions(id), assessment_id TEXT NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(session_id,assessment_id));
         """)
 
     def save(

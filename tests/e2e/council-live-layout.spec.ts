@@ -193,7 +193,7 @@ async function setup(
     .getByRole("button", { name: "Start Product Analysis", exact: true })
     .click();
   await page.getByRole("button", { name: "Confirm scope & begin" }).click();
-  await page.goto("/council");
+  await page.goto("/council?advanced=1");
   return mutations;
 }
 

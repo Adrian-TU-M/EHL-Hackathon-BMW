@@ -9,8 +9,10 @@ import {
 } from "lucide-react";
 import { api, post, type Debate } from "../../lib/api/live";
 import type { JudgeAssessment } from "../../lib/api/judge";
-import { Badge, Button } from "../ui/Primitives";
+import { Badge, Button, Modal } from "../ui/Primitives";
 import { useSavedJudgeAudio } from "./useSavedJudgeAudio";
+
+import { ProposalVoiceConversation } from "./ProposalVoiceConversation";
 
 export interface LiveReview {
   run_id: string;
@@ -47,6 +49,7 @@ export function LiveJudgeReview({
   debate: Pick<Debate, "run_id" | "model">;
   onReview?: (review: LiveReview) => void;
 }) {
+  const [discussionOpen, setDiscussionOpen] = useState(false);
   const [review, setReview] = useState<LiveReview | null>(null);
   const [voice, setVoice] = useState<VoiceStatus | null>(null);
   const [error, setError] = useState("");
@@ -296,7 +299,13 @@ export function LiveJudgeReview({
           <Volume2 size={15} />{" "}
           {voiceBusy ? "Preparing voice…" : "Hear the Judge"}
         </Button>
+        <Button variant="secondary" disabled={busy || !assessment} onClick={() => { stopVoice(); setDiscussionOpen(true); }}>
+          <MessageSquareText size={15} /> Discuss with Judge
+        </Button>
       </div>
+      {discussionOpen && <Modal title="Discuss with the Judge" wide onClose={() => setDiscussionOpen(false)}>
+        <ProposalVoiceConversation key={`${debate.run_id}:${review.assessment?.id}`} runId={debate.run_id} />
+      </Modal>}
       <label className="field-label" htmlFor={`review-reason-${debate.run_id}`}>
         Decision note <span className="muted">(required to reject)</span>
       </label>

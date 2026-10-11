@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import os
+import json
+from uuid import UUID
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -44,6 +46,11 @@ class VoiceInput(Model):
     assessment_id: str
 
 
+class VehicleStart(Model):
+    scope: Scope
+    idempotency_key: UUID
+
+
 def create_app(engine: Engine | None = None):
     @asynccontextmanager
     async def lifespan(app):
@@ -70,6 +77,37 @@ def create_app(engine: Engine | None = None):
             app.state.engine.store.close()
 
     app = FastAPI(title="BMW moderator controller", version="1.0.0", lifespan=lifespan)
+    start_lock = asyncio.Lock()
+
+    @app.post("/api/moderator/vehicle-debates", status_code=201)
+    async def start_vehicle(body: VehicleStart, request: Request):
+        """One explicit PM action covers every scoped, eligible Moderator topic."""
+        e = request.app.state.engine
+        key = str(body.idempotency_key)
+        fingerprint = json.dumps(body.scope.model_dump(), sort_keys=True)
+        async with start_lock:
+            saved = e.store.db.execute("SELECT fingerprint, session_id FROM vehicle_starts WHERE command_key=?", (key,)).fetchone()
+            if saved and saved[0] != fingerprint:
+                raise Conflict("This start request already belongs to a different vehicle scope")
+            if saved:
+                s = e.get(saved[1])
+            else:
+                # Deterministic source discovery is immediate; no model job is
+                # needed just to show the PM that their debate has started.
+                s = await e.create(body.scope, limits=Limits(session_seconds=21600, session_tokens=6000000), refine_agenda=False)
+                with e.store.db:
+                    e.store.db.execute("INSERT INTO vehicle_starts VALUES (?,?,?)", (key, fingerprint, s.id))
+            if s.status == "awaiting_confirmation":
+                topics = [t.id for t in s.agenda.topics if t.eligible]
+                if not topics:
+                    raise HTTPException(422, "No scoped evidence supports an agenda for this car. Choose a supported vehicle and market.")
+                s = await e.confirm(s.id, ConfirmAgenda(expected_version=s.agenda.version, selected_ids=topics))
+            if s.status == "ready":
+                s = await e.control(s.id, Control(action="start", expected_revision=s.revision, idempotency_key=key))
+            return s
+
+    from .discussion import install_discussion
+    install_discussion(app)
 
     @app.exception_handler(Conflict)
     async def conflict(_, error):

@@ -16,6 +16,7 @@ from backend.llm.ollama import OllamaClient
 from backend.schemas.agent import AgentPosition, Claim
 from backend.schemas.council import CouncilTurn
 from backend.storage import RunStore
+from backend.voice_conversation import ConversationMessage
 
 router = APIRouter(prefix="/api/review", tags=["PM review"])
 _locks: dict[str, asyncio.Lock] = {}
@@ -322,3 +323,41 @@ async def message(run_id: UUID, body: ReviewMessage):
         review["receipts"][str(body.id)] = fingerprint
         _write_review(review)
         return public_review(review)
+
+
+# Same original ElevenLabs conversation for Market/Competitor proposal councils.
+def _voice_assessment(review, assessment_id=None):
+    from backend.judge.service import digest
+    if not review["assessment"]:
+        raise HTTPException(409, "Reassess the edited requirement before discussing it")
+    assessment = JudgeAssessment.model_validate(review["assessment"])
+    packet = JudgeRequest.model_validate(review["request"])
+    if digest(packet) != assessment.input_digest or (assessment_id and assessment.id != assessment_id):
+        raise HTTPException(409, "The saved assessment changed. Reopen this discussion.")
+    return assessment, packet
+
+
+@router.get("/debates/{run_id}/conversation")
+async def voice_conversation(run_id: UUID):
+    from backend.voice_conversation import configuration
+    review = load_review(run_id)
+    assessment, packet = _voice_assessment(review)
+    messages = review.get("voice_messages", {}).get(assessment.id, [])
+    return configuration(assessment, packet, messages, review["status"])
+
+
+@router.post("/debates/{run_id}/conversation")
+async def save_voice_conversation(run_id: UUID, body: ConversationMessage):
+    async with _locks.setdefault(str(run_id), asyncio.Lock()):
+        review = load_review(run_id)
+        assessment, _ = _voice_assessment(review, body.assessment_id)
+        messages = review.setdefault("voice_messages", {}).setdefault(assessment.id, [])
+        existing = next((m for m in messages if m["id"] == body.id), None)
+        if existing:
+            if existing["text"] != body.text or existing["actor"] != body.actor:
+                raise HTTPException(409, "Conversation event already has different content")
+        else:
+            messages.append({"id": body.id, "actor": body.actor, "text": body.text,
+                             "created_at": timestamp(), "provenance": "elevenlabs_transcript"})
+            _write_review(review)
+        return {"messages": messages}

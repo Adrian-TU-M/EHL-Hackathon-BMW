@@ -48,6 +48,8 @@ export async function request<T>(
   return response.json();
 }
 export const moderatorApi = {
+  startVehicle: (scope: Scope, idempotency_key: string) =>
+    request<ModeratorSession>("/vehicle-debates", { scope, idempotency_key }),
   sessions: () => request<{ sessions: ModeratorSessionSummary[] }>("/sessions"),
   health: () =>
     request<{

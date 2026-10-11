@@ -225,6 +225,7 @@ test("review, versioning, evidence exclusion, scoring, persistence, audit and PD
   await page
     .getByRole("link", { name: "Decisions & scenarios", exact: true })
     .click();
+  await page.goto("/decisions?demo=1");
   const first = page.locator(".requirement-card").first();
   await first.getByRole("button", { name: "Review", exact: true }).click();
   await page
@@ -324,7 +325,7 @@ test("mobile layout, navigation, deep links and reduced motion", async ({
     fullPage: true,
     animations: "disabled",
   });
-  await page.goto("/decisions");
+  await page.goto("/decisions?demo=1");
   await expect(
     page.getByRole("heading", { name: "Shape the next generation." }),
   ).toBeVisible();

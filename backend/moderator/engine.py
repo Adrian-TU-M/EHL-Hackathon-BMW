@@ -75,6 +75,8 @@ class Engine:
         self.capabilities = {}
         self.deadlines = {}
         self.pending = {}
+        if hasattr(adapters, "bind_native"):
+            adapters.bind_native(self.resolve_native)
         saved = store.catalogs()
         self.catalogs = {c.snapshot_hash: c for c in saved}
         if catalog:
@@ -212,7 +214,7 @@ class Engine:
                 "Frozen source snapshot unavailable. Restore that catalog or create a linked new session."
             )
 
-    async def create(self, scope: Scope, parent=None, limits: Limits | None = None):
+    async def create(self, scope: Scope, parent=None, limits: Limits | None = None, *, refine_agenda=True):
         if not self.catalog:
             raise Conflict(
                 "Supplied source collection unavailable; run ingestion first"
@@ -221,7 +223,7 @@ class Engine:
             self.get(parent)
         agenda = prepare(self.catalog, scope)
         # Agenda refinement is bounded separately from topic budgets and never changes ratings.
-        if not self.adapters.missing():
+        if refine_agenda and not self.adapters.missing():
             data = {
                 "scope": scope.model_dump(),
                 "candidates": [
@@ -265,6 +267,7 @@ class Engine:
         s = Session(
             agenda=agenda,
             mode=self.adapters.mode,
+            participant_runtime="native" if getattr(self.adapters, "native_implementations", False) else "legacy",
             parent_session_id=parent,
             limits=limits or Limits(),
             tokens=agenda_usage,
@@ -488,15 +491,28 @@ class Engine:
 
     def allowed(self, s, actor):
         topic = next(t for t in s.agenda.topics if t.id == s.work.brief.topic_id)
+        if s.participant_runtime == "native" and actor == "customer":
+            # Native Customer retrieval computes full-scope statistics before
+            # choosing theme quotes. It still sees only the frozen Customer data.
+            return [e for e in self.snapshot(s).evidence if e.domain == "customer" and applicable(e, s.agenda.scope, True)]
         if actor in ROLES:
             return role_evidence(
                 self.snapshot(s), s.agenda.scope, actor, topic.evidence_ids
             )
+        cited = {i for c in s.work.claims for i in c.evidence_ids} if s.participant_runtime == "native" else set()
         return [
             e
             for e in self.snapshot(s).evidence
-            if e.id in topic.evidence_ids and applicable(e, s.agenda.scope, True)
+            if e.id in set(topic.evidence_ids) | cited and applicable(e, s.agenda.scope, True)
         ]
+
+    def resolve_native(self, token):
+        """In-process equivalent of the Moderator's scoped retrieval capability."""
+        key = token.rsplit("/", 1)[-1]
+        self.retrieve(key, [])  # Check generation/stage; stale native calls cannot retrieve.
+        sid, _, actor, _, _ = self.capabilities[key].split(":")
+        session = self.get(sid)
+        return self.snapshot(session), self.allowed(session, actor)
 
     def access(self, s, actor):
         key = f"{s.id}:{s.generation}:{actor}:{s.work.brief.topic_id}:{s.work.stage}"
@@ -570,6 +586,12 @@ class Engine:
             for e in ev
             if e.kind in {"study_mean", "study_distribution", "provided_forecast"}
         ][:2]
+        if s.participant_runtime == "native":
+            # Native Customer retrieval may select another authorized quote.
+            # Review that exact citation rather than the initial excerpt window.
+            cited = {i for c in s.work.claims for i in c.evidence_ids}
+            cited.update(i for c in s.work.challenges for i in c.response_evidence_ids)
+            selected += [e for e in ev if e.id in cited]
         seen, excerpts = set(), []
         for e in selected:
             if e.id in seen:
@@ -585,6 +607,7 @@ class Engine:
             item["excerpt_truncated"] = len(e.passage) > 1600
             excerpts.append(item)
         return {
+            "participant_runtime": s.participant_runtime,
             "brief": s.work.brief.model_dump(),
             "evidence": excerpts,
             "available_evidence_count": len(ev),
@@ -632,6 +655,10 @@ class Engine:
                 )
                 + output_allowance + 2000
             )
+            if s.participant_runtime == "native" and actor in ROLES and operation != "semantic_check":
+                # Native handlers include retrieval, synthesis and citation review.
+                # Charge their actual Ollama usage, with a bounded reservation.
+                reserve = max(reserve, 48000)
             if w.tokens + reserve > cap or s.tokens + reserve > s.limits.session_tokens:
                 raise Budget("Token reservation exhausted")
             w.attempts[slot] = w.attempts.get(slot, 0) + 1
@@ -1236,6 +1263,8 @@ class Engine:
                                     {
                                         "challenge": c.model_dump(),
                                         "disposition_author": role,
+                                        "implementation": result.implementation if result else None,
+                                        "native_output": result.native_output if result else None,
                                     },
                                 )
                         w.stage = "rebuttal_validation"

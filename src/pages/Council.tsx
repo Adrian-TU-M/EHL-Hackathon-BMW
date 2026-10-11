@@ -33,9 +33,18 @@ const STANCE: Record<string, string> = {
 const CouncilScene = lazy(() => import("../components/council/CouncilScene"));
 import LiveCouncil from "./LiveCouncil";
 import ModeratorCouncil from "./ModeratorCouncil";
+import VehicleCouncil from "./VehicleCouncil";
 export default function Council() {
   const [params] = useSearchParams();
-  return params.get("demo") === "1" ? <DemoCouncil /> : params.has("source_run") ? <LiveCouncil /> : <ModeratorCouncil />;
+  return params.get("demo") === "1" ? (
+    <DemoCouncil />
+  ) : params.has("source_run") ? (
+    <LiveCouncil />
+  ) : params.get("advanced") === "1" ? (
+    <ModeratorCouncil />
+  ) : (
+    <VehicleCouncil />
+  );
 }
 function DemoCouncil() {
   const {
@@ -249,13 +258,21 @@ function DemoCouncil() {
             {event?.model && (
               <small className="council-live-tag" data-testid="live-turn">
                 Live · {event.model.replace("ollama:", "")} · BMW feedback
-                {event.respondingTo && event.stance && event.stance !== "none" && (
-                  <> · {STANCE[event.stance]} {event.respondingTo}</>
-                )}
+                {event.respondingTo &&
+                  event.stance &&
+                  event.stance !== "none" && (
+                    <>
+                      {" "}
+                      · {STANCE[event.stance]} {event.respondingTo}
+                    </>
+                  )}
               </small>
             )}
             {event?.evidenceBase && (
-              <small className="council-evidence-base" data-testid="evidence-base">
+              <small
+                className="council-evidence-base"
+                data-testid="evidence-base"
+              >
                 {event.evidenceBase}
               </small>
             )}
@@ -366,12 +383,12 @@ function DemoCouncil() {
               <div>
                 <strong style={{ color: agentMeta[e.actor].color }}>
                   {agentMeta[e.actor].name} <span>{e.stage}</span>
-                  {e.model && (
-                    <span className="council-live-tag"> live</span>
-                  )}
+                  {e.model && <span className="council-live-tag"> live</span>}
                 </strong>
                 {e.evidenceBase && (
-                  <small className="council-evidence-base">{e.evidenceBase}</small>
+                  <small className="council-evidence-base">
+                    {e.evidenceBase}
+                  </small>
                 )}
                 <p>{e.statement}</p>
                 {e.assumption && <small>Assumption: {e.assumption}</small>}
@@ -399,7 +416,9 @@ function DemoCouncil() {
         <div className="council-review-footer">
           <div>
             <strong>An open discussion. A deliberate decision.</strong>
-            <span>The council never approves a requirement on your behalf.</span>
+            <span>
+              The council never approves a requirement on your behalf.
+            </span>
           </div>
           <Button disabled onClick={() => navigate("/decisions")}>
             Continue to PM review <ArrowRight size={16} />

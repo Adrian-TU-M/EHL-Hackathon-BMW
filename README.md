@@ -14,9 +14,23 @@ Read [PROJECT_SPEC.md](PROJECT_SPEC.md) for the complete product specification, 
 
 Customer, Market Trends, Competitor, Moderator and Judge now share **Ollama `qwen3:8b`** on one laptop. The Customer page uses supplied feedback and studies; Market and Competitor pages offer cited investigations. The council runs only when the PM requests it. The Judge applies its assessment rubric to the actual debate, and the PM retains the final decision.
 
-Presentation generation is excluded. Decisions includes a persisted live-review inbox alongside the existing demo workspace; the demo PDF export remains separate. See [backend/README.md](backend/README.md) for routes and runtime details, and [backend/MARKET.md](backend/MARKET.md) for Market sources and limitations.
+Presentation generation is excluded. Decisions & Scenarios now shows the actual saved council verdicts, PM reviews, and what-if rankings of the same assessed criteria. The legacy demo portfolio is explicit at `/decisions?demo=1`; its PDF export remains separate. See [backend/README.md](backend/README.md) for routes and runtime details, and [backend/MARKET.md](backend/MARKET.md) for Market sources and limitations.
 
-Open `/council` to find active/recent debates from any browser connected to this backend, or prepare an agenda and explicitly start it. Published arguments and Judge review appear first; the confirmed agenda is collapsible. Reopening a session restores its saved transcript without starting inference. For a quick live demo, select one topic: the integrated Controls test took about **12.5 minutes** on this laptop while another council shared Qwen. Multi-topic agendas run sequentially, and competing requests or repairs add time.
+Open `/council` and choose **Start car debate**. One PM action freezes the selected vehicle scope and starts every evidence-supported Moderator topic automatically, without selecting an individual feature. The large interactive council table sits above a chronological transcript. **Talk to Jury** opens the original ElevenLabs conversation about the completed Qwen verdict; direct local-Qwen text discussion is also available; **Review decisions** opens those same results in Decisions & Scenarios. Saved councils reopen without starting inference. Advanced controls remain at `/council?advanced=1`. The latest native Controls debate completed all three specialist challenges, their replies and the real Judge assessment in **7 minutes** on this laptop. Timing varies with evidence, repairs and other Qwen work; full-car agendas run sequentially and can take much longer. This is local inference, not an instant scripted demo.
+
+The original `JudgeConversationSession` from commits `627539b` / `54c0b73` is shared by the live council, Decisions and the explicit demo. It preserves the ElevenLabs React SDK, continuous voice/text sessions, animated orb, actual audio meters, transcript and pause/resume. Configure the teammate's public `ELEVENLABS_AGENT_ID` in ignored `backend/.env` (or `VITE_ELEVENLABS_AGENT_ID` in `.env.local`). This is separate from the server-side narration API key. The ElevenLabs conversation receives the actual saved Qwen assessment and proposed requirements; it does not rescore or approve them. No raw source files are uploaded. Transcripts persist against the exact assessment ID. The voice agent's hosted conversation model is configured by its owner; it must not be described as local Qwen. **Ask local Qwen directly in text** uses the local model against the saved evidence-backed verdict. An optional `ask_jury` client tool is implemented for an owner-configured ElevenLabs agent; enable `ELEVENLABS_JURY_TOOL_ENABLED=1` only after configuring that blocking tool in ElevenLabs.
+
+The manual integration retains these branch implementations:
+
+| Participant | Original implementation used in new live councils | Preserved work |
+| --- | --- | --- |
+| Customer | `Customer_Agent`: `CustomerAgent.perspective` | Native theme retrieval, deduplicated statistics, citation verification, study references, stance and counter-question |
+| Market | `Market_Trends_Agent`: `MarketParticipant.turn` | Native market draft, source/numeric validation and grounding review; standalone `MarketAgent` and page unchanged |
+| Competitor | `Competitors_Agent`: competitor `GroundedParticipant.turn` | Original branch's debate handler; standalone tool-using `CompetitorAgent` and page unchanged |
+| Moderator | `Moderator_Agent`: `Engine` | Frozen agenda, real claim-targeted rounds, budgets, pause/resume, source validation and audit |
+| Judge | `Judge_Agent`: `JudgeService` | Native argument evaluation, weighted criteria, uncertainty and versioned PM review |
+
+Native outputs and implementation identifiers are retained in new council audit events. Existing saved councils retain their original protocol and evidence; they are not relabelled as native executions. Presentation generation remains excluded.
 
 ## Run locally
 

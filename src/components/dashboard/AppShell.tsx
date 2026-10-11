@@ -42,7 +42,7 @@ export default function AppShell() {
   const location = useLocation();
   const liveWorkspace =
     ["/market", "/customer", "/competitor"].includes(location.pathname) ||
-    (location.pathname === "/council" &&
+    (["/council", "/decisions"].includes(location.pathname) &&
       !new URLSearchParams(location.search).has("demo"));
   const activeIndex = navigation.findIndex(
     (item) => item.to === location.pathname,

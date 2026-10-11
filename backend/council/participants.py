@@ -66,7 +66,11 @@ class GroundedParticipant:
                 schema['$defs']['Challenge']['properties']['target_agent_id'] = {'type':'string','const':lead}
                 schema['$defs']['Challenge']['properties']['target_claim_id'] = {'type':'string','enum':sorted(t[1] for t in targets)}
         if not targets or stage != 'challenge': schema['properties']['challenges']['maxItems'] = 0
-        elif stage == 'challenge': schema['properties']['challenges']['minItems'] = 1
+        elif stage == 'challenge':
+            schema['properties']['challenges']['minItems'] = 1
+            schema['properties']['challenges']['maxItems'] = 1
+            schema['$defs']['Challenge']['properties']['target_agent_id'] = {'type':'string','enum':sorted({target[0] for target in targets})}
+            schema['$defs']['Challenge']['properties']['target_claim_id'] = {'type':'string','enum':sorted({target[1] for target in targets})}
         answer_schema = schema['properties']['answered_claim_ids']
         if prior_ids: answer_schema['items']['enum'] = sorted(prior_ids)
         else: answer_schema['maxItems'] = 0

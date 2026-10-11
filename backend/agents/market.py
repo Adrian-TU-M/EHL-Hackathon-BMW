@@ -182,6 +182,8 @@ class MarketParticipant:
             if not set(d.answered_claim_ids)<=prior_ids:raise ValueError('Unknown answered claim ID')
             if stage=='revision' and (not challenged or not challenged<=set(d.answered_claim_ids)):raise ValueError('Answer all actual claims challenged against Market.')
         fields={}
+        if stage=='challenge' and targets:
+            fields={'target_claim_id':{'type':'string','enum':sorted(targets)}, 'question':{'type':'string','minLength':5,'maxLength':500}}
         if stage!='challenge':
             fields={'target_claim_id':{'type':'string','enum':['']},'question':{'type':'string','enum':['']}}
         if stage=='revision':

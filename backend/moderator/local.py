@@ -230,10 +230,16 @@ def constrain_schema(schema, actor, operation, data):
 
 class OllamaAdapters:
     mode = "ollama"
+    native_implementations = True
 
     def __init__(self, settings: Settings | None = None, llm=None):
         self.settings = settings or Settings.from_env()
         self.llm = llm or OllamaClient(replace(self.settings, ollama_timeout_seconds=max(240, self.settings.ollama_timeout_seconds)))
+        self.native = None
+
+    def bind_native(self, resolver):
+        from .native import NativeSpecialists
+        self.native = NativeSpecialists(self.settings, resolver)
 
     def missing(self):
         return []  # Runtime connectivity is checked by health; never substitute fixtures.
@@ -245,9 +251,18 @@ class OllamaAdapters:
         if actor == "judge" and operation == "assessment":
             from .judge_bridge import assess_packet
             return await assess_packet(data, self.settings)
+        if actor in {"customer", "market", "competitor"} and operation in {"perspective", "challenge", "rebuttal", "clarification"} and data.get("participant_runtime") == "native":
+            if self.native is None:
+                raise RuntimeError("Native specialist resolver is not connected")
+            return await self.native.call(actor, operation, data)
         if operation not in TASKS:
             raise ValueError(f"Unsupported local operation: {operation}")
         output_schema = constrain_schema(schema, actor, operation, data)
+        native_review = operation == "semantic_check" and data.get("participant_runtime") == "native"
+        if native_review:
+            ids = [c["id"] for c in data.get("claims", [])]
+            check = {"type": "object", "properties": {"supported": {"type": "boolean"}, "reason": {"type": "string", "maxLength": 240}}, "required": ["supported", "reason"], "additionalProperties": False}
+            output_schema = {"type": "object", "properties": {"checks": {"type": "object", "properties": {key: check for key in ids}, "required": ids, "additionalProperties": False}}, "required": ["checks"], "additionalProperties": False}
         generation_data = data
         facts = {}
         if operation == "perspective":
@@ -272,6 +287,8 @@ BMW has/lacks equipment, that a rival improves safety, or that most/many custome
 feature. No theme-frequency counts are supplied in this call. Alternatives are conditional
 experiments; tradeoffs are possible risks. Never convert anecdotes into prevalence.
 """
+        if native_review:
+            system = POLICY + "\n" + TASKS[operation] + "\nUse the checks schema: classify EVERY exact claim key with supported true/false and a concise reason. Do not output supported_ids or unsupported. Judge interpretations on the supplied quotations. Explicitly conditional tests and transparent limitations are allowed. Source-qualified statements that a source says something do not establish it as a population-wide fact."
         logging.getLogger(__name__).info("Local moderator call %s/%s", actor, operation)
         response = await self.llm.chat([
             {"role": "system", "content": system},
@@ -281,6 +298,10 @@ experiments; tradeoffs are possible risks. Never convert anecdotes into prevalen
         if any(not isinstance(n, int) or n < 0 for n in usage):
             raise ValueError("Ollama did not report actual token usage")
         output = json.loads(response["message"]["content"])
+        if native_review:
+            checks = output.get("checks", {})
+            output = {"supported_ids": [key for key, value in checks.items() if value.get("supported") is True],
+                      "unsupported": {key: value.get("reason") or "Unsupported by supplied citations" for key, value in checks.items() if value.get("supported") is not True}}
         total_usage = sum(usage)
         if operation == "semantic_check":
             ids = {claim["id"] for claim in data.get("claims", [])}

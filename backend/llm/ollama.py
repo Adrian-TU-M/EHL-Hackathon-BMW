@@ -41,4 +41,7 @@ class OllamaClient:
                 f"{self.settings.ollama_base_url}/api/chat", json=payload
             )
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            from backend.llm.usage import record_usage
+            record_usage(result)
+            return result

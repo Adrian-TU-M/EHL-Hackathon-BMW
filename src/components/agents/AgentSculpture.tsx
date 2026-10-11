@@ -68,7 +68,9 @@ export function AgentSculpture({
     const t = elapsed.current;
     // Restrained movement keeps each symbol facing the PM and recognizable.
     emblem.current.rotation.y = Math.sin(t * 0.38) * 0.13;
-    emblem.current.position.y = Math.sin(t * (active ? 1.5 : 0.8)) * 0.035;
+    emblem.current.position.y = active
+      ? Math.abs(Math.sin(t * 2.4)) * 0.14
+      : Math.sin(t * 0.8) * 0.035;
     const target = active ? 1.06 : 1;
     emblem.current.scale.setScalar(
       emblem.current.scale.x +
@@ -78,6 +80,32 @@ export function AgentSculpture({
   });
   return (
     <group position={position} scale={scale} name={`${agent}-agent-emblem`}>
+      {active && (
+        <group>
+          <mesh position={[0, 0.02, 0]}>
+            <cylinderGeometry args={[0.83, 0.56, 1.5, 48, 1, true]} />
+            <meshBasicMaterial
+              color={color}
+              transparent
+              opacity={0.08}
+              depthWrite={false}
+              side={2}
+            />
+          </mesh>
+          {[-0.52, -0.34, 0.78].map((y) => (
+            <mesh key={y} position={[0, y, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[0.72, 0.738, 64]} />
+              <meshBasicMaterial color={color} transparent opacity={0.65} />
+            </mesh>
+          ))}
+          <pointLight
+            position={[0, 0.3, 0.8]}
+            color={color}
+            intensity={2.5}
+            distance={2}
+          />
+        </group>
+      )}
       <group ref={emblem}>
         <AgentIcon agent={agent} active={active} paused={paused} />
         <group ref={halo} position={[0, 0.02, -0.23]}>

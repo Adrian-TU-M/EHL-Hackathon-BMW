@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import LiveDecisions from "./LiveDecisions";
 import {
   ArrowUpRight,
   FileText,
@@ -31,6 +33,11 @@ import {
 } from "../lib/scoring";
 import type { Criterion, Requirement, Weights } from "../lib/types";
 export default function Decisions() {
+  const [params] = useSearchParams();
+  return params.get("demo") === "1" ? <DemoDecisions /> : <LiveDecisions />;
+}
+
+function DemoDecisions() {
   const { requirements, weights, setWeights, evidence } = useAppStore();
   const [draft, setDraft] = useState<Weights>(weights);
   const [review, setReview] = useState<Requirement | null>(null);

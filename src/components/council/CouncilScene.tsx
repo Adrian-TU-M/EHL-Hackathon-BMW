@@ -35,16 +35,16 @@ const fallbackIcons = {
   judge: Scale,
 };
 const positions: Record<AgentId, [number, number, number]> = {
-  customer: [-2.35, 0.4, 0],
-  market: [0, 0.65, -1],
-  competitor: [2.35, 0.4, 0],
-  moderator: [-1.05, -0.05, 2],
-  judge: [1.15, 0.05, 2],
+  customer: [-2.35, 0.35, 0.15],
+  market: [-1.3, 0.35, -1.8],
+  competitor: [1.35, 0.35, -1.8],
+  moderator: [-1.1, 0.35, 1.9],
+  judge: [1.5, 0.35, 1.4],
 };
 function ProjectLabels({
   labels,
 }: {
-  labels: RefObject<Partial<Record<AgentId, HTMLDivElement>>>;
+  labels: RefObject<Partial<Record<AgentId, HTMLButtonElement>>>;
 }) {
   const point = useRef(new Vector3());
   useFrame(({ camera, size }) => {
@@ -52,9 +52,7 @@ function ProjectLabels({
       const label = labels.current[agent];
       if (!label) continue;
       const [x, y, z] = positions[agent];
-      point.current
-        .set(x, y - (agent === "moderator" ? 0.65 : 0.9), z)
-        .project(camera);
+      point.current.set(x, y - 0.9, z).project(camera);
       label.style.transform = `translate(${((point.current.x + 1) * size.width) / 2}px, ${((-point.current.y + 1) * size.height) / 2}px) translate(-50%, -50%)`;
       label.style.visibility = "visible";
     }
@@ -65,14 +63,18 @@ export default function CouncilScene({
   council,
   showcase,
   agentStates,
+  onSelectAgent,
+  selectedAgent,
 }: {
   council: CouncilState;
   showcase?: AgentState;
   agentStates?: Partial<Record<AgentId, AgentState>>;
+  onSelectAgent?: (agent: AgentId) => void;
+  selectedAgent?: AgentId | null;
 }) {
   const { reduced, visible } = useMotion();
   const wrapper = useRef<HTMLDivElement>(null);
-  const labels = useRef<Partial<Record<AgentId, HTMLDivElement>>>({});
+  const labels = useRef<Partial<Record<AgentId, HTMLButtonElement>>>({});
   const [inView, setInView] = useState(true);
   const stateFor = (agent: AgentId) =>
     showcase ?? agentStates?.[agent] ?? avatarState(council, agent);
@@ -92,7 +94,13 @@ export default function CouncilScene({
       {agents.map((a) => {
         const Icon = fallbackIcons[a];
         return (
-          <div key={a} className={`agent-static ${a}`}>
+          <button
+            type="button"
+            key={a}
+            className={`agent-static ${a}`}
+            onClick={() => onSelectAgent?.(a)}
+            aria-pressed={selectedAgent === a}
+          >
             <Icon
               size={52}
               strokeWidth={1.3}
@@ -101,7 +109,7 @@ export default function CouncilScene({
             />
             {agentMeta[a].name}
             <small>{stateFor(a)}</small>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -120,8 +128,8 @@ export default function CouncilScene({
           frameloop={
             !visible || !inView ? "never" : reduced ? "demand" : "always"
           }
-          camera={{ position: [0, 4.3, 7.3], fov: 34 }}
-          fallback={fallback}
+          camera={{ position: [0, 4.4, 7], fov: 34 }}
+          fallback={<p>3D rendering is unavailable in this browser.</p>}
         >
           <ProjectLabels labels={labels} />
           <ambientLight intensity={1.2} />
@@ -142,18 +150,24 @@ export default function CouncilScene({
             <Lightformer position={[4, 2, 2]} scale={[3, 5, 1]} intensity={4} />
           </Environment>
           {agents.map((a) => (
-            <group key={a}>
+            <group
+              key={a}
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelectAgent?.(a);
+              }}
+            >
               <AgentSculpture
                 agent={a}
                 position={positions[a]}
                 state={stateFor(a)}
-                scale={a === "moderator" ? 0.6 : a === "judge" ? 0.75 : 1}
+                scale={1.08}
                 reduced={reduced || !visible || !inView}
               />
               <Line
                 points={[
-                  [positions[a][0], -0.64, positions[a][2]],
-                  [0, -0.64, 0.5],
+                  [positions[a][0], -0.43, positions[a][2]],
+                  [0, -0.43, 0.15],
                 ]}
                 color="#4e84b8"
                 lineWidth={0.6}
@@ -162,21 +176,38 @@ export default function CouncilScene({
               />
             </group>
           ))}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.65, 0.4]}>
-            <ringGeometry args={[2.6, 2.62, 100]} />
-            <meshBasicMaterial color="#3274a5" transparent opacity={0.4} />
-          </mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.66, 0.4]}>
-            <circleGeometry args={[2.6, 100]} />
+          <mesh position={[0, -0.61, 0.1]}>
+            <cylinderGeometry args={[3, 2.87, 0.32, 96]} />
             <meshStandardMaterial
-              color="#081a2b"
-              metalness={0.6}
-              roughness={0.35}
-              transparent
-              opacity={0.65}
+              color="#0b192d"
+              metalness={0.85}
+              roughness={0.24}
             />
           </mesh>
+          <mesh position={[0, -1.05, 0.1]}>
+            <cylinderGeometry args={[1.2, 1.65, 0.65, 48]} />
+            <meshStandardMaterial
+              color="#081222"
+              metalness={0.85}
+              roughness={0.3}
+            />
+          </mesh>
+          {[2.94, 2.72, 0.65].map((radius) => (
+            <mesh
+              key={radius}
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[0, -0.44, 0.1]}
+            >
+              <ringGeometry args={[radius, radius + 0.018, 96]} />
+              <meshBasicMaterial
+                color={radius < 1 ? "#b4daff" : "#398bff"}
+                transparent
+                opacity={0.8}
+              />
+            </mesh>
+          ))}
           <OrbitControls
+            target={[0, -0.35, 0.1]}
             enablePan={false}
             enableZoom={false}
             minPolarAngle={0.7}
@@ -188,18 +219,21 @@ export default function CouncilScene({
       </SceneBoundary>
       <div className="spatial-agent-labels">
         {agents.map((a) => (
-          <div
+          <button
+            type="button"
             key={a}
+            onClick={() => onSelectAgent?.(a)}
+            aria-pressed={selectedAgent === a}
             ref={(el) => {
               if (el) labels.current[a] = el;
               else delete labels.current[a];
             }}
-            className={`scene-agent-label ${highlighted(a) ? "is-speaking" : ""}`}
+            className={`scene-agent-label ${highlighted(a) ? "is-speaking" : ""} ${selectedAgent === a ? "is-selected" : ""}`}
           >
             <span style={{ background: agentMeta[a].color }} />
             {agentMeta[a].name}
             <small>{stateFor(a)}</small>
-          </div>
+          </button>
         ))}
       </div>
     </div>

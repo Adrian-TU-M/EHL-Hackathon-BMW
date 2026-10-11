@@ -235,6 +235,8 @@ class AgentPosition(Model):
     change_conditions: list[str] = Field(default_factory=list)
     assumptions: list[Assumption] = Field(default_factory=list, max_length=6)
     abstention_reason: str | None = None
+    implementation: str | None = None
+    native_output: dict[str, Any] | None = None
 
 
 class Challenge(Model):
@@ -252,6 +254,8 @@ class Challenge(Model):
     response: str | None = None
     response_evidence_ids: list[str] = Field(default_factory=list)
     requested_status: Literal["resolved", "narrowed", "unresolved"] | None = None
+    implementation: str | None = None
+    native_output: dict[str, Any] | None = None
 
 
 class ChallengeResponse(Model):
@@ -275,6 +279,8 @@ class RebuttalItem(Model):
 class Rebuttal(Model):
     actor: Role
     responses: list[RebuttalItem]
+    implementation: str | None = None
+    native_output: dict[str, Any] | None = None
 
 
 class Clarification(Model):
@@ -293,6 +299,8 @@ class ClarificationResponse(Model):
     statement: str
     evidence_ids: list[str]
     claim_ids: list[str] = Field(default_factory=list)
+    implementation: str | None = None
+    native_output: dict[str, Any] | None = None
 
 
 class ScoringInput(Model):
@@ -452,6 +460,8 @@ class Session(Model):
         "unavailable",
     ] = "awaiting_confirmation"
     mode: Literal["deterministic", "http", "ollama"]
+    # Old saved runs keep their original protocol; new runs call native teammates.
+    participant_runtime: Literal["legacy", "native"] = "legacy"
     cursor: int = 0
     sequence: int = 0
     revision: int = 0

@@ -60,6 +60,34 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             "expected_version": review["request"]["features"][0]["version"],
             "assessment_id": (review["assessment"] or {}).get("id"), **extra}
 
+    async def test_proposal_voice_transcript_preserves_decisions_and_rejects_stale_assessments(self):
+        from backend.council.judge import router
+        app = FastAPI()
+        app.include_router(router)
+        url = f"/api/review/debates/{self.run_id}/conversation"
+        with patch("backend.council.judge.Settings.from_env", return_value=self.settings), \
+             patch.dict("os.environ", {"ELEVENLABS_AGENT_ID": "agent-teammate"}):
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+                response = await client.get(url)
+                self.assertEqual(response.status_code, 200)
+                context = response.json()
+                self.assertEqual(context["agent_id"], "agent-teammate")
+                self.assertEqual(context["context"]["assessment_id"], self.assessment.id)
+                self.assertNotIn("evidence", context["context"])
+                event = {"id": "sdk-event", "assessment_id": self.assessment.id,
+                         "actor": "judge", "text": "A customer test remains necessary."}
+                self.assertEqual((await client.post(url, json=event)).status_code, 200)
+                self.assertEqual((await client.post(url, json=event)).status_code, 200)
+                review = load_review(self.run_id)
+                self.assertEqual(review["revision"], 1)
+                self.assertEqual(review["decisions"], [])
+                self.assertEqual(len(review["voice_messages"][self.assessment.id]), 1)
+                self.assertEqual((await client.post(url, json={**event, "text": "Changed"})).status_code, 409)
+                await decide(self.run_id, ReviewDecision(**self.command(review, action="edit",
+                    rationale="Narrow the proposal", description="Test route guidance before release.")))
+                self.assertEqual((await client.get(url)).status_code, 409)
+                self.assertEqual((await client.post(url, json=event)).status_code, 409)
+
     async def test_actual_inputs_preserved_and_shared_model_ignores_legacy_cloud_config(self):
         self.assertEqual({a.agent for a in self.request.arguments}, {"customer", "market", "competitor"})
         self.assertEqual(self.request.evidence[0].passage, "Charging stops were difficult to plan.")
